@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perun Filmverse</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] font-inter">
+    <!-- Sekcja logowania/rejestracji -->
+    <div id="authContainer" class="container max-w-lg mx-auto bg-[var(--card-bg)] p-6 rounded-xl shadow-2xl mt-10">
+        <div class="flex border-b border-gray-600">
+            <button id="loginTab" class="flex-1 py-3 text-center font-semibold tab-active rounded-tl-lg" onclick="switchTab('login')">Logowanie</button>
+            <button id="registerTab" class="flex-1 py-3 text-center font-semibold tab-inactive rounded-tr-lg" onclick="switchTab('register')">Rejestracja</button>
+        </div>
+        <div id="loginSection" class="mt-6">
+            <h2 class="text-2xl font-bold text-[var(--accent-color)] mb-4 text-center">Perun Filmverse</h2>
+            <div class="space-y-4">
+                <input type="email" id="loginEmail" placeholder="Email" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200" aria-label="Email">
+                <input type="password" id="loginPassword" placeholder="Hasło" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200" aria-label="Hasło">
+                <button id="loginButton" onclick="login()" class="w-full bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Zaloguj</button>
+            </div>
+        </div>
+        <div id="registerSection" class="mt-6 hidden">
+            <h2 class="text-2xl font-bold text-[var(--accent-color)] mb-4 text-center">Rejestracja</h2>
+            <div id="step1" class="space-y-4">
+                <h3 class="text-lg font-semibold">Etap 1: Dane podstawowe</h3>
+                <input type="email" id="regEmail" placeholder="Email" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <input type="password" id="regPassword" placeholder="Hasło" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <input type="password" id="regPasswordConfirm" placeholder="Potwierdź hasło" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <button onclick="nextStep(1)" class="w-full bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Dalej</button>
+            </div>
+            <div id="step2" class="space-y-4 step-hidden">
+                <h3 class="text-lg font-semibold">Etap 2: Dane osobowe</h3>
+                <input type="text" id="regFirstName" placeholder="Imię" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <input type="text" id="regLastName" placeholder="Nazwisko" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <div class="flex space-x-4">
+                    <button onclick="prevStep(2)" class="w-1/2 bg-gray-600 text-white p-3 rounded-md hover:bg-gray-700 transition duration-200">Wstecz</button>
+                    <button onclick="nextStep(2)" class="w-1/2 bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Dalej</button>
+                </div>
+            </div>
+            <div id="step3" class="space-y-4 step-hidden">
+                <h3 class="text-lg font-semibold">Etap 3: Data urodzenia</h3>
+                <input type="date" id="regBirthDate" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <div class="flex space-x-4">
+                    <button onclick="prevStep(3)" class="w-1/2 bg-gray-600 text-white p-3 rounded-md hover:bg-gray-700 transition duration-200">Wstecz</button>
+                    <button id="registerButton" onclick="register()" class="w-1/2 bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Zarejestruj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal kodu dostępu -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="accessCodeModal" role="dialog" aria-label="Weryfikacja kodu dostępu">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-xl max-w-lg w-[90%] shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 text-white">Weryfikacja kodu dostępu</h2>
+            <p class="text-sm mb-4 text-gray-300">Wpisz jednorazowy kod dostępu, aby odblokować treści.</p>
+            <div class="space-y-4">
+                <input type="text" id="accessCodeInput" placeholder="Kod dostępu" required class="w-full p-3 border rounded-md bg-[var(--input-bg)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200" aria-label="Kod dostępu">
+                <button id="verifyCodeButton" onclick="verifyAccessCode()" class="w-full bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Zweryfikuj</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sekcja po zalogowaniu -->
+    <div id="contentContainer" class="hidden min-h-screen">
+        <header class="fixed top-0 w-full bg-[var(--secondary-bg)] p-4 flex justify-between items-center z-50 backdrop-blur-md border-b border-[rgba(255,255,255,0.1)]">
+            <div class="text-3xl font-bold text-[var(--accent-color)]">Perun Filmverse</div>
+            <nav class="flex items-center gap-4">
+                <div class="search-bar relative">
+                    <input type="text" id="searchInput" placeholder="Szukaj filmów i seriali..." class="p-2 rounded-lg bg-[var(--input-bg)] text-[var(--text-color)] w-48 focus:w-64 focus:bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-color)] transition-all duration-300" aria-label="Wyszukaj filmy i seriale">
+                    <div id="searchDropdown" class="search-dropdown absolute top-12 left-0 bg-[var(--card-bg)] rounded-lg shadow-xl w-full hidden"></div>
+                </div>
+                <div id="avatar" class="w-10 h-10 rounded-full bg-[var(--accent-color)] flex items-center justify-center text-white font-semibold cursor-pointer hover:scale-105 transition-all duration-300" role="button" aria-label="Menu użytkownika" aria-haspopup="true"></div>
+                <div id="dropdown" class="hidden absolute top-16 right-4 bg-[var(--card-bg)] rounded-lg shadow-xl min-w-48 border border-[rgba(255,255,255,0.1)] animate-slideIn">
+                    <button onclick="openProfileModal()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Profil">Profil</button>
+                    <button onclick="openSettingsModal()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Ustawienia">Ustawienia</button>
+                    <button onclick="logout()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Wyloguj się">Wyloguj</button>
+                </div>
+            </nav>
+        </header>
+        <div class="pt-20 px-4 md:px-8">
+            <!-- Hero Section -->
+            <div class="hero-section mb-10 hidden" id="heroSection" role="region" aria-label="Polecana zawartość">
+                <div class="relative w-full h-[56.25vw] max-h-[600px] bg-[var(--card-bg)] rounded-xl overflow-hidden">
+                    <img id="heroImage" class="w-full h-full object-cover" alt="Polecana zawartość">
+                    <div class="absolute bottom-0 left-0 right-0 bg-[var(--gradient-overlay)] p-6">
+                        <h2 id="heroTitle" class="text-3xl font-bold text-white mb-2"></h2>
+                        <p id="heroDescription" class="text-sm text-gray-300 mb-4"></p>
+                        <button id="heroPlayBtn" class="bg-[var(--accent-color)] text-white px-6 py-2 rounded-md hover:bg-[var(--accent-hover)] transition duration-200" aria-label="Odtwórz polecaną zawartość">Odtwórz</button>
+                    </div>
+                </div>
+            </div>
+            <div class="section mb-10 hidden" id="recentlyViewed" role="region" aria-label="Ostatnio oglądane">
+                <h2 class="text-2xl font-bold mb-4 text-white">Ostatnio oglądane</h2>
+                <div class="carousel-container relative">
+                    <div class="carousel flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory" id="recentlyViewedContent" tabindex="0" aria-label="Karuzela ostatnio oglądanych"></div>
+                    <div class="carousel-nav absolute top-1/2 w-full flex justify-between -translate-y-1/2 pointer-events-none">
+                        <button class="carousel-prev bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Poprzedni element">◄</button>
+                        <button class="carousel-next bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Następny element">►</button>
+                    </div>
+                </div>
+            </div>
+            <div class="section mb-10 hidden" id="movies" role="region" aria-label="Sekcja Filmy">
+                <h2 class="text-2xl font-bold mb-4 text-white">Filmy</h2>
+                <div class="carousel-container relative">
+                    <div class="carousel flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory" id="moviesContent" tabindex="0" aria-label="Karuzela filmów"></div>
+                    <div class="carousel-nav absolute top-1/2 w-full flex justify-between -translate-y-1/2 pointer-events-none">
+                        <button class="carousel-prev bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Poprzedni element">◄</button>
+                        <button class="carousel-next bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Następny element">►</button>
+                    </div>
+                </div>
+            </div>
+            <div class="section mb-10 hidden" id="series" role="region" aria-label="Sekcja Seriale">
+                <h2 class="text-2xl font-bold mb-4 text-white">Seriale</h2>
+                <div class="carousel-container relative">
+                    <div class="carousel flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory" id="seriesContent" tabindex="0" aria-label="Karuzela seriali"></div>
+                    <div class="carousel-nav absolute top-1/2 w-full flex justify-between -translate-y-1/2 pointer-events-none">
+                        <button class="carousel-prev bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Poprzedni element">◄</button>
+                        <button class="carousel-next bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Następny element">►</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal odtwarzacza -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="mediaModal" role="dialog" aria-label="Odtwarzacz multimediów">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-xl max-w-5xl w-[90%] max-h-[90vh] overflow-y-auto shadow-xl">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4 text-white"></h2>
+            <div class="player-container relative" id="playerContainer">
+                <video id="player" controls="false" class="w-full aspect-video bg-black rounded-lg"></video>
+                <div class="controls absolute bottom-0 left-0 right-0 bg-[rgba(0,0,0,0.7)] p-2 flex items-center gap-4">
+                    <button onclick="playPauseVideo()" data-tooltip="Odtwórz" id="playPauseButton" class="text-white">
+                        <i id="playPauseIcon" class="fas fa-play"></i>
+                    </button>
+                    <button onclick="stopVideo()" data-tooltip="Stop" class="text-white">
+                        <i id="stopIcon" class="fas fa-stop"></i>
+                    </button>
+                    <div class="volume-container flex items-center gap-2">
+                        <button onclick="toggleMute()" data-tooltip="Wycisz" id="muteButton" class="text-white">
+                            <i id="volumeIcon" class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="setVolume(this.value)" onclick="setVolumeClick(event)" class="w-24">
+                    </div>
+                    <button onclick="toggleLoop()" data-tooltip="Włącz pętlę" id="loopButton" class="text-white">
+                        <i id="loopIcon" class="fas fa-redo"></i>
+                    </button>
+                    <button onclick="toggleFullscreen()" data-tooltip="Pełny ekran" class="text-white">
+                        <i id="fullscreenIcon" class="fas fa-expand"></i>
+                    </button>
+                    <div class="progress-container flex-1 relative" onmousemove="showProgressTooltip(event)" onmouseleave="hideProgressTooltip()" onmousedown="startSeeking(event)">
+                        <div class="progress-bar bg-gray-600 h-1 rounded" id="progressBar">
+                            <div class="progress-filled bg-[var(--accent-color)] h-full rounded" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-tooltip absolute bg-black text-white text-xs p-1 rounded hidden" id="progressTooltip">0:00</div>
+                    </div>
+                    <span class="time-display text-sm text-white" id="timeDisplay">0:00 / 0:00</span>
+                </div>
+            </div>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij odtwarzacz" onclick="closeModal('mediaModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal szczegółów -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="detailsModal" role="dialog" aria-label="Szczegóły zawartości">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-xl max-w-2xl w-[90%] shadow-xl">
+            <h2 id="detailsTitle" class="text-2xl font-bold mb-4 text-white"></h2>
+            <img id="detailsImage" class="w-full h-64 object-cover rounded-lg mb-4" alt="">
+            <p id="detailsDescription" class="text-sm mb-2 text-gray-300"></p>
+            <p id="detailsCategory" class="text-sm text-gray-400 mb-2"></p>
+            <p id="detailsAgeRating" class="text-sm text-gray-400 mb-4"></p>
+            <div id="seriesEpisodes" class="hidden mb-4">
+                <label for="seasonSelect" class="text-sm font-medium text-white">Sezon:</label>
+                <select id="seasonSelect" class="w-full p-2 rounded-md bg-[var(--input-bg)] text-[var(--text-color)] mb-2" onchange="updateEpisodeSelect()"></select>
+                <label for="episodeSelect" class="text-sm font-medium text-white">Odcinek:</label>
+                <select id="episodeSelect" class="w-full p-2 rounded-md bg-[var(--input-bg)] text-[var(--text-color)]"></select>
+            </div>
+            <div class="flex items-center mb-4">
+                <i id="likeIcon" class="far fa-heart text-[var(--text-color)] cursor-pointer mr-2" onclick="toggleLike(currentItem.title)"></i>
+                <span id="likeCount" class="text-sm text-[var(--text-color)]"></span>
+            </div>
+            <button id="detailsOpenBtn" class="w-full bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Otwórz zawartość">Odtwórz</button>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij szczegóły" onclick="closeModal('detailsModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal ustawień -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="settingsModal" role="dialog" aria-label="Ustawienia">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-xl max-w-lg w-[90%] shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 text-white">Ustawienia</h2>
+            <div class="theme-grid grid grid-cols-3 gap-4 mb-4">
+                <div class="theme-preview bg-[#141414] h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="dark" role="button" aria-label="Motyw ciemny"></div>
+                <div class="theme-preview bg-white h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="light" role="button" aria-label="Motyw jasny"></div>
+                <div class="theme-preview bg-black h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="high-contrast" role="button" aria-label="Motyw wysokiego kontrastu"></div>
+            </div>
+            <div class="toggle flex items-center gap-2 mb-4">
+                <label for="compactView" class="text-sm text-white">Kompaktowy widok</label>
+                <input type="checkbox" id="compactView" class="w-10 h-5 bg-gray-600 rounded-full appearance-none cursor-pointer checked:bg-[var(--accent-color)] relative before:content-[''] before:w-4 before:h-4 before:bg-white before:rounded-full before:absolute before:top-0.5 before:left-0.5 before:transition-transform checked:before:translate-x-5" aria-label="Włącz kompaktowy widok">
+            </div>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij ustawienia" onclick="closeModal('settingsModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal profilu -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="profileModal" role="dialog" aria-label="Profil użytkownika">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-xl max-w-lg w-[90%] shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 text-white">Profil</h2>
+            <form id="profileForm" class="space-y-4">
+                <label for="profileAvatar" class="text-sm font-medium text-white">Kolor awatara</label>
+                <input type="color" id="profileAvatar" class="w-full p-2 rounded-lg bg-[var(--input-bg)] text-[var(--text-color)]" aria-label="Kolor tła awatara">
+                <button type="submit" class="w-full bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zapisz profil">Zapisz</button>
+            </form>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij profil" onclick="closeModal('profileModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast hidden fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg z-[2000]" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

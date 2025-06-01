@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perun Filmverse</title>
+    <link rel="icon" href="data:,">
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN - nie używaj w produkcji, zainstaluj lokalnie: https://tailwindcss.com/docs/installation -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --text-color: #f5f5f5;
+            --card-bg: #1a1a1a;
+            --accent-color: #1e90ff;
+            --accent-hover: #4dabff;
+            --secondary-bg: rgba(10, 10, 10, 0.95);
+            --gradient-overlay: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9));
+            --border-radius: 12px;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --card-bg: #f0f0f0;
+            --secondary-bg: rgba(255, 255, 255, 0.95);
+        }
+        [data-theme="high-contrast"] {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #222222;
+            --accent-color: #ffff00;
+            --accent-hover: #cccc00;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+        .step-hidden { display: none; }
+        .tab-active { background-color: var(--accent-color); color: white; }
+        .tab-inactive { background-color: #e5e7eb; color: #374151; }
+        .carousel { scroll-behavior: smooth; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+        .item { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .item:hover { transform: translateY(-10px); box-shadow: var(--shadow); }
+        .modal { animation: modalFadeIn 0.3s ease; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content { animation: scaleIn 0.3s ease-out; }
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .toast { animation: toastIn 0.3s ease; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .player-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            background-color: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        #player {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: block;
+        }
+        .controls {
+            background: linear-gradient(180deg, #161616, #0c0c0c);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            transition: opacity 0.3s ease;
+        }
+        .controls.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .controls button {
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            position: relative;
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            transition: color 0.2s, transform 0.2s, opacity 0.2s;
+        }
+        .controls button:hover {
+            color: var(--accent-color);
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 5px rgba(30, 144, 255, 0.5));
+        }
+        .controls button:active {
+            transform: scale(0.85);
+            animation: pulse 0.2s;
+        }
+        .controls button:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.85); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .controls button i {
+            font-size: 30px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+            width: 200px;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(30, 144, 255, 0.5);
+            outline: none;
+        }
+        input[type="text"]::placeholder {
+            color: #aaa;
+            font-size: 12px;
+        }
+        input[readonly] {
+            background-color: #222;
+            cursor: not-allowed;
+        }
+        input.valid {
+            border-color: #00cc00;
+            box-shadow: 0 0 5px rgba(0, 204, 0, 0.5);
+        }
+        input.invalid {
+            border-color: #cc0000;
+            box-shadow: 0 0 5px rgba(204, 0, 0, 0.5);
+        }
+        .progress-container {
+            flex-grow: 1;
+            height: 8px;
+            background-color: #444;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .progress-container:hover {
+            background: linear-gradient(90deg, #555, #666);
+            box-shadow: 0 0 6px rgba(30, 144, 255, 0.6);
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+            width: 0;
+            border-radius: 4px;
+            transition: width 0.1s ease;
+        }
+        .progress-tooltip {
+            position: absolute;
+            top: -35px;
+            background-color: #333;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .progress-container:hover .progress-tooltip,
+        .progress-container.active .progress-tooltip {
+            opacity: 1;
+        }
+        .time-display {
+            font-size: 14px;
+            color: #ccc;
+            min-width: 100px;
+            text-align: center;
+        }
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        input[type="range"] {
+            width: 90px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .player-container {
+                margin: 10px;
+            }
+            input[type="text"] {
+                width: 150px;
+                font-size: 12px;
+            }
+            input[type="text"]::placeholder {
+                font-size: 10px;
+            }
+            input[type="range"] {
+                width: 60px;
+            }
+            .time-display {
+                min-width: 80px;
+                font-size: 12px;
+            }
+            .controls button i {
+                font-size: 26px;
+            }
+            .controls {
+                gap: 8px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Sekcja logowania/rejestracji -->
+    <div id="authContainer" class="container max-w-lg mx-auto bg-[var(--card-bg)] p-6 rounded-xl shadow-2xl mt-10">
+        <div class="flex border-b border-gray-300">
+            <button id="loginTab" class="flex-1 py-3 text-center font-semibold tab-active rounded-tl-lg" onclick="switchTab('login')">Logowanie</button>
+            <button id="registerTab" class="flex-1 py-3 text-center font-semibold tab-inactive rounded-tr-lg" onclick="switchTab('register')">Rejestracja</button>
+        </div>
+        <div id="loginSection" class="mt-6">
+            <h2 class="text-2xl font-bold text-[var(--accent-color)] mb-4 text-center">Perun Filmverse</h2>
+            <div class="space-y-4">
+                <input type="email" id="loginEmail" placeholder="Email" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200" aria-label="Email">
+                <input type="password" id="loginPassword" placeholder="Hasło" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200" aria-label="Hasło">
+                <button onclick="login()" class="w-full bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Zaloguj</button>
+            </div>
+        </div>
+        <div id="registerSection" class="mt-6 hidden">
+            <h2 class="text-2xl font-bold text-[var(--accent-color)] mb-4 text-center">Rejestracja</h2>
+            <div id="step1" class="space-y-4">
+                <h3 class="text-lg font-semibold">Etap 1: Dane podstawowe</h3>
+                <input type="email" id="regEmail" placeholder="Email" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <input type="password" id="regPassword" placeholder="Hasło" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <button onclick="nextStep(1)" class="w-full bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Dalej</button>
+            </div>
+            <div id="step2" class="space-y-4 step-hidden">
+                <h3 class="text-lg font-semibold">Etap 2: Dane osobowe</h3>
+                <input type="text" id="regFirstName" placeholder="Imię" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <input type="text" id="regLastName" placeholder="Nazwisko" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <div class="flex space-x-4">
+                    <button onclick="prevStep(2)" class="w-1/2 bg-gray-300 text-gray-800 p-3 rounded-md hover:bg-gray-400 transition duration-200">Wstecz</button>
+                    <button onclick="nextStep(2)" class="w-1/2 bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Dalej</button>
+                </div>
+            </div>
+            <div id="step3" class="space-y-4 step-hidden">
+                <h3 class="text-lg font-semibold">Etap 3: Data urodzenia</h3>
+                <input type="date" id="regBirthDate" required class="w-full p-3 border rounded-md bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition duration-200">
+                <div class="flex space-x-4">
+                    <button onclick="prevStep(3)" class="w-1/2 bg-gray-300 text-gray-800 p-3 rounded-md hover:bg-gray-400 transition duration-200">Wstecz</button>
+                    <button onclick="register()" class="w-1/2 bg-[var(--accent-color)] text-white p-3 rounded-md hover:bg-[var(--accent-hover)] transition duration-200">Zarejestruj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sekcja po zalogowaniu -->
+    <div id="contentContainer" class="hidden min-h-screen">
+        <header class="fixed top-0 w-full bg-[var(--secondary-bg)] p-4 flex justify-between items-center z-50 backdrop-blur-md border-b border-[rgba(255,255,255,0.1)]">
+            <div class="text-2xl font-bold text-[var(--accent-color)]">Perun Filmverse</div>
+            <nav class="flex items-center gap-4">
+                <div class="search-bar hidden">
+                    <input type="text" id="searchInput" placeholder="Szukaj..." disabled class="p-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-[var(--text-color)] w-48 focus:w-56 focus:bg-[rgba(255,255,255,0.15)] focus:ring-2 focus:ring-[var(--accent-color)] transition-all duration-300" aria-label="Wyszukaj filmy">
+                </div>
+                <div id="avatar" class="w-10 h-10 rounded-full bg-[var(--accent-color)] flex items-center justify-center text-white font-semibold cursor-pointer hover:scale-110 hover:shadow-[var(--shadow)] transition-all duration-300" role="button" aria-label="Menu użytkownika" aria-haspopup="true"></div>
+                <div id="dropdown" class="hidden absolute top-16 right-4 bg-[var(--card-bg)] rounded-lg shadow-[var(--shadow)] min-w-48 border border-[rgba(255,255,255,0.1)] animate-slideIn">
+                    <button onclick="openProfileModal()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Profil">Profil</button>
+                    <button onclick="openSettingsModal()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Ustawienia">Ustawienia</button>
+                    <button onclick="logout()" class="w-full text-left px-4 py-2 text-[var(--text-color)] hover:bg-[var(--accent-color)] hover:text-white transition-all duration-200" role="menuitem" aria-label="Wyloguj się">Wyloguj</button>
+                </div>
+            </nav>
+        </header>
+        <div class="pt-20 px-4 md:px-8">
+            <div class="section mb-10" id="recentlyViewed" role="region" aria-label="Ostatnio oglądane">
+                <h2 class="text-2xl font-bold mb-4">Ostatnio oglądane</h2>
+                <div class="carousel-container relative">
+                    <div class="carousel flex overflow-x-auto gap-4 pb-4" id="recentlyViewedContent" tabindex="0" aria-label="Karuzela ostatnio oglądanych"></div>
+                    <div class="carousel-nav absolute top-1/2 w-full flex justify-between -translate-y-1/2 pointer-events-none">
+                        <button class="carousel-prev bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Poprzedni element">◄</button>
+                        <button class="carousel-next bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Następny element">►</button>
+                    </div>
+                </div>
+            </div>
+            <div class="section mb-10" id="movies" role="region" aria-label="Sekcja Filmy">
+                <h2 class="text-2xl font-bold mb-4">Filmy</h2>
+                <div class="carousel-container relative">
+                    <div class="carousel flex overflow-x-auto gap-4 pb-4" id="moviesContent" tabindex="0" aria-label="Karuzela filmów"></div>
+                    <div class="carousel-nav absolute top-1/2 w-full flex justify-between -translate-y-1/2 pointer-events-none">
+                        <button class="carousel-prev bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Poprzedni element">◄</button>
+                        <button class="carousel-next bg-[rgba(0,0,0,0.7)] text-white text-xl p-2 rounded-full hover:bg-[var(--accent-color)] hover:scale-110 transition-all duration-200 pointer-events-auto" aria-label="Następny element">►</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal odtwarzacza -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="mediaModal" role="dialog" aria-label="Odtwarzacz multimediów">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-lg max-w-4xl w-[90%] max-h-[90vh] overflow-y-auto shadow-[var(--shadow)]">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4"></h2>
+            <div class="player-container" id="playerContainer">
+                <div id="player" oncontextmenu="return false;"></div>
+                <div class="controls" id="controls">
+                    <button onclick="playPauseVideo()" data-tooltip="Odtwórz" id="playPauseButton">
+                        <i id="playPauseIcon" class="fas fa-play"></i>
+                    </button>
+                    <button onclick="stopVideo()" data-tooltip="Stop">
+                        <i id="stopIcon" class="fas fa-stop"></i>
+                    </button>
+                    <div class="volume-container">
+                        <button onclick="toggleMute()" data-tooltip="Wycisz" id="muteButton">
+                            <i id="volumeIcon" class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="setVolume(this.value)" onclick="setVolumeClick(event)">
+                    </div>
+                    <button onclick="toggleLoop()" data-tooltip="Włącz pętlę" id="loopButton">
+                        <i id="loopIcon" class="fas fa-redo"></i>
+                    </button>
+                    <button onclick="toggleFullscreen()" data-tooltip="Pełny ekran">
+                        <i id="fullscreenIcon" class="fas fa-expand"></i>
+                    </button>
+                    <div class="progress-container" onmousemove="showProgressTooltip(event)" onmouseleave="hideProgressTooltip()" onmousedown="startSeeking(event)">
+                        <div class="progress-bar" id="progressBar"></div>
+                        <div class="progress-tooltip" id="progressTooltip">0:00</div>
+                    </div>
+                    <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+                    <input type="text" id="videoId" placeholder="Wprowadź ID filmu" autocomplete="off" readonly class="hidden" />
+                    <button onclick="loadVideo()" data-tooltip="Załaduj film" class="hidden">
+                        <i id="loadIcon" class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij odtwarzacz" onclick="closeModal('mediaModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal szczegółów -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="detailsModal" role="dialog" aria-label="Szczegóły zawartości">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-lg max-w-lg w-[90%] shadow-[var(--shadow)]">
+            <h2 id="detailsTitle" class="text-2xl font-bold mb-4"></h2>
+            <img id="detailsImage" class="w-full h-48 object-cover rounded-lg mb-4" alt="">
+            <p id="detailsDescription" class="text-sm mb-2"></p>
+            <p id="detailsCategory" class="text-sm opacity-80 mb-2"></p>
+            <button id="detailsOpenBtn" class="w-full bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] hover:-translate-y-1 transition-all duration-200" aria-label="Otwórz zawartość">Otwórz</button>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij szczegóły" onclick="closeModal('detailsModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal ustawień -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center" id="settingsModal" role="dialog" aria-label="Ustawienia">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-lg max-w-lg w-[90%] shadow-[var(--shadow)]">
+            <h2 class="text-2xl font-bold mb-4">Ustawienia</h2>
+            <div class="theme-grid grid grid-cols-3 gap-4 mb-4">
+                <div class="theme-preview bg-[#121212] h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="dark" role="button" aria-label="Motyw ciemny"></div>
+                <div class="theme-preview bg-white h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="light" role="button" aria-label="Motyw jasny"></div>
+                <div class="theme-preview bg-black h-24 rounded-lg cursor-pointer hover:scale-105 transition-all duration-200" data-theme="high-contrast" role="button" aria-label="Motyw wysokiego kontrastu"></div>
+            </div>
+            <div class="toggle flex items-center gap-2 mb-4">
+                <label for="compactView" class="text-sm">Kompaktowy widok</label>
+                <input type="checkbox" id="compactView" class="w-10 h-5 bg-gray-600 rounded-full appearance-none cursor-pointer checked:bg-[var(--accent-color)] relative before:content-[''] before:w-4 before:h-4 before:bg-white before:rounded-full before:absolute before:top-0.5 before:left-0.5 before:transition-transform checked:before:translate-x-5" aria-label="Włącz kompaktowy widok">
+            </div>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij ustawienia" onclick="closeModal('settingsModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Modal profilu -->
+    <div class="modal hidden fixed inset-0 bg-[rgba(0,0,0,0.95)] z-[2000] flex items-center justify-center/sites/grok3-web-prod/artifact/065b2a99-178b-4426-9671-38d9f19370b3/index.html" id="profileModal" role="dialog" aria-label="Profil użytkownika">
+        <div class="modal-content bg-[var(--card-bg)] p-6 rounded-lg max-w-lg w-[90%] shadow-[var(--shadow)]">
+            <h2 class="text-2xl font-bold mb-4">Profil</h2>
+            <form id="profileForm" class="space-y-4">
+                <label for="profileAvatar" class="text-sm font-medium">Kolor awatara</label>
+                <input type="color" id="profileAvatar" class="w-full p-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-[var(--text-color)]" aria-label="Kolor tła awatara">
+                <button type="submit" class="w-full bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zapisz profil">Zapisz</button>
+            </form>
+            <button class="close-btn absolute top-4 right-4 bg-[var(--accent-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-all duration-200" aria-label="Zamknij profil" onclick="closeModal('profileModal')">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast hidden fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg z-[2000]" id="toast"></div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwx0Pp7bmUjNt69q4gETA3CQm4LyX4V2NAr8jn8iToiy0ksyUJMkz9i-emqu4HZqj2-/exec';
+        let currentStep = 1;
+        let player;
+        let isPlaying = false;
+        let isMuted = false;
+        let isPlayerReady = false;
+        let isFullscreen = false;
+        let isLooping = false;
+        let controlsTimeout;
+        let recentlyViewed = JSON.parse(localStorage.getItem('perunFilmRecentlyViewed')) || [];
+
+        // Funkcje odtwarzacza - zdefiniowane globalnie
+        function onYouTubeIframeAPIReady() {
+            // Inicjalizacja przeniesiona do openMediaModal
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            setVolume(50);
+            updateProgress();
+            document.getElementById('playerContainer').addEventListener('mousemove', showControls);
+        }
+
+        function onPlayerStateChange(event) {
+            isPlaying = event.data === YT.PlayerState.PLAYING;
+            document.getElementById('playPauseIcon').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            document.getElementById('playPauseButton').setAttribute('data-tooltip', isPlaying ? 'Pauza' : 'Odtwórz');
+            if (isPlaying) {
+                startControlsTimeout();
+            } else {
+                showControls();
+            }
+        }
+
+        function onPlayerError(event) {
+            const errorCode = event.data;
+            let message = "Wystąpił błąd podczas ładowania filmu.";
+            if (errorCode === 100 || errorCode === 101 || errorCode === 150) {
+                message = "Film jest niedostępny (prywatny, usunięty lub ograniczony).";
+            }
+            showToast(message);
+            const videoIdInput = document.getElementById('videoId');
+            videoIdInput.removeAttribute('readonly');
+            videoIdInput.classList.remove('valid');
+            videoIdInput.classList.add('invalid');
+            videoIdInput.placeholder = 'Błędny ID filmu';
+        }
+
+        function playPauseVideo() {
+            if (!isPlayerReady || !player) return;
+            if (isPlaying) {
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
+        }
+
+        function stopVideo() {
+            if (!isPlayerReady || !player) return;
+            player.stopVideo();
+            document.getElementById('stopIcon').className = 'fas fa-stop-circle';
+            setTimeout(() => {
+                document.getElementById('stopIcon').className = 'fas fa-stop';
+            }, 200);
+        }
+
+        function toggleMute() {
+            if (!isPlayerReady || !player) return;
+            isMuted = !isMuted;
+            player.setVolume(isMuted ? 0 : document.getElementById('volumeSlider').value);
+            document.getElementById('volumeIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+            document.getElementById('muteButton').setAttribute('data-tooltip', isMuted ? 'Włącz dźwięk' : 'Wycisz');
+        }
+
+        function setVolume(value) {
+            if (!isPlayerReady || !player) return;
+            player.setVolume(value);
+            isMuted = value == 0;
+            document.getElementById('volumeIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+            document.getElementById('muteButton').setAttribute('data-tooltip', isMuted ? 'Włącz dźwięk' : 'Wycisz');
+        }
+
+        function setVolumeClick(event) {
+            const slider = event.target;
+            const rect = slider.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            const newValue = Math.round((clickX / width) * 100);
+            slider.value = newValue;
+            setVolume(newValue);
+        }
+
+        function toggleLoop() {
+            if (!isPlayerReady || !player) return;
+            isLooping = !isLooping;
+            player.setLoop(isLooping);
+            document.getElementById('loopIcon').className = isLooping ? 'fas fa-redo-alt' : 'fas fa-redo';
+            document.getElementById('loopButton').setAttribute('data-tooltip', isLooping ? 'Wyłącz pętlę' : 'Włącz pętlę');
+        }
+
+        function toggleFullscreen() {
+            if (!isPlayerReady || !player) return;
+            const playerContainer = document.getElementById('playerContainer');
+            if (!isFullscreen) {
+                if (playerContainer.requestFullscreen) {
+                    playerContainer.requestFullscreen();
+                } else if (playerContainer.webkitRequestFullscreen) {
+                    playerContainer.webkitRequestFullscreen();
+                } else if (playerContainer.msRequestFullscreen) {
+                    playerContainer.msRequestFullscreen();
+                }
+                isFullscreen = true;
+                document.getElementById('fullscreenIcon').className = 'fas fa-compress';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                isFullscreen = false;
+                document.getElementById('fullscreenIcon').className = 'fas fa-expand';
+            }
+        }
+
+        function loadVideo() {
+            // Nie używane, film ładowany automatycznie
+        }
+
+        function handleEnter(event) {
+            // Nie używane, input readonly
+        }
+
+        function validateInput(input) {
+            // Nie używane, input readonly
+        }
+
+        function startSeeking(event) {
+            document.querySelector('.progress-container').classList.add('active');
+            seekVideo(event);
+            document.addEventListener('mousemove', seekVideo);
+            document.addEventListener('mouseup', stopSeeking);
+        }
+
+        function stopSeeking() {
+            document.querySelector('.progress-container').classList.remove('active');
+            document.removeEventListener('mousemove', seekVideo);
+            document.removeEventListener('mouseup', stopSeeking);
+        }
+
+        function seekVideo(event) {
+            if (!isPlayerReady || !player) return;
+            const progressContainer = event.currentTarget;
+            const rect = progressContainer.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            const seekTime = (clickX / width) * player.getDuration();
+            player.seekTo(seekTime, true);
+            const tooltip = document.getElementById('progressTooltip');
+            tooltip.textContent = formatTime(seekTime);
+            tooltip.style.left = `${clickX}px`;
+            tooltip.style.transform = 'translateX(-50%)';
+        }
+
+        function showProgressTooltip(event) {
+            if (!isPlayerReady || !player) return;
+            const progressContainer = event.currentTarget;
+            const rect = progressContainer.getBoundingClientRect();
+            const hoverX = event.clientX - rect.left;
+            const width = rect.width;
+            const hoverTime = (hoverX / width) * player.getDuration();
+            const tooltip = document.getElementById('progressTooltip');
+            tooltip.textContent = formatTime(hoverTime);
+            tooltip.style.left = `${hoverX}px`;
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideProgressTooltip() {
+            document.getElementById('progressTooltip').style.opacity = '0';
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgress() {
+            if (isPlayerReady && player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
+                const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+                document.getElementById('progressBar').style.width = `${progressPercent}%`;
+                document.getElementById('timeDisplay').textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+            }
+            requestAnimationFrame(updateProgress);
+        }
+
+        function showControls() {
+            const controls = document.getElementById('controls');
+            controls.classList.remove('hidden');
+            startControlsTimeout();
+        }
+
+        function startControlsTimeout() {
+            clearTimeout(controlsTimeout);
+            if (isPlaying) {
+                controlsTimeout = setTimeout(() => {
+                    document.getElementById('controls').classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // Walidacja email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function switchTab(tab) {
+            const loginSection = document.getElementById('loginSection');
+            const registerSection = document.getElementById('registerSection');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+
+            if (tab === 'login') {
+                loginSection.classList.remove('hidden');
+                registerSection.classList.add('hidden');
+                loginTab.classList.add('tab-active');
+                loginTab.classList.remove('tab-inactive');
+                registerTab.classList.add('tab-inactive');
+                registerTab.classList.remove('tab-active');
+            } else {
+                loginSection.classList.add('hidden');
+                registerSection.classList.remove('hidden');
+                loginTab.classList.add('tab-inactive');
+                loginTab.classList.remove('tab-active');
+                registerTab.classList.add('tab-active');
+                registerTab.classList.remove('tab-inactive');
+                resetRegisterForm();
+            }
+        }
+
+        function resetRegisterForm() {
+            currentStep = 1;
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regFirstName').value = '';
+            document.getElementById('regLastName').value = '';
+            document.getElementById('regBirthDate').value = '';
+            showStep(1);
+        }
+
+        function showStep(step) {
+            document.getElementById('step1').classList.add('step-hidden');
+            document.getElementById('step2').classList.add('step-hidden');
+            document.getElementById('step3').classList.add('step-hidden');
+            document.getElementById(`step${step}`).classList.remove('step-hidden');
+        }
+
+        function nextStep(step) {
+            if (step === 1) {
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+                if (!email || !password) {
+                    showToast('Proszę wypełnić wszystkie pola.');
+                    return;
+                }
+                if (!isValidEmail(email)) {
+                    showToast('Proszę podać poprawny adres email.');
+                    return;
+                }
+            } else if (step === 2) {
+                const firstName = document.getElementById('regFirstName').value;
+                const lastName = document.getElementById('regLastName').value;
+                if (!firstName || !lastName) {
+                    showToast('Proszę wypełnić wszystkie pola.');
+                    return;
+                }
+            }
+            currentStep = step + 1;
+            showStep(currentStep);
+        }
+
+        function prevStep(step) {
+            currentStep = step - 1;
+            showStep(currentStep);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        async function checkUserSession() {
+            try {
+                const response = await fetch(`${API_URL}?action=checkUserSession`, { method: 'GET' });
+                if (!response.ok) throw new Error(`Błąd odpowiedzi serwera: ${response.status}`);
+                const user = await response.json();
+                showAuthSection(user);
+            } catch (error) {
+                console.error('Błąd sesji:', error);
+                showAuthSection(null);
+            }
+        }
+
+        function showAuthSection(user) {
+            const authContainer = document.getElementById('authContainer');
+            const contentContainer = document.getElementById('contentContainer');
+            const avatar = document.getElementById('avatar');
+
+            if (user && user.email) {
+                authContainer.classList.add('hidden');
+                contentContainer.classList.remove('hidden');
+                avatar.textContent = user.email[0].toUpperCase();
+                loadVideos();
+                loadRecentlyViewed();
+                setupAvatarDropdown();
+            } else {
+                authContainer.classList.remove('hidden');
+                contentContainer.classList.add('hidden');
+                switchTab('login');
+                if (user && user.error) {
+                    showToast('Błąd: ' + user.error);
+                }
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                showToast('Proszę wypełnić wszystkie pola.');
+                return;
+            }
+            if (!isValidEmail(email)) {
+                showToast('Proszę podać poprawny adres email.');
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, { method: 'GET' });
+                if (!response.ok) throw new Error(`Błąd odpowiedzi serwera: ${response.status}`);
+                const user = await response.json();
+                showAuthSection(user);
+            } catch (error) {
+                showToast('Błąd logowania: ' + error.message);
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const firstName = document.getElementById('regFirstName').value;
+            const lastName = document.getElementById('regLastName').value;
+            const birthDate = document.getElementById('regBirthDate').value;
+
+            if (!email || !password || !firstName || !lastName || !birthDate) {
+                showToast('Proszę wypełnić wszystkie pola.');
+                return;
+            }
+            if (!isValidEmail(email)) {
+                showToast('Proszę podać poprawny adres email.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}?action=register&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&birthDate=${encodeURIComponent(birthDate)}`, { method: 'GET' });
+                if (!response.ok) throw new Error(`Błąd odpowiedzi serwera: ${response.status}`);
+                const user = await response.json();
+                showAuthSection(user);
+            } catch (error) {
+                showToast('Błąd rejestracji: ' + error.message);
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch(`${API_URL}?action=logout`, { method: 'GET' });
+                if (!response.ok) throw new Error(`Błąd odpowiedzi serwera: ${response.status}`);
+                recentlyViewed = [];
+                localStorage.removeItem('perunFilmRecentlyViewed');
+                showAuthSection(null);
+            } catch (error) {
+                showToast('Błąd wylogowania: ' + error.message);
+            }
+        }
+
+        async function loadVideos() {
+            try {
+                const response = await fetch(`${API_URL}?action=getVideos`, { method: 'GET' });
+                if (!response.ok) throw new Error(`Błąd odpowiedzi serwera: ${response.status}`);
+                const videos = await response.json();
+                if (videos.error) {
+                    showToast('Błąd: ' + videos.error);
+                    return;
+                }
+                const moviesContent = document.getElementById('moviesContent');
+                moviesContent.innerHTML = '';
+                videos.forEach(video => {
+                    const item = document.createElement('div');
+                    item.className = 'item relative bg-[var(--card-bg)] rounded-lg overflow-hidden cursor-pointer flex-shrink-0 w-60 h-40';
+                    item.innerHTML = `
+                        <img src="https://img.youtube.com/vi/${getYouTubeId(video.url)}/hqdefault.jpg" class="w-full h-full object-cover rounded-lg" alt="${video.title}">
+                        <p class="absolute bottom-0 left-0 right-0 bg-[var(--gradient-overlay)] text-[var(--text-color)] text-sm p-2 text-center font-medium">${video.title}</p>
+                    `;
+                    item.addEventListener('click', () => openDetailsModal(video));
+                    moviesContent.appendChild(item);
+                });
+                setupCarousel('moviesContent');
+            } catch (error) {
+                showToast('Błąd ładowania filmów: ' + error.message);
+            }
+        }
+
+        function loadRecentlyViewed() {
+            const recentlyViewedContent = document.getElementById('recentlyViewedContent');
+            recentlyViewedContent.innerHTML = '';
+            recentlyViewed.forEach(video => {
+                const item = document.createElement('div');
+                item.className = 'item relative bg-[var(--card-bg)] rounded-lg overflow-hidden cursor-pointer flex-shrink-0 w-60 h-40';
+                item.innerHTML = `
+                    <img src="https://img.youtube.com/vi/${getYouTubeId(video.url)}/hqdefault.jpg" class="w-full h-full object-cover rounded-lg" alt="${video.title}">
+                    <p class="absolute bottom-0 left-0 right-0 bg-[var(--gradient-overlay)] text-[var(--text-color)] text-sm p-2 text-center font-medium">${video.title}</p>
+                `;
+                item.addEventListener('click', () => openDetailsModal(video));
+                recentlyViewedContent.appendChild(item);
+            });
+            setupCarousel('recentlyViewedContent');
+        }
+
+        function getYouTubeId(url) {
+            const match = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([^?&]+)/);
+            return match ? match[1] : '';
+        }
+
+        function setupCarousel(containerId) {
+            const container = document.getElementById(containerId);
+            const prevBtn = container.parentElement.querySelector('.carousel-prev');
+            const nextBtn = container.parentElement.querySelector('.carousel-next');
+
+            function updateButtons() {
+                prevBtn.disabled = container.scrollLeft <= 0;
+                nextBtn.disabled = container.scrollLeft + container.clientWidth >= container.scrollWidth;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                container.scrollBy({ left: -240, behavior: 'smooth' });
+                setTimeout(updateButtons, 300);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                container.scrollBy({ left: 240, behavior: 'smooth' });
+                setTimeout(updateButtons, 300);
+            });
+
+            container.addEventListener('scroll', updateButtons);
+            updateButtons();
+        }
+
+        function openDetailsModal(video) {
+            const modal = document.getElementById('detailsModal');
+            document.getElementById('detailsTitle').textContent = video.title;
+            document.getElementById('detailsImage').src = `https://img.youtube.com/vi/${getYouTubeId(video.url)}/hqdefault.jpg`;
+            document.getElementById('detailsImage').alt = video.title;
+            document.getElementById('detailsDescription').textContent = video.description || 'Brak opisu';
+            document.getElementById('detailsCategory').textContent = 'Kategoria: Filmy';
+            document.getElementById('detailsOpenBtn').onclick = () => {
+                openMediaModal(video);
+                addToRecentlyViewed(video);
+            };
+            modal.classList.remove('hidden');
+        }
+
+        function openMediaModal(video) {
+            const modal = document.getElementById('mediaModal');
+            const videoId = getYouTubeId(video.url);
+            document.getElementById('modalTitle').textContent = video.title;
+            document.getElementById('videoId').value = videoId;
+
+            // Inicjalizacja odtwarzacza YouTube
+            if (player) {
+                player.destroy();
+            }
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 0,
+                    'showinfo': 0,
+                    'rel': 0,
+                    'modestbranding': 1,
+                    'fs': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+
+            modal.classList.remove('hidden');
+            closeModal('detailsModal');
+        }
+
+        function addToRecentlyViewed(video) {
+            recentlyViewed = recentlyViewed.filter(v => v.url !== video.url);
+            recentlyViewed.unshift(video);
+            if (recentlyViewed.length > 10) recentlyViewed.pop();
+            localStorage.setItem('perunFilmRecentlyViewed', JSON.stringify(recentlyViewed));
+            loadRecentlyViewed();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            if (modalId === 'mediaModal' && player) {
+                player.destroy();
+                player = null;
+            }
+        }
+
+        function setupAvatarDropdown() {
+            const avatar = document.getElementById('avatar');
+            const dropdown = document.getElementById('dropdown');
+            avatar.addEventListener('click', () => {
+                dropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!avatar.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            const themePreviews = modal.querySelectorAll('.theme-preview');
+            const compactView = document.getElementById('compactView');
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+            themePreviews.forEach(preview => {
+                preview.classList.toggle('border-2', preview.dataset.theme === currentTheme);
+                preview.classList.toggle('border-[var(--accent-color)]', preview.dataset.theme === currentTheme);
+                preview.addEventListener('click', () => {
+                    document.documentElement.setAttribute('data-theme', preview.dataset.theme);
+                    themePreviews.forEach(p => {
+                        p.classList.remove('border-2', 'border-[var(--accent-color)]');
+                    });
+                    preview.classList.add('border-2', 'border-[var(--accent-color)]');
+                    localStorage.setItem('perunFilmTheme', preview.dataset.theme);
+                });
+            });
+
+            compactView.checked = document.documentElement.getAttribute('data-view') === 'compact';
+            compactView.addEventListener('change', () => {
+                document.documentElement.setAttribute('data-view', compactView.checked ? 'compact' : '');
+                localStorage.setItem('perunFilmView', compactView.checked ? 'compact' : '');
+                loadVideos();
+                loadRecentlyViewed();
+            });
+
+            modal.classList.remove('hidden');
+            closeModal('dropdown');
+        }
+
+        function openProfileModal() {
+            const modal = document.getElementById('profileModal');
+            const form = document.getElementById('profileForm');
+            const avatarColor = localStorage.getItem('perunFilmAvatarColor') || '#1e90ff';
+            document.getElementById('profileAvatar').value = avatarColor;
+            document.getElementById('avatar').style.backgroundColor = avatarColor;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newColor = document.getElementById('profileAvatar').value;
+                localStorage.setItem('perunFilmAvatarColor', newColor);
+                document.getElementById('avatar').style.backgroundColor = newColor;
+                closeModal('profileModal');
+                showToast('Profil zapisany!');
+            });
+
+            modal.classList.remove('hidden');
+            closeModal('dropdown');
+        }
+
+        // Skróty klawiaturowe dla odtwarzacza
+        document.addEventListener('keydown', (event) => {
+            if (!isPlayerReady || !player || document.getElementById('mediaModal').classList.contains('hidden')) return;
+            switch (event.key) {
+                case ' ':
+                    event.preventDefault();
+                    playPauseVideo();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+                case 'ArrowRight':
+                    player.seekTo(player.getCurrentTime() + 5, true);
+                    break;
+                case 'ArrowLeft':
+                    player.seekTo(player.getCurrentTime() - 5, true);
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'j':
+                    player.seekTo(player.getCurrentTime() - 10, true);
+                    break;
+                case 'l':
+                    player.seekTo(player.getCurrentTime() + 10, true);
+                    break;
+                case 'k':
+                    stopVideo();
+                    break;
+            }
+        });
+
+        // Inicjalizacja
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('perunFilmTheme') || 'dark');
+        document.documentElement.setAttribute('data-view', localStorage.getItem('perunFilmView') || '');
+        document.getElementById('avatar').style.backgroundColor = localStorage.getItem('perunFilmAvatarColor') || '#1e90ff';
+        checkUserSession();
+    </script>
+</body>
+</html>

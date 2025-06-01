@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Własny odtwarzacz YouTube</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #0b0b0b;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .player-container {
+      width: 100%;
+      max-width: 1280px;
+      margin: 20px auto;
+      background-color: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    #player {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: block;
+    }
+
+    .controls {
+      background: linear-gradient(180deg, #161616, #0c0c0c);
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      transition: opacity 0.3s ease;
+    }
+
+    .controls.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    button {
+      background-color: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px;
+      position: relative;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+      transition: color 0.2s, transform 0.2s, opacity 0.2s;
+    }
+
+    button:hover {
+      color: #ff5555;
+      transform: scale(1.3);
+      filter: drop-shadow(0 0 5px rgba(255, 85, 85, 0.5));
+    }
+
+    button:active {
+      transform: scale(0.85);
+      animation: pulse 0.2s;
+    }
+
+    button:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.85); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    button i {
+      font-size: 30px;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #333;
+      color: #fff;
+      width: 200px;
+      font-size: 14px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #ff5555;
+      box-shadow: 0 0 5px rgba(255, 85, 85, 0.5);
+      outline: none;
+    }
+
+    input[type="text"]::placeholder {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    input[readonly] {
+      background-color: #222;
+      cursor: not-allowed;
+    }
+
+    input.valid {
+      border-color: #00cc00;
+      box-shadow: 0 0 5px rgba(0, 204, 0, 0.5);
+    }
+
+    input.invalid {
+      border-color: #cc0000;
+      box-shadow: 0 0 5px rgba(204, 0, 0, 0.5);
+    }
+
+    .progress-container {
+      flex-grow: 1;
+      height: 8px;
+      background-color: #444;
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .progress-container:hover {
+      background: linear-gradient(90deg, #555, #666);
+      box-shadow: 0 0 6px rgba(255, 85, 85, 0.6);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ff5555, #ff7777);
+      width: 0;
+      border-radius: 4px;
+      transition: width 0.1s ease;
+    }
+
+    .progress-tooltip {
+      position: absolute;
+      top: -35px;
+      background-color: #333;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 3px;
+      font-size: 13px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .progress-container:hover .progress-tooltip,
+    .progress-container.active .progress-tooltip {
+      opacity: 1;
+    }
+
+    .time-display {
+      font-size: 14px;
+      color: #ccc;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      width: 90px;
+      accent-color: #ff5555;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .player-container {
+        margin: 10px;
+      }
+      input[type="text"] {
+        width: 150px;
+        font-size: 12px;
+      }
+      input[type="text"]::placeholder {
+        font-size: 10px;
+      }
+      input[type="range"] {
+        width: 60px;
+      }
+      .time-display {
+        min-width: 80px;
+        font-size: 12px;
+      }
+      button i {
+        font-size: 26px;
+      }
+      .controls {
+        gap: 8px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container" id="playerContainer">
+    <div id="player" oncontextmenu="return false;"></div>
+    <div class="controls" id="controls">
+      <button onclick="playPauseVideo()" data-tooltip="Odtwórz" id="playPauseButton">
+        <i id="playPauseIcon" class="fas fa-play"></i>
+      </button>
+      <button onclick="stopVideo()" data-tooltip="Stop">
+        <i id="stopIcon" class="fas fa-stop"></i>
+      </button>
+      <div class="volume-container">
+        <button onclick="toggleMute()" data-tooltip="Wycisz" id="muteButton">
+          <i id="volumeIcon" class="fas fa-volume-up"></i>
+        </button>
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="setVolume(this.value)" onclick="setVolumeClick(event)">
+      </div>
+      <button onclick="toggleLoop()" data-tooltip="Włącz pętlę" id="loopButton">
+        <i id="loopIcon" class="fas fa-redo"></i>
+      </button>
+      <button onclick="toggleFullscreen()" data-tooltip="Pełny ekran">
+        <i id="fullscreenIcon" class="fas fa-expand"></i>
+      </button>
+      <div class="progress-container" onmousemove="showProgressTooltip(event)" onmouseleave="hideProgressTooltip()" onmousedown="startSeeking(event)">
+        <div class="progress-bar" id="progressBar"></div>
+        <div class="progress-tooltip" id="progressTooltip">0:00</div>
+      </div>
+      <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+      <input type="text" id="videoId" placeholder="Wprowadź ID filmu (np. dQw4w9WgXcQ)" autocomplete="off" onkeypress="handleEnter(event)" oninput="validateInput(this)" oncopy="return false;" />
+      <button onclick="loadVideo()" data-tooltip="Załaduj film">
+        <i id="loadIcon" class="fas fa-download"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script>
+    let player;
+    let isPlaying = false;
+    let isMuted = false;
+    let isPlayerReady = false;
+    let isFullscreen = false;
+    let isLooping = false;
+    let controlsTimeout;
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        videoId: 'dQw4w9WgXcQ',
+        playerVars: {
+          'playsinline': 1,
+          'controls': 0,
+          'showinfo': 0,
+          'rel': 0,
+          'modestbranding': 1,
+          'fs': 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      isPlayerReady = true;
+      setVolume(50);
+      updateProgress();
+      document.getElementById('playerContainer').addEventListener('mousemove', showControls);
+    }
+
+    function onPlayerStateChange(event) {
+      isPlaying = event.data === YT.PlayerState.PLAYING;
+      document.getElementById('playPauseIcon').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+      document.getElementById('playPauseButton').setAttribute('data-tooltip', isPlaying ? 'Pauza' : 'Odtwórz');
+      if (isPlaying) {
+        startControlsTimeout();
+      } else {
+        showControls();
+      }
+    }
+
+    function onPlayerError(event) {
+      const errorCode = event.data;
+      let message = "Wystąpił błąd podczas ładowania filmu.";
+      if (errorCode === 100 || errorCode === 101 || errorCode === 150) {
+        message = "Film jest niedostępny (prywatny, usunięty lub ograniczony).";
+      }
+      alert(message);
+      const videoIdInput = document.getElementById('videoId');
+      videoIdInput.removeAttribute('readonly');
+      videoIdInput.classList.remove('valid');
+      videoIdInput.classList.add('invalid');
+      videoIdInput.placeholder = 'Błędny ID filmu';
+    }
+
+    function playPauseVideo() {
+      if (!isPlayerReady || !player) return;
+      if (isPlaying) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+    }
+
+    function stopVideo() {
+      if (!isPlayerReady || !player) return;
+      player.stopVideo();
+      document.getElementById('stopIcon').className = 'fas fa-stop-circle';
+      setTimeout(() => {
+        document.getElementById('stopIcon').className = 'fas fa-stop';
+      }, 200);
+    }
+
+    function toggleMute() {
+      if (!isPlayerReady || !player) return;
+      isMuted = !isMuted;
+      player.setVolume(isMuted ? 0 : document.getElementById('volumeSlider').value);
+      document.getElementById('volumeIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+      document.getElementById('muteButton').setAttribute('data-tooltip', isMuted ? 'Włącz dźwięk' : 'Wycisz');
+    }
+
+    function setVolume(value) {
+      if (!isPlayerReady || !player) return;
+      player.setVolume(value);
+      isMuted = value == 0;
+      document.getElementById('volumeIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+      document.getElementById('muteButton').setAttribute('data-tooltip', isMuted ? 'Włącz dźwięk' : 'Wycisz');
+    }
+
+    function setVolumeClick(event) {
+      const slider = event.target;
+      const rect = slider.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const width = rect.width;
+      const newValue = Math.round((clickX / width) * 100);
+      slider.value = newValue;
+      setVolume(newValue);
+    }
+
+    function toggleLoop() {
+      if (!isPlayerReady || !player) return;
+      isLooping = !isLooping;
+      player.setLoop(isLooping);
+      document.getElementById('loopIcon').className = isLooping ? 'fas fa-redo-alt' : 'fas fa-redo';
+      document.getElementById('loopButton').setAttribute('data-tooltip', isLooping ? 'Wyłącz pętlę' : 'Włącz pętlę');
+    }
+
+    function toggleFullscreen() {
+      if (!isPlayerReady || !player) return;
+      const playerContainer = document.getElementById('playerContainer');
+      if (!isFullscreen) {
+        if (playerContainer.requestFullscreen) {
+          playerContainer.requestFullscreen();
+        } else if (playerContainer.webkitRequestFullscreen) {
+          playerContainer.webkitRequestFullscreen();
+        } else if (playerContainer.msRequestFullscreen) {
+          playerContainer.msRequestFullscreen();
+        }
+        isFullscreen = true;
+        document.getElementById('fullscreenIcon').className = 'fas fa-compress';
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+        isFullscreen = false;
+        document.getElementById('fullscreenIcon').className = 'fas fa-expand';
+      }
+    }
+
+    function loadVideo() {
+      const videoIdInput = document.getElementById('videoId');
+      const videoId = videoIdInput.value.trim();
+      if (!videoId) {
+        alert("Wprowadź ID filmu!");
+        videoIdInput.classList.add('invalid');
+        videoIdInput.placeholder = 'Wprowadź ID filmu';
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        alert("Nieprawidłowy format ID filmu! Powinien mieć 11 znaków (litery, cyfry, -, _).");
+        videoIdInput.classList.add('invalid');
+        videoIdInput.placeholder = 'Błędny format ID';
+        videoIdInput.value = '';
+        return;
+      }
+      if (!isPlayerReady || !player) {
+        alert("Odtwarzacz nie jest jeszcze gotowy. Spróbuj ponownie za chwilę.");
+        return;
+      }
+      player.loadVideoById(videoId);
+      videoIdInput.value = '';
+      videoIdInput.setAttribute('readonly', 'true');
+      videoIdInput.classList.remove('invalid');
+      videoIdInput.classList.add('valid');
+      videoIdInput.placeholder = 'Film załadowany';
+      document.getElementById('loadIcon').className = 'fas fa-check';
+      setTimeout(() => {
+        document.getElementById('loadIcon').className = 'fas fa-download';
+      }, 200);
+    }
+
+    function handleEnter(event) {
+      if (event.key === 'Enter') {
+        loadVideo();
+      }
+    }
+
+    function validateInput(input) {
+      const videoId = input.value.trim();
+      input.classList.remove('valid', 'invalid');
+      if (videoId && !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        input.classList.add('invalid');
+        input.placeholder = 'Błędny format ID';
+      } else if (videoId) {
+        input.placeholder = 'Wprowadź ID filmu';
+      }
+    }
+
+    function startSeeking(event) {
+      document.querySelector('.progress-container').classList.add('active');
+      seekVideo(event);
+      document.addEventListener('mousemove', seekVideo);
+      document.addEventListener('mouseup', stopSeeking);
+    }
+
+    function stopSeeking() {
+      document.querySelector('.progress-container').classList.remove('active');
+      document.removeEventListener('mousemove', seekVideo);
+      document.removeEventListener('mouseup', stopSeeking);
+    }
+
+    function seekVideo(event) {
+      if (!isPlayerReady || !player) return;
+      const progressContainer = event.currentTarget;
+      const rect = progressContainer.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const width = rect.width;
+      const seekTime = (clickX / width) * player.getDuration();
+      player.seekTo(seekTime, true);
+      const tooltip = document.getElementById('progressTooltip');
+      tooltip.textContent = formatTime(seekTime);
+      tooltip.style.left = `${clickX}px`;
+      tooltip.style.transform = 'translateX(-50%)';
+    }
+
+    function showProgressTooltip(event) {
+      if (!isPlayerReady || !player) return;
+      const progressContainer = event.currentTarget;
+      const rect = progressContainer.getBoundingClientRect();
+      const hoverX = event.clientX - rect.left;
+      const width = rect.width;
+      const hoverTime = (hoverX / width) * player.getDuration();
+      const tooltip = document.getElementById('progressTooltip');
+      tooltip.textContent = formatTime(hoverTime);
+      tooltip.style.left = `${hoverX}px`;
+      tooltip.style.transform = 'translateX(-50%)';
+    }
+
+    function hideProgressTooltip() {
+      document.getElementById('progressTooltip').style.opacity = '0';
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateProgress() {
+      if (isPlayerReady && player && player.getCurrentTime) {
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+        document.getElementById('progressBar').style.width = `${progressPercent}%`;
+        document.getElementById('timeDisplay').textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+      }
+      requestAnimationFrame(updateProgress);
+    }
+
+    function showControls() {
+      const controls = document.getElementById('controls');
+      controls.classList.remove('hidden');
+      startControlsTimeout();
+    }
+
+    function startControlsTimeout() {
+      clearTimeout(controlsTimeout);
+      if (isPlaying) {
+        controlsTimeout = setTimeout(() => {
+          document.getElementById('controls').classList.add('hidden');
+        }, 3000);
+      }
+    }
+
+    // Skróty klawiaturowe
+    document.addEventListener('keydown', (event) => {
+      if (!isPlayerReady || !player) return;
+      switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          playPauseVideo();
+          break;
+        case 'm':
+          toggleMute();
+          break;
+        case 'ArrowRight':
+          player.seekTo(player.getCurrentTime() + 5, true);
+          break;
+        case 'ArrowLeft':
+          player.seekTo(player.getCurrentTime() - 5, true);
+          break;
+        case 'f':
+          toggleFullscreen();
+          break;
+        case 'j':
+          player.seekTo(player.getCurrentTime() - 10, true);
+          break;
+        case 'l':
+          player.seekTo(player.getCurrentTime() + 10, true);
+          break;
+        case 'k':
+          stopVideo();
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
