@@ -1,0 +1,33 @@
+.add-button.hidden {
+    opacity: 0.2;
+    pointer-events: none;
+    cursor: none;
+}
+.add-button {
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    background: none;
+    border-width: initial;
+    border-style: none;
+    border-color: initial;
+    border-image: initial;
+    border-radius: 5px;
+    padding: 1px;
+}
+.event-progress-container {
+    width: 100%;
+    background-color: var(--primary-background-color);
+    border-radius: 5px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.event-progress-bar {
+    height: 20px;
+    background-color: var(--button-color); /* Zielony kolor, możesz zmienić */
+    text-align: center;
+    line-height: 20px;
+    color: var(--secondary-text-color);
+    transition: width 0.3s ease-in-out;
+}

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perun Gameverse</title>
+    <link rel="stylesheet" href="style/main.css">
+    <link rel="stylesheet" href="style/responsibility.css">
+    <link rel="stylesheet" href="style/animations.css">
+    <link rel="stylesheet" href="style/todo.css">
+    <link rel="stylesheet" href="style/chat.css">
+    <link rel="stylesheet" href="effects/like.css">
+    <link rel="stylesheet" href="style/public.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="img/perun2.1.png">
+</head>
+<body>
+    <div id="notification-container" class="notification-container"></div>
+    <header class="sticky">
+        <div class="progress-container">
+            <div class="progress-bar" id="myBar"></div>
+        </div>  
+        <div id="sidenavOpenButton">
+            <i class="fas fa-bars" style="font-size: 30px;"></i>
+        </div>
+        <div id="headertytul">
+            <h1>PERUN GAMEVERSE</h1>
+            <h3>Najlepsze gry na wyciągnięcie ręki</h3>
+        </div>
+        <div id="user-info-container" onclick="Modal.open('playerInfoModal')" class="user-info" style="cursor: pointer;">
+            <button buttonId="7" class="add-button">🐇</button>
+            <div id="playerName">?</div>
+            <div id="playerPLN">?</div>
+            <div id="playerRank">?</div>
+            <i class="fas fa-user" style="font-size: 30px;"></i>
+        </div>
+    </header>
+    <div id="parallax"></div>
+    <div id="parallaxEnd"></div>
+    <main>
+        <div id="sidenav">
+            <a onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></a>
+            <a onclick="Modal.open('achievementModal')" class="sidenavButton" title="Osiągnięcia"><i class="fa-solid fa-trophy"></i></a>
+            <a onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></a>
+            <a onclick="Modal.open('personalizationModal')" class="sidenavButton" title="Personalizacje"><i class="fa-solid fa-palette"></i></a>
+            <a onclick="Modal.open('chatModal');scrollToBottom()" class="sidenavButton" title="Chat"><i class="fa-solid fa-comments"></i></a>
+            <a onclick="Modal.open('rankingModal')" class="sidenavButton" title="Ranking"><i class="fa-solid fa-ranking-star"></i></a>
+            <a onclick="Modal.open('aiModal')" class="sidenavButton" title="Perun AI"><i class="fa-solid fa-robot"></i></a>
+            <a onclick="Modal.open('challengesModal')" class="sidenavButton" title="Wyzwania"><i class="fa-solid fa-star"></i></a>
+            <a onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></a>
+            <a onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></a>
+            <a onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></a>
+            <a buttonId="1" class="add-button sidenavButton"><i class="fa-solid fa-egg"></i></a>
+          </div>
+        <div id="mainwindow">
+            <div id="usernameDemoContainer" style="display: none;">
+                Twoja wersja Demo Zmiany Użytkownika potrwa jeszcze: ??:??:??
+            </div>
+            <div class="search-filters-container borderColorChange">
+                <input type="text" id="searchInput" placeholder="Szukaj">
+                <div class="filterdropdown">
+                    <button class="filterdropbtn">FILTRY</button>
+                    <div id="dropdownFiltres" class="dropdownFiltres-content">
+                        <button onclick="filterSelection('all'); changeClass(this)">Wszystkie</button>
+                        <button onclick="filterSelection('hot'); changeClass(this)">HOT</button>
+                        <button onclick="filterSelection('event'); changeClass(this)">EVENT</button>
+                        <button onclick="filterSelection('nowosc'); changeClass(this)">Nowości</button>
+                        <button onclick="filterSelection('ukonczona'); changeClass(this)">Ukończone<button buttonId="13" class="add-button">🥚</button></button>
+                        <button onclick="filterSelection('konserwacje'); changeClass(this)">Konserwacje</button>
+                        <button onclick="filterSelection('beta'); changeClass(this)">Beta</button>
+                        <button onclick="filterSelection('testy'); changeClass(this)">Testy</button>
+                    </div>
+                </div>
+            </div>
+            <div id="lastPlayedGames"></div>
+            <div class="game-container borderColorChange" max="12">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
+            </div>
+            <div class="slideshow-container" id="slideshow1">
+                <div class="slides">
+                    <h1>Najnowszy update!</h1>
+                    <div class="slide" id="updateSlideshow"></div>
+                </div>
+                <div class="slides">
+                    <h1>Gry HOT!<button buttonId="12" class="add-button">🐇</button></h1>
+                    <div class="slide" id="hotSlideshow"></div>
+                </div>
+                <div class="slides">
+                    <h1>Gry EVENTOWE!</h1>
+                    <div class="slide" id="eventSlideshow"></div>
+                </div>
+                <div class="slides">
+                    <h1>Blog Developerów!</h1>
+                    <div class="slide" id="blogSlideshow">
+                        <h3 class="blog">Zobacz jak wygląda HUB bez żadnych podpiętych skryptów - <a href="pusty/skrypt.html" class="game-short-link" target="_blank">👀</a></h3>
+                        <h3 class="blog"><button buttonId="11" class="add-button">🥚</button>Zobacz jak wygląda HUB bez CSS odpowiedzialnego za kolory - <a href="pusty/kolory.html" class="game-short-link" target="_blank">👀</a></h3>
+                        <h3 class="blog">Zobacz jak wygląda HUB bez CSS odpowiedzialnego za budowę - <a href="pusty/budowa.html" class="game-short-link" target="_blank">👀</a></h3>
+                    </div>
+                </div>
+                <button class="prev">&#10094;</button>
+                <button class="next">&#10095;</button>
+                <div class="dots-container">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </div>
+            <div class="game-container borderColorChange" max="12">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
+            </div>
+            <div class="event-container">
+                <div class="events" id="easterEvent">
+                    <h1>Event wielkanocny!</h1>
+                    <div class="event-block">
+                        <h3>Ukończ wszystkie zadania by zdobyć odznakę Wielkanoc 2025</h3>
+                        <button buttonId="17" class="add-button">🐰</button>Zbierz wszystkie zające i jajka, które zostały rozrzucone po całej stronie: 
+                        <!-- Pasek dla tablicy w localStorage -->
+                        <div class="event-progress-container" 
+                             data-storage-key="easter2025Buttons" 
+                             data-total-buttons="20">
+                            <div class="event-progress-bar"></div>
+                        </div>
+                        Zdobądź 25 pkt. w Wielkanocne Jajka:
+                        <!-- Pasek dla pojedynczej wartości w localStorage -->
+                        <div class="event-progress-container" 
+                             data-storage-key="eventGameHighScore" 
+                             data-total-buttons="25">
+                            <div class="event-progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="game-container borderColorChange" max="12">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p id="footerText">© 2025 Perun Gameverse & ChatGPT & Grok. Wszelkie prawa zastrzeżone. Wersja 1.0.0</p>
+    </footer>
+
+
+    <div id="updateModal" class="modal">
+        <h1>Dziennik zmian</h1>
+        <div class="modal-content">
+            <div id="tabsContainer" class="tab">
+                <button class="tablinks" style="width: 100%;padding: 12px;" onclick="openTab(event, 'updt')">📆 Aktualizacje</button>
+            </div>
+            <div id="tabContentsContainer">
+                <div style="text-align: center;" id="updt" class="tabcontent" style="display: block;">
+                    <table>
+                        <thead><tr><th class="tg-0pky">Poniedziałek</th><th class="tg-0pky">Wtorek</th><th class="tg-0pky">Środa</th><th class="tg-0pky">Czwartek</th><th class="tg-0pky">Piątek</th><th class="tg-0pky">Sobota</th><th class="tg-0pky">Niedziela</th></tr></thead>
+                        <tbody>
+                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">20:00</td></tr>
+                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">Major Update<button buttonId="6" class="add-button">🐇</button></td></tr>
+                        </tbody>
+                    </table>
+                    <b style="color: black;" id="demo"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="welcomeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="firework"></div>
+            <div class="firework"></div>
+            <div class="firework"></div>
+            <h2>Witaj na PERUN GAMEVERSE!</h2>
+            <p>Cieszymy się, że do nas dołączyłeś! Teraz możesz zagrać w dowolną grę, jaką tylko chcesz. <br><b>Miłej zabawy!</b> <br>Ale najpierw wpisz swoją nazwę użytkownika.</p>
+            <form id="usernameForm">
+                <input type="text" style="display: block;" id="usernameInput" placeholder="Twoja nazwa" required min="3" max="15">
+                <button id="saveUsernameBtn">Zapisz nazwę</button>
+                <p id="errorMessage">Proszę wpisać nazwę użytkownika.</p>
+              </form>
+        </div>
+    </div>
+    <div id="achievementModal" class="modal">
+        <h1>
+            Osiągnięcia
+            <button buttonId="5" class="add-button">🐇</button>
+        </h1>
+        <div class="modal-content" id="achievementModalContent" style="overflow-y: auto;">
+            <!-- Treść będzie generowana dynamicznie w JS -->
+        </div>
+    </div>
+    <div id="playerInfoModal" class="modal">
+        <h1>Profil Użytkownika</h1>
+        <div class="modal-content">
+            <button onclick="displayLocalStorageTable(profileColumns)">Pokaż Dane</button>
+            <div id="localStorageData"></div>
+        </div>
+    </div>
+    <div id="navigationModal" class="modal">
+        <h1>Nawigacja</h1>
+        <div class="modal-content">
+            <div class="navigation-thumbnails">
+                <div class="thumbnail-item" onclick="scrollToSection(0,'')">
+                    <div class="thumbnail-header">Parallax</div>
+                    <p>Przewiń do górnej części strony</p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection('game-container','0')">
+                    <div class="thumbnail-header">Gry 1</div>
+                    <p>Lista dostępnych gier</p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection('slideshow1')">
+                    <div class="thumbnail-header">Slajdy</div>
+                    <p>Sekcja z pokazem slajdów</p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection('game-container','1')">
+                    <div class="thumbnail-header">Gry 2</div>
+                    <p>Lista dostępnych gier</p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection('easterEvent')">
+                    <div class="thumbnail-header">Event wielkanocny</div>
+                    <p>Sprawdź zadania z Eventu wielkanocnego<button buttonId="10" class="add-button">🐇</button></p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection('game-container','2')">
+                    <div class="thumbnail-header">Gry 3</div>
+                    <p>Lista dostępnych gier</p>
+                </div>
+                <div class="thumbnail-item" onclick="scrollToSection(1,'')">
+                    <div class="thumbnail-header">Stopka</div>
+                    <p>Przewiń do dolnej części strony</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="rankingModal" class="modal">
+        <h1>Ranking</h1>
+        <div class="modal-content" style="overflow-y: auto;">
+            <table id="rankingTable">
+                <thead>
+                  <tr>
+                    <th>Lp.</th>
+                    <th>Użytkownik</th>
+                    <th>Ranga</th>
+                    <th>Punkty</th>
+                    <th>PLN</th>
+                    <th>Osiągnięcia</th>
+                  </tr>
+                </thead>
+                <tbody id="rankingBody">
+                  <!-- Wypełniane dynamicznie -->
+                </tbody>
+              </table>
+              <div id="rankingMessage"></div>
+        </div>
+    </div>
+    <div id="consoleModal" class="modal">
+        <h1>Konsola</h1>
+        <div class="modal-content">
+            <div class="console-container">
+                <div id="consoleOutput"></div>
+                <div class="input-container">
+                    <input type="text" id="consoleInput" placeholder="Wpisz komendę lub kod JS i naciśnij Enter...">
+                    <button onclick="clearConsole()">Wyczyść</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="settingsModal" class="modal" style="overflow-y: auto;">
+        <h1>Ustawienia</h1>
+        <div class="modal-content">
+            <h2>Ustawienia</h2>
+            <label>Nazwa użytkownika:</label>
+            <input type="text" name="nameInput" id="usernameSettingsInput">
+            <button onclick="handleUsernameChange()" id="usernameChangeButton">Zmień</button>
+            <br><br>
+            <label>Avatar:</label>
+            <input type="file" id="avatarUpload" accept="image/*">
+            <br><br>
+            <label>Rozmiar czcionki wiadomości: </label>
+            <input type="range" id="chatFontSizeSlider" min="10" max="30" value="16"><button onclick='document.getElementById("chatFontSizeSlider").value=17;document.documentElement.style.setProperty("--chatMessageFontSize", `17px`);localStorage.setItem("chatMessageFontSize", 17)'>Reset</button>
+            <hr>
+            <h2>Eksperymenty</h2> <br>
+            <label class="switch"><input type="checkbox" switchId="01"><span class="slider round"></span></label><label>Tryb developera</label><br>
+            <label class="switch"><input type="checkbox" switchId="02"><span class="slider round"></span></label><label>Zapis modali</label><br>
+            <label class="switch"><input type="checkbox" switchId="03"><span class="slider round"></span></label><label>Ładowanie obrazów na Chacie</label><br>
+            <label class="switch"><input type="checkbox" switchId="04"><span class="slider round"></span></label><label>Ukrywanie zbanowanych słów na Chacie</label><br>
+            <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
+            <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Powiadomienia</label><br>
+            <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>???</label><br>
+            <button buttonId="3" class="add-button">🥚</button>
+            <button onclick="resetSwitches();initializeSwitches()">Reset</button>
+        </div>
+    </div>
+    <div id="chatModal" class="modal">
+        <h1>Chat</h1>
+        <div class="modal-content">
+            <div id="chat-container">
+                <div id="users-counter" class="users-counter">
+                    Aktywni użytkownicy: <span id="activeUsersCount">0</span>
+                    <div class="dropdown">
+                        <button class="dropdown-button" id="activeUsersDropdownBtn" onclick="toggleDropdown('activeUsersDropdown')">
+                          <i class="fas fa-info-circle"></i>
+                        </button>
+                        <div class="dropdown-content" id="activeUsersDropdown">
+                          <ul id="activeUsers">
+
+                          </ul>
+                        </div>
+                      </div>
+                </div>
+                <div id="chat-window">
+                    <ul id="chatMessages">
+                        <div id="spinnerContainer"><div id="ChatLoading" class="spinner" style="display: block;"></div></div>
+                    </ul>
+                </div>
+                <div id="input-container">
+                    <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
+                    <input id="chatMessage" type="text" placeholder="Napisz wiadomość... (Wiadomości podlegają moderacji)" maxlength="200"/>
+                    <button id="sendButton" onclick="sendChatMessage()">Wyślij</button>
+                </div>
+                <div id="emojiPicker" class="emoji-picker">
+                    <span onclick="addEmoji('😊')">😊</span>
+                    <span onclick="addEmoji('😂')">😂</span>
+                    <span onclick="addEmoji('❤️')">❤️</span>
+                    <span onclick="addEmoji('👍')">👍</span>
+                    <span onclick="addEmoji('😢')">😢</span>
+                    <span onclick="addEmoji('🔥')">🔥</span>
+                    <span onclick="addEmoji('🐇')"><button buttonId="2" class="add-button">🐇</button></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="personalizationModal" class="modal">
+        <h1>Personalizacja</h1>
+        <div class="modal-content">
+            <label>Motyw: </label>
+            <select name="theme" id="themeSelect" onchange="changeTheme(this.value)">
+                <option value="dark">Ciemny</option>
+                <option value="gray">Szary</option>
+                <option value="light">Jasny</option>
+            </select>
+        </div>
+    </div>
+    <div id="aiModal" class="modal">
+        <h1>Perun AI</h1>
+        <div class="modal-content">
+              <div class="aiContainer">
+                <div class="chat-box" id="chatBox"></div>
+                <input type="text" id="userAiInput" placeholder="Zadaj pytanie..." />
+                <button onclick="getAIResponse()" style="border: none;">Wyślij</button>
+            </div>
+        </div>
+    </div>
+    <div id="challengesModal" class="modal">
+        <h1>Wyzwania</h1>
+        <div class="modal-content">
+            <div id="dailyChallenges"></div>
+        </div>
+    </div>
+    <div id="ownGameModal" class="modal">
+        <h1>Własna gra</h1>
+        <div class="modal-content">
+            <div class="pageBuilderContainer">
+                <div id="pageBuilderSlide1" class="pageBuilderSlide active">
+                    <h2>1. Tytuł strony</h2>
+                    <textarea id="pageBuilderTitle" class="pageBuilderTextarea" placeholder="Wpisz tytuł swojej strony..."></textarea>
+                </div>
+        
+                <div id="pageBuilderSlide2" class="pageBuilderSlide">
+                    <h2>2. Treść (body)</h2>
+                    <textarea id="pageBuilderBody" class="pageBuilderTextarea" placeholder="Wpisz kod HTML dla body..."></textarea>
+                </div>
+        
+                <div id="pageBuilderSlide3" class="pageBuilderSlide">
+                    <h2>3. Style (CSS)</h2>
+                    <textarea id="pageBuilderStyle" class="pageBuilderTextarea" placeholder="Wpisz kod CSS..."></textarea>
+                </div>
+        
+                <div id="pageBuilderSlide4" class="pageBuilderSlide">
+                    <h2>4. Skrypt (JavaScript)</h2>
+                    <textarea id="pageBuilderScript" class="pageBuilderTextarea" placeholder="Wpisz kod JavaScript..."></textarea>
+                </div>
+        
+                <div id="pageBuilderSlide5" class="pageBuilderSlide">
+                    <h2>5. Cały Kod</h2>
+                    <textarea id="pageBuilderFullCode" class="pageBuilderTextarea" placeholder="Wpisz pełny kod HTML..."></textarea>
+                </div>
+        
+                <div class="pageBuilderNav">
+                    <button id="pageBuilderPrevBtn" class="pageBuilderButton" onclick="pageBuilderPrevSlide()">Poprzedni</button>
+                    <button id="pageBuilderNextBtn" class="pageBuilderButton" onclick="pageBuilderNextSlide()">Następny</button>
+                    <button class="pageBuilderButton" onclick="pageBuilderSaveAndPreview()">Zapisz i Podgląd</button>
+                    <button class="pageBuilderButton" onclick="pageBuilderExport()">Eksportuj</button>
+                    <button class="pageBuilderButton" onclick="pageBuilderClear()">Wyczyść</button>
+                </div>
+        
+                <div class="pageBuilderStatus" id="pageBuilderStatus">Zapisano: Nigdy</div>
+            </div>
+        </div>
+    </div>
+    <div id="opinionModal" class="modal">
+        <h1>Opinia</h1>
+        <div class="modal-content">
+            <form id="ratingForm">
+                <label class="required">Oceń (1-10 gwiazdek)</label>
+                <div class="rating">
+                    <input type="radio" id="star10" name="rating" value="10" required>
+                    <label for="star10">★</label>
+                    <input type="radio" id="star9" name="rating" value="9">
+                    <label for="star9">★</label>
+                    <input type="radio" id="star8" name="rating" value="8">
+                    <label for="star8">★</label>
+                    <input type="radio" id="star7" name="rating" value="7">
+                    <label for="star7">★</label>
+                    <input type="radio" id="star6" name="rating" value="6">
+                    <label for="star6">★</label>
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4">
+                    <label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1">
+                    <label for="star1">★</label>
+                </div>
+                <br><br><br>
+                <label>Co dodać nowego/zmienić?</label>
+                <textarea name="whattodo" id="whattodoratingform"></textarea>
+                <!-- <label for="username" class="required">Imię/Nick</label>
+                <input type="text" id="username" name="username" required> -->
+                <br><br>
+                <button type="submit" id="opinionSubmit">Wyślij</button><br><br><br>
+                <p>Użyj starej metody: <a href="https://forms.gle/ZzyGN1X4Uo3g1GSd6" target="_blank" class="sidenavButton" title="Feedback" style="color: white;"><i class="fas fa-paper-plane"></i></a></p>
+                <p id="ratingFormErrorMessage" class="error">Wypełnij wszystkie wymagane pola!</p>
+            </form>
+        </div>
+    </div>
+    <div class="loader-container loading-screen" id="loader">
+        <div class="text">
+            <span class="word1">Perun </span>
+            <span class="word2">Gameverse</span>
+        </div>
+        <div class="siteLoadingSpinner"></div>
+    </div>
+    <script src="script/script.js"></script>
+    <script src="script/achievements.js"></script>
+    <script src="script/games.js"></script>
+    <script src="script/changes.js"></script>
+    <script src="script/chat.js"></script>
+    <script src="script/console.js"></script>
+    <script src="script/notifications.js"></script>
+    <script src="script/script2.js"></script>
+    <script src="script/event.js"></script>
+</body>
+</html>
