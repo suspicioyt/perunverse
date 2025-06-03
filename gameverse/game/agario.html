@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agar.io Clone | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s;
+        }
+        body.night-mode {
+            background-color: #1a1a2e;
+        }
+        canvas {
+            display: block;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            touch-action: none;
+            transition: background-color 0.5s;
+        }
+        canvas.night-mode {
+            background-color: #2a2a3e;
+            border-color: #4a4a6e;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            transition: color 0.5s;
+        }
+        #ui.night-mode {
+            color: #e0e0ff;
+        }
+        #powerup {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            color: #008000;
+            font-size: 16px;
+            transition: color 0.5s;
+        }
+        #powerup.night-mode {
+            color: #00ff00;
+        }
+        #powerup-bar {
+            position: absolute;
+            top: 90px;
+            left: 10px;
+            width: 100px;
+            height: 10px;
+            background-color: #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+        #powerup-bar.night-mode {
+            background-color: #4a4a6e;
+        }
+        #powerup-progress {
+            height: 100%;
+            background-color: #00FF00;
+            transition: width 0.1s linear;
+        }
+        #restart, #night-mode-toggle {
+            position: absolute;
+            left: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            touch-action: manipulation;
+            transition: background-color 0.5s;
+        }
+        #restart {
+            top: 110px;
+        }
+        #night-mode-toggle {
+            top: 150px;
+            background-color: #4444ff;
+        }
+        #night-mode-toggle.night-mode {
+            background-color: #6666ff;
+        }
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(200, 200, 200, 0.9));
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 200px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background 0.5s;
+        }
+        #scoreboard.night-mode {
+            background: linear-gradient(to bottom, rgba(40, 40, 60, 0.9), rgba(60, 60, 80, 0.9));
+            color: #e0e0ff;
+        }
+        #scoreboard div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .top-score {
+            animation: glow 1.5s infinite;
+        }
+        #gameOver {
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 24px;
+            width: 100%;
+            height: 100%;
+            transition: background-color 0.5s;
+        }
+        #gameOver.night-mode {
+            background-color: rgba(20, 20, 40, 0.7);
+            color: #e0e0ff;
+        }
+        #minimap {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 150px;
+            height: 150px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #333;
+            border-radius: 5px;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        #minimap.night-mode {
+            background-color: rgba(40, 40, 60, 0.8);
+            border-color: #4a4a6e;
+        }
+        #minimap.near-edge {
+            animation: pulseBorder 1s infinite;
+        }
+        .pulse {
+            animation: pulse 0.8s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #FFD700; }
+            50% { text-shadow: 0 0 10px #FFD700; }
+            100% { text-shadow: 0 0 5px #FFD700; }
+        }
+        @keyframes pulsePowerup {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        @keyframes pulseBorder {
+            0% { border-color: #333; }
+            50% { border-color: #FF4444; }
+            100% { border-color: #333; }
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes cloudPulse {
+            0% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+            100% { opacity: 0.2; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">Score: <span id="score">0</span> | Kills: <span id="kills">0</span> | Bots: <span id="bots">0</span> | Diff: <span id="difficulty">1</span> | Size: <span id="size">20</span> | Time: <span id="time">00:00</span> | FPS: <span id="fps">0</span></div>
+    <div id="powerup">Power-up: None</div>
+    <div id="powerup-bar"><div id="powerup-progress" style="width: 0%"></div></div>
+    <button id="restart">Restart</button>
+    <button id="night-mode-toggle">Night Mode</button>
+    <div id="scoreboard" style="overflow-x: hidden;"></div>
+    <div id="gameOver">
+        <div>Game Over!</div>
+        <div>Final Score: <span id="finalScore">0</span></div>
+        <div>Final Kills: <span id="finalKills">0</span></div>
+        <div>High Score Kills: <span id="highScoreKills">0</span></div>
+        <button id="restartGameOver" style="margin-top: 20px; padding: 10px 20px; font-size: 18px; background-color: #ff4444; color: white; border: none; border-radius: 5px;">Restart</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="minimap"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimap');
+        const minimapCtx = minimapCanvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const killsDisplay = document.getElementById('kills');
+        const botsDisplay = document.getElementById('bots');
+        const difficultyDisplay = document.getElementById('difficulty');
+        const sizeDisplay = document.getElementById('size');
+        const timeDisplay = document.getElementById('time');
+        const fpsDisplay = document.getElementById('fps');
+        const powerupDisplay = document.getElementById('powerup');
+        const powerupProgress = document.getElementById('powerup-progress');
+        const restartButton = document.getElementById('restart');
+        const nightModeToggle = document.getElementById('night-mode-toggle');
+        const scoreboard = document.getElementById('scoreboard');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const finalKillsDisplay = document.getElementById('finalKills');
+        const highScoreKillsDisplay = document.getElementById('highScoreKills');
+        const restartGameOverButton = document.getElementById('restartGameOver');
+
+        if (!ctx || !minimapCtx) {
+            alert('Nie można zainicjalizować canvasu. Sprawdź przeglądarkę.');
+            throw new Error('Canvas context not available');
+        }
+
+        // Map size
+        const mapWidth = 3000;
+        const mapHeight = 3000;
+
+        // Adjust canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.8;
+            minimapCanvas.width = Math.min(150, window.innerWidth * 0.15);
+            minimapCanvas.height = Math.min(150, window.innerHeight * 0.15);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        let gameRunning = true;
+        let difficulty = 1;
+        let enemySpawnTimer = 0;
+        let freezeTimer = 0;
+        let shrinkTimer = 0;
+        let decoyTimer = 0;
+        let magnetTimer = 0;
+        let burstTimer = 0;
+        let reverseTimer = 0;
+        let kills = 0;
+        let gameTime = 0;
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+        let highScoreKills = localStorage.getItem('highScoreKills') ? parseInt(localStorage.getItem('highScoreKills')) : 0;
+        let maxEnemies = 18;
+        let lastCameraScale = 1;
+        let minimapFrame = 0;
+        let nightMode = false;
+
+        // Player object
+        const player = {
+            x: mapWidth / 2,
+            y: mapHeight / 2,
+            radius: 20,
+            color: getRandomColor(),
+            speed: 3.5,
+            score: 0,
+            powerup: null,
+            powerupTimer: 0,
+            shield: false,
+            massBoost: false,
+            ghost: false,
+            magnet: false,
+            burst: false,
+            reverse: false,
+            id: 'player',
+            name: 'You'
+        };
+
+        // Decoy object
+        let decoy = null;
+
+        // Food, power-ups, enemies, particles, clouds
+        const foods = [];
+        const powerups = [];
+        const enemies = [];
+        const backgroundDots = [];
+        const explosionParticles = [];
+        const trailParticles = [];
+        const powerupParticles = [];
+        const clouds = [];
+        const foodCount = 250;
+        const powerupCount = 10;
+        const backgroundDotCount = 50;
+        const cloudCount = 10;
+
+        // Target position
+        let targetX = player.x;
+        let targetY = player.y;
+
+        // Bot names
+        const botNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa'];
+
+        // Generate random color
+        function getRandomColor() {
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Darken color
+        function darkenColor(color) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            return `rgb(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)})`;
+        }
+
+        // Create food particles
+        function createFoods() {
+            foods.length = 0;
+            for (let i = 0; i < foodCount; i++) {
+                foods.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    radius: 5,
+                    color: getRandomColor()
+                });
+            }
+        }
+
+        // Create power-ups
+        function createPowerups() {
+            powerups.length = 0;
+            const types = ['speed', 'shield', 'freeze', 'massBoost', 'teleport', 'ghost', 'shrink', 'decoy', 'magnet', 'burst', 'reverse'];
+            for (let i = 0; i < powerupCount; i++) {
+                let x, y, safe = false;
+                const type = types[Math.floor(Math.random() * types.length)];
+                while (!safe) {
+                    x = Math.random() * mapWidth;
+                    y = Math.random() * mapHeight;
+                    safe = true;
+                    for (let other of powerups) {
+                        const dx = x - other.x;
+                        const dy = y - other.y;
+                        if (Math.sqrt(dx * dx + dy * dy) < 50) {
+                            safe = false;
+                            break;
+                        }
+                    }
+                }
+                powerups.push({
+                    x, y,
+                    radius: 8,
+                    type,
+                    color: type === 'speed' ? '#FFD700' : type === 'shield' ? '#00FF00' : type === 'freeze' ? '#00B7EB' : 
+                           type === 'massBoost' ? '#FFA500' : type === 'teleport' ? '#800080' : type === 'ghost' ? '#FFFFFF' : 
+                           type === 'shrink' ? '#FF00FF' : type === 'decoy' ? '#00FFFF' : type === 'magnet' ? '#FF69B4' : 
+                           type === 'burst' ? '#DC143C' : '#FF4500'
+                });
+            }
+        }
+
+        // Create background dots
+        function createBackgroundDots() {
+            backgroundDots.length = 0;
+            for (let i = 0; i < backgroundDotCount; i++) {
+                backgroundDots.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    radius: 2,
+                    color: nightMode ? 'rgba(200, 200, 255, 0.5)' : 'rgba(200, 200, 200, 0.5)',
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
+                });
+            }
+        }
+
+        // Create clouds
+        function createClouds() {
+            clouds.length = 0;
+            for (let i = 0; i < cloudCount; i++) {
+                clouds.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    radius: 50 + Math.random() * 50,
+                    opacity: 0.2 + Math.random() * 0.2,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3
+                });
+            }
+        }
+
+        // Create explosion particles
+        function createExplosion(x, y, color, count = 8) {
+            if (explosionParticles.length > 80) return;
+            for (let i = 0; i < count; i++) {
+                explosionParticles.push({
+                    x, y,
+                    radius: 3 + Math.random() * 4,
+                    color,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 60
+                });
+            }
+        }
+
+        // Create trail particles
+        function createTrail(x, y, color) {
+            if (trailParticles.length > 150) return;
+            if (Math.random() < 0.1) {
+                trailParticles.push({
+                    x, y,
+                    radius: 2,
+                    color,
+                    life: 30
+                });
+            }
+        }
+
+        // Create power-up particles
+        function createPowerupParticles(x, y, color, count = 10) {
+            if (powerupParticles.length > 50) return;
+            for (let i = 0; i < count; i++) {
+                powerupParticles.push({
+                    x, y,
+                    radius: 2 + Math.random() * 2,
+                    color,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    life: 90
+                });
+            }
+        }
+
+        // Create single enemy
+        function createEnemy() {
+            if (enemies.length >= maxEnemies) return;
+            const typeChance = Math.random();
+            const isHunter = typeChance < 0.4;
+            const isOpportunist = typeChance >= 0.4 && typeChance < 0.6;
+            let x, y, safe = false;
+            while (!safe) {
+                x = Math.random() * mapWidth;
+                y = Math.random() * mapHeight;
+                const dx = x - player.x;
+                const dy = y - player.y;
+                safe = Math.sqrt(dx * dx + dy * dy) > 200;
+            }
+            enemies.push({
+                x, y,
+                radius: isHunter ? 10 + Math.random() * 5 : 8 + Math.random() * 12,
+                color: getRandomColor(),
+                speed: isHunter ? 2.8 + Math.random() * 1.7 : isOpportunist ? 2.0 + Math.random() * 1.0 : 1.2 + Math.random() * 1.3,
+                minSpeed: isHunter ? 0.4 : isOpportunist ? 0.3 : 0.2,
+                score: 0,
+                powerup: null,
+                powerupTimer: 0,
+                target: null,
+                targetTimer: 120,
+                id: `enemy_${Date.now()}_${Math.random()}`,
+                name: botNames[Math.floor(Math.random() * botNames.length)],
+                hunter: isHunter,
+                opportunist: isOpportunist,
+                cooperating: Math.random() < 0.2,
+                fleeing: false,
+                lastVx: 0,
+                lastVy: 0
+            });
+        }
+
+        // Input handling
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const scale = getCameraScale();
+            const viewWidth = canvas.width / scale;
+            const viewHeight = canvas.height / scale;
+            const viewX = player.x - viewWidth / 2;
+            const viewY = player.y - viewHeight / 2;
+            targetX = viewX + (event.clientX - rect.left) / scale;
+            targetY = viewY + (event.clientY - rect.top) / scale;
+        });
+
+        canvas.addEventListener('touchmove', (event) => {
+            event.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scale = getCameraScale();
+            const viewWidth = canvas.width / scale;
+            const viewHeight = canvas.height / scale;
+            const viewX = player.x - viewWidth / 2;
+            const viewY = player.y - viewHeight / 2;
+            const touch = event.touches[0];
+            targetX = viewX + (touch.clientX - rect.left) / scale;
+            targetY = viewY + (touch.clientY - rect.top) / scale;
+        }, { passive: false });
+
+        // Improved dynamic camera scaling
+        function getCameraScale() {
+            // Płynne skalowanie oparte na logarytmie promienia gracza
+            const baseScale = 60 / player.radius;
+            const smoothFactor = Math.log10(player.radius + 10) * 0.7;
+            const targetScale = Math.min(2.5, Math.max(0.6, baseScale / smoothFactor));
+            // Wygładzanie zmian skali
+            lastCameraScale = lastCameraScale * 0.95 + targetScale * 0.05;
+            return lastCameraScale;
+        }
+
+        // Move player
+        function movePlayer() {
+            if (!gameRunning) return;
+            const dx = targetX - player.x;
+            const dy = targetY - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 10) {
+                const speed = player.powerup === 'speed' ? player.speed * 1.3 : player.massBoost ? player.speed * 0.8 : player.speed;
+                const vx = (dx / distance) * speed;
+                const vy = (dy / distance) * speed;
+                player.x += vx;
+                player.y += vy;
+                createTrail(player.x, player.y, player.color);
+            }
+            player.x = Math.max(player.radius, Math.min(mapWidth - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(mapHeight - player.radius, player.y));
+        }
+
+        // Move decoy
+        function moveDecoy() {
+            if (!decoy) return;
+            const dx = player.x - decoy.x;
+            const dy = player.y - decoy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 10) {
+                const vx = (dx / distance) * player.speed * 0.8;
+                const vy = (dy / distance) * player.speed * 0.8;
+                decoy.x += vx;
+                decoy.y += vy;
+                createTrail(decoy.x, decoy.y, decoy.color);
+            }
+            decoy.x = Math.max(decoy.radius, Math.min(mapWidth - decoy.radius, decoy.x));
+            decoy.y = Math.max(decoy.radius, Math.min(mapHeight - decoy.radius, decoy.y));
+        }
+
+        // Move enemies
+        function moveEnemies() {
+            if (freezeTimer > 0) return;
+            enemies.forEach(enemy => {
+                try {
+                    enemy.targetTimer--;
+                    if (enemy.targetTimer <= 0) {
+                        enemy.targetTimer = 120;
+                        enemy.target = null;
+                    }
+
+                    let closest = null;
+                    let minScore = Infinity;
+                    let avoidTarget = null;
+                    let avoidDistance = Infinity;
+                    let powerupTarget = null;
+                    let powerupDistance = Infinity;
+
+                    powerups.forEach(powerup => {
+                        const dx = enemy.x - powerup.x;
+                        const dy = enemy.y - powerup.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < powerupDistance && distance < enemy.radius * (enemy.opportunist ? 8 : 5)) {
+                            powerupDistance = distance;
+                            powerupTarget = powerup;
+                        }
+                    });
+
+                    enemy.fleeing = false;
+                    if (enemy.radius < 45 || player.powerup === 'freeze' || player.powerup === 'massBoost' || player.powerup === 'burst' || player.powerup === 'reverse') {
+                        enemies.forEach(otherEnemy => {
+                            if (otherEnemy !== enemy && otherEnemy.radius > enemy.radius * 1.2) {
+                                const dx = enemy.x - otherEnemy.x;
+                                const dy = enemy.y - otherEnemy.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance < avoidDistance && distance < enemy.radius * 5) {
+                                    avoidDistance = distance;
+                                    avoidTarget = otherEnemy;
+                                }
+                            }
+                        });
+                        if ((player.radius > enemy.radius * 1.2 || player.powerup === 'freeze' || player.powerup === 'massBoost' || player.powerup === 'burst' || player.powerup === 'reverse') && Math.random() < 0.8) {
+                            const dx = enemy.x - player.x;
+                            const dy = enemy.y - player.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < avoidDistance && distance < enemy.radius * 5) {
+                                avoidDistance = distance;
+                                avoidTarget = player;
+                                enemy.fleeing = true;
+                            }
+                        }
+                    }
+
+                    if (avoidTarget && Math.random() < 0.9) {
+                        const dx = avoidTarget.x - enemy.x;
+                        const dy = avoidTarget.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > 10) {
+                            let vx = -(dx / distance) * enemy.speed * 1.2;
+                            let vy = -(dy / distance) * enemy.speed * 1.2;
+                            if (reverseTimer > 0 && enemy.powerup !== 'reverse') {
+                                vx = -vx;
+                                vy = -vy;
+                            }
+                            vx = enemy.lastVx * 0.7 + vx * 0.3;
+                            vy = enemy.lastVy * 0.7 + vy * 0.3;
+                            enemy.lastVx = vx;
+                            enemy.lastVy = vy;
+                            enemy.x += vx;
+                            enemy.y += vy;
+                            createTrail(enemy.x, enemy.y, enemy.color);
+                        }
+                    } else if (powerupTarget && (enemy.opportunist || Math.random() < 0.3)) {
+                        const dx = powerupTarget.x - enemy.x;
+                        const dy = powerupTarget.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > 10) {
+                            let vx = (dx / distance) * enemy.speed;
+                            let vy = (dy / distance) * enemy.speed;
+                            if (reverseTimer > 0 && enemy.powerup !== 'reverse') {
+                                vx = -vx;
+                                vy = -vy;
+                            }
+                            vx = enemy.lastVx * 0.7 + vx * 0.3;
+                            vy = enemy.lastVy * 0.7 + vy * 0.3;
+                            enemy.lastVx = vx;
+                            enemy.lastVy = vy;
+                            enemy.x += vx;
+                            enemy.y += vy;
+                            createTrail(enemy.x, enemy.y, enemy.color);
+                        }
+                    } else {
+                        if (enemy.hunter && !player.ghost && !enemy.opportunist) {
+                            if (decoy && Math.random() < 0.7) {
+                                const dx = enemy.x - decoy.x;
+                                const dy = enemy.y - decoy.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const score = distance / (decoy.radius + 1);
+                                if (score < minScore && distance < enemy.radius * 6) {
+                                    minScore = score;
+                                    closest = decoy;
+                                }
+                            } else if (enemy.radius > player.radius * 1.2 && !player.shield) {
+                                const dx = enemy.x - player.x;
+                                const dy = enemy.y - player.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const score = distance / (player.radius + 1);
+                                if (score < minScore && distance < enemy.radius * 6) {
+                                    minScore = score;
+                                    closest = player;
+                                }
+                            }
+                            enemies.forEach(otherEnemy => {
+                                if (otherEnemy !== enemy && enemy.radius > otherEnemy.radius * 1.2 && !otherEnemy.opportunist) {
+                                    const dx = enemy.x - otherEnemy.x;
+                                    const dy = enemy.y - otherEnemy.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+                                    const score = distance / (otherEnemy.radius + 1);
+                                    if (score < minScore && distance < enemy.radius * 6) {
+                                        minScore = score;
+                                        closest = otherEnemy;
+                                    }
+                                }
+                            });
+                        } else if (enemy.opportunist && !player.ghost) {
+                            enemies.forEach(otherEnemy => {
+                                if (otherEnemy !== enemy && enemy.radius > otherEnemy.radius * 1.5) {
+                                    const dx = enemy.x - otherEnemy.x;
+                                    const dy = enemy.y - otherEnemy.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+                                    const score = distance / (otherEnemy.radius + 1);
+                                    if (score < minScore && distance < enemy.radius * 4) {
+                                        minScore = score;
+                                        closest = otherEnemy;
+                                    }
+                                }
+                            });
+                        }
+
+                        foods.forEach(food => {
+                            const dx = enemy.x - food.x;
+                            const dy = enemy.y - food.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const score = distance / (enemy.opportunist ? 10 : 5);
+                            if (score < minScore && distance < enemy.radius * 5) {
+                                minScore = score;
+                                closest = food;
+                            }
+                        });
+
+                        if (!closest) {
+                            if (!enemy.randomTarget || Math.random() < 0.01) {
+                                enemy.randomTarget = {
+                                    x: Math.random() * mapWidth,
+                                    y: Math.random() * mapHeight
+                                };
+                            }
+                            closest = enemy.randomTarget;
+                        }
+
+                        if (closest && closest.x !== undefined && closest.y !== undefined) {
+                            const dx = closest.x - enemy.x;
+                            const dy = closest.y - enemy.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance > 10) {
+                                let vx = (dx / distance) * Math.max(enemy.speed, enemy.minSpeed);
+                                let vy = (dy / distance) * Math.max(enemy.speed, enemy.minSpeed);
+                                if (reverseTimer > 0 && enemy.powerup !== 'reverse') {
+                                    vx = -vx;
+                                    vy = -vy;
+                                }
+                                if (enemy.cooperating && closest !== player && closest !== decoy) {
+                                    enemies.forEach(otherEnemy => {
+                                        if (otherEnemy !== enemy && otherEnemy.target === closest && otherEnemy.hunter) {
+                                            const dx2 = closest.x - enemy.x;
+                                            const dy2 = closest.y - enemy.y;
+                                            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                                            if (dist2 < enemy.radius * 3) {
+                                                vx *= 1.2;
+                                                vy *= 1.2;
+                                            }
+                                        }
+                                    });
+                                }
+                                enemies.forEach(otherEnemy => {
+                                    if (otherEnemy !== enemy && Math.abs(enemy.radius - otherEnemy.radius) < 10) {
+                                        const dx2 = enemy.x - otherEnemy.x;
+                                        const dy2 = enemy.y - otherEnemy.y;
+                                        const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                                        if (dist2 < enemy.radius * 2) {
+                                            vx += (dx2 / dist2) * 0.5;
+                                            vy += (dy2 / dist2) * 0.5;
+                                        }
+                                    }
+                                });
+                                vx = enemy.lastVx * 0.7 + vx * 0.3;
+                                vy = enemy.lastVy * 0.7 + vy * 0.3;
+                                enemy.lastVx = vx;
+                                enemy.lastVy = vy;
+                                enemy.x += vx;
+                                enemy.y += vy;
+                                createTrail(enemy.x, enemy.y, enemy.color);
+                            }
+                        }
+                        enemy.target = closest;
+                    }
+
+                    enemy.x = Math.max(enemy.radius, Math.min(mapWidth - enemy.radius, enemy.x));
+                    enemy.y = Math.max(enemy.radius, Math.min(mapHeight - enemy.radius, enemy.y));
+                } catch (e) {
+                    console.error('Error in moveEnemies:', e);
+                }
+            });
+        }
+
+        // Move background dots
+        let backgroundUpdateFrame = 0;
+        function moveBackgroundDots() {
+            backgroundUpdateFrame++;
+            if (backgroundUpdateFrame % 2 !== 0) return;
+            backgroundDots.forEach(dot => {
+                dot.x += dot.vx;
+                dot.y += dot.vy;
+                if (dot.x < 0 || dot.x > mapWidth) dot.vx = -dot.vx;
+                if (dot.y < 0 || dot.y > mapHeight) dot.vy = -dot.vy;
+                dot.color = nightMode ? 'rgba(200, 200, 255, 0.5)' : 'rgba(200, 200, 200, 0.5)';
+            });
+        }
+
+        // Move clouds
+        function moveClouds() {
+            clouds.forEach(cloud => {
+                cloud.x += cloud.vx + (player.x - mapWidth / 2) * 0.0001;
+                cloud.y += cloud.vy + (player.y - mapHeight / 2) * 0.0001;
+                if (cloud.x < -cloud.radius) cloud.x += mapWidth + cloud.radius * 2;
+                if (cloud.x > mapWidth + cloud.radius) cloud.x -= mapWidth + cloud.radius * 2;
+                if (cloud.y < -cloud.radius) cloud.y += mapHeight + cloud.radius * 2;
+                if (cloud.y > mapHeight + cloud.radius) cloud.y -= mapHeight + cloud.radius * 2;
+            });
+        }
+
+        // Update explosion particles
+        function updateExplosionParticles() {
+            for (let i = explosionParticles.length - 1; i >= 0; i--) {
+                const particle = explosionParticles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life--;
+                if (particle.life <= 0) {
+                    explosionParticles.splice(i, 1);
+                }
+            }
+        }
+
+        // Update trail particles
+        function updateTrailParticles() {
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
+                const particle = trailParticles[i];
+                particle.life--;
+                if (particle.life <= 0) {
+                    trailParticles.splice(i, 1);
+                }
+            }
+        }
+
+        // Update power-up particles
+        function updatePowerupParticles() {
+            for (let i = powerupParticles.length - 1; i >= 0; i--) {
+                const particle = powerupParticles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.95;
+                particle.vy *= 0.95;
+                particle.life--;
+                if (particle.life <= 0) {
+                    powerupParticles.splice(i, 1);
+                }
+            }
+        }
+
+        // Update magnet power-up
+        function updateMagnet() {
+            if (!player.magnet) return;
+            foods.forEach(food => {
+                const dx = player.x - food.x;
+                const dy = player.y - food.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < player.radius * 3 && distance > player.radius) {
+                    const vx = (dx / distance) * 2;
+                    const vy = (dy / distance) * 2;
+                    food.x += vx;
+                    food.y += vy;
+                }
+            });
+        }
+
+        // Update burst power-up
+        function updateBurst() {
+            if (!player.burst || burstTimer <= 0) return;
+            enemies.forEach(enemy => {
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < player.radius * 5 && distance > player.radius) {
+                    const vx = (dx / distance) * 5;
+                    const vy = (dy / distance) * 5;
+                    enemy.x += vx;
+                    enemy.y += vy;
+                    enemy.fleeing = true;
+                }
+            });
+        }
+
+        // Quad-tree for collision optimization
+        class QuadTree {
+            constructor(x, y, width, height, capacity = 4) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.capacity = capacity;
+                this.items = [];
+                this.divided = false;
+            }
+
+            subdivide() {
+                const w = this.width / 2;
+                const h = this.height / 2;
+                this.northwest = new QuadTree(this.x, this.y, w, h, this.capacity);
+                this.northeast = new QuadTree(this.x + w, this.y, w, h, this.capacity);
+                this.southwest = new QuadTree(this.x, this.y + h, w, h, this.capacity);
+                this.southeast = new QuadTree(this.x + w, this.y + h, w, h, this.capacity);
+                this.divided = true;
+            }
+
+            insert(item) {
+                if (!this.contains(item)) return false;
+                if (this.items.length < this.capacity && !this.divided) {
+                    this.items.push(item);
+                    return true;
+                }
+                if (!this.divided) this.subdivide();
+                return (this.northwest.insert(item) ||
+                        this.northeast.insert(item) ||
+                        this.southwest.insert(item) ||
+                        this.southeast.insert(item));
+            }
+
+            contains(item) {
+                return (item.x >= this.x && item.x < this.x + this.width &&
+                        item.y >= this.y && item.y < this.y + this.height);
+            }
+
+            query(range, found) {
+                if (!found) found = [];
+                if (!this.intersects(range)) return found;
+                for (let item of this.items) {
+                    if (range.x - range.radius <= item.x && item.x <= range.x + range.radius &&
+                        range.y - range.radius <= item.y && item.y <= range.y + range.radius) {
+                        found.push(item);
+                    }
+                }
+                if (this.divided) {
+                    this.northwest.query(range, found);
+                    this.northeast.query(range, found);
+                    this.southwest.query(range, found);
+                    this.southeast.query(range, found);
+                }
+                return found;
+            }
+
+            intersects(range) {
+                return !(range.x - range.radius > this.x + this.width ||
+                         range.x + range.radius < this.x ||
+                         range.y - range.radius > this.y + this.height ||
+                         range.y + range.radius < this.y);
+            }
+        }
+
+        // Check collisions
+        function checkCollisions() {
+            if (!gameRunning) return;
+            try {
+                const quadTree = new QuadTree(0, 0, mapWidth, mapHeight);
+                foods.forEach(food => quadTree.insert(food));
+                powerups.forEach(powerup => quadTree.insert(powerup));
+
+                // Player collisions
+                const playerRange = { x: player.x, y: player.y, radius: player.radius + 8 };
+                const nearbyItems = quadTree.query(playerRange);
+                for (let item of nearbyItems) {
+                    const dx = player.x - item.x;
+                    const dy = player.y - item.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if ('type' in item && distance < player.radius + item.radius) {
+                        const index = powerups.indexOf(item);
+                        if (index !== -1) {
+                            powerups.splice(index, 1);
+                            player.powerup = item.type;
+                            player.powerupTimer = item.type === 'massBoost' ? 150 : item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : 300;
+                            player.shield = item.type === 'shield';
+                            player.massBoost = item.type === 'massBoost';
+                            player.ghost = item.type === 'ghost';
+                            player.magnet = item.type === 'magnet';
+                            player.burst = item.type === 'burst';
+                            player.reverse = item.type === 'reverse';
+                            if (item.type === 'freeze') freezeTimer = 180;
+                            if (item.type === 'massBoost') player.radius *= 1.5;
+                            if (item.type === 'teleport') {
+                                let newX, newY, safe = false;
+                                while (!safe) {
+                                    newX = Math.random() * mapWidth;
+                                    newY = Math.random() * mapHeight;
+                                    safe = true;
+                                    for (let enemy of enemies) {
+                                        const dx = newX - enemy.x;
+                                        const dy = newY - enemy.y;
+                                        if (Math.sqrt(dx * dx + dy * dy) < enemy.radius + player.radius + 50) {
+                                            safe = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                                player.x = newX;
+                                player.y = newY;
+                                targetX = newX;
+                                targetY = newY;
+                            }
+                            if (item.type === 'shrink') shrinkTimer = 300;
+                            if (item.type === 'decoy') {
+                                decoy = {
+                                    x: player.x + (Math.random() - 0.5) * 100,
+                                    y: player.y + (Math.random() - 0.5) * 100,
+                                    radius: player.radius,
+                                    color: player.color,
+                                    id: 'decoy'
+                                };
+                                decoyTimer = 300;
+                            }
+                            if (item.type === 'magnet') magnetTimer = 600;
+                            if (item.type === 'burst') burstTimer = 300;
+                            if (item.type === 'reverse') reverseTimer = 600;
+                            powerupDisplay.textContent = `Power-up: ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}`;
+                            createPowerupParticles(player.x, player.y, item.color);
+                            createPowerups();
+                        }
+                    } else if (distance < player.radius + item.radius) {
+                        const index = foods.indexOf(item);
+                        if (index !== -1) {
+                            foods.splice(index, 1);
+                            player.radius += 0.3;
+                            player.score += 1;
+                            player.speed = Math.max(1.8, player.speed - 0.015);
+                            scoreDisplay.textContent = player.score;
+                            sizeDisplay.textContent = player.radius.toFixed(1);
+                            foods.push({
+                                x: Math.random() * mapWidth,
+                                y: Math.random() * mapHeight,
+                                radius: 5,
+                                color: getRandomColor()
+                            });
+                        }
+                    }
+                }
+
+                // Enemy collisions
+                enemies.forEach(enemy => {
+                    const enemyRange = { x: enemy.x, y: enemy.y, radius: enemy.radius + 8 };
+                    const nearbyItems = quadTree.query(enemyRange);
+                    for (let item of nearbyItems) {
+                        if ('type' in item) {
+                            const dx = enemy.x - item.x;
+                            const dy = enemy.y - item.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < enemy.radius + item.radius) {
+                                const index = powerups.indexOf(item);
+                                if (index !== -1) {
+                                    powerups.splice(index, 1);
+                                    enemy.powerup = item.type;
+                                    enemy.powerupTimer = item.type === 'massBoost' ? 150 : item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : 300;
+                                    if (item.type === 'massBoost') enemy.radius *= 1.5;
+                                    if (item.type === 'teleport') {
+                                        let newX, newY, safe = false;
+                                        while (!safe) {
+                                            newX = Math.random() * mapWidth;
+                                            newY = Math.random() * mapHeight;
+                                            safe = true;
+                                            for (let otherEnemy of enemies) {
+                                                if (otherEnemy !== enemy) {
+                                                    const dx = newX - otherEnemy.x;
+                                                    const dy = newY - otherEnemy.y;
+                                                    if (Math.sqrt(dx * dx + dy * dy) < otherEnemy.radius + enemy.radius + 50) {
+                                                        safe = false;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        enemy.x = newX;
+                                        enemy.y = newY;
+                                    }
+                                    if (item.type === 'shrink') {
+                                        enemies.forEach(otherEnemy => {
+                                            if (otherEnemy !== enemy) {
+                                                otherEnemy.radius *= 0.8;
+                                                otherEnemy.radius = Math.max(5, otherEnemy.radius);
+                                            }
+                                        });
+                                    }
+                                    createPowerupParticles(enemy.x, enemy.y, item.color, 6);
+                                    createPowerups();
+                                }
+                            }
+                        } else {
+                            const dx = enemy.x - item.x;
+                            const dy = enemy.y - item.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < enemy.radius + item.radius) {
+                                const index = foods.indexOf(item);
+                                if (index !== -1) {
+                                    foods.splice(index, 1);
+                                    enemy.radius = Math.min(45, enemy.radius + 0.3);
+                                    enemy.score += 1;
+                                    enemy.speed = Math.max(enemy.minSpeed, enemy.speed - 0.01);
+                                    foods.push({
+                                        x: Math.random() * mapWidth,
+                                        y: Math.random() * mapHeight,
+                                        radius: 5,
+                                        color: getRandomColor()
+                                    });
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Player vs Enemies
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dx = player.x - enemy.x;
+                    const dy = player.y - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < player.radius + enemy.radius) {
+                        if (enemy.radius > player.radius && !player.shield) {
+                            gameRunning = false;
+                            finalScoreDisplay.textContent = player.score;
+                            finalKillsDisplay.textContent = kills;
+                            highScoreKills = Math.max(highScoreKills, kills);
+                            localStorage.setItem('highScoreKills', highScoreKills);
+                            highScoreKillsDisplay.textContent = highScoreKills;
+                            gameOverScreen.style.display = 'flex';
+                            createExplosion(player.x, player.y, player.color);
+                        } else if (player.radius > enemy.radius * 1.2) {
+                            enemies.splice(i, 1);
+                            player.radius += enemy.radius * 0.3;
+                            player.score += enemy.hunter ? 15 : 10;
+                            kills += 1;
+                            scoreDisplay.textContent = player.score;
+                            killsDisplay.textContent = kills;
+                            sizeDisplay.textContent = player.radius.toFixed(1);
+                            createEnemy();
+                            createExplosion(enemy.x, enemy.y, enemy.color);
+                        }
+                    }
+                }
+
+                // Enemies vs Enemies
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    for (let j = enemies.length - 1; j >= 0; j--) {
+                        if (i !== j) {
+                            const otherEnemy = enemies[j];
+                            const dx = enemy.x - otherEnemy.x;
+                            const dy = enemy.y - otherEnemy.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < enemy.radius + otherEnemy.radius && enemy.radius > otherEnemy.radius * 1.2) {
+                                enemies.splice(j, 1);
+                                enemy.radius = Math.min(45, enemy.radius + otherEnemy.radius * 0.3);
+                                enemy.score += otherEnemy.hunter ? 15 : 10;
+                                createEnemy();
+                                createExplosion(otherEnemy.x, otherEnemy.y, otherEnemy.color);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Collision error:', e);
+            }
+        }
+
+        // Update power-up and timers
+        function updatePowerup() {
+            if (player.powerupTimer > 0) {
+                player.powerupTimer--;
+                powerupProgress.style.width = `${(player.powerupTimer / (player.powerup === 'massBoost' ? 150 : player.powerup === 'magnet' ? 600 : player.powerup === 'burst' ? 300 : player.powerup === 'reverse' ? 600 : 300)) * 100}%`;
+                if (player.powerupTimer <= 0) {
+                    player.powerup = null;
+                    player.shield = false;
+                    player.massBoost = false;
+                    player.ghost = false;
+                    player.magnet = false;
+                    player.burst = false;
+                    player.reverse = false;
+                    powerupDisplay.textContent = 'Power-up: None';
+                    powerupProgress.style.width = '0%';
+                }
+            }
+            enemies.forEach(enemy => {
+                if (enemy.powerupTimer > 0) {
+                    enemy.powerupTimer--;
+                    if (enemy.powerupTimer <= 0) {
+                        enemy.powerup = null;
+                    }
+                }
+            });
+            if (freezeTimer > 0) freezeTimer--;
+            if (shrinkTimer > 0) shrinkTimer--;
+            if (decoyTimer > 0) {
+                decoyTimer--;
+                if (decoyTimer <= 0) decoy = null;
+            }
+            if (magnetTimer > 0) {
+                magnetTimer--;
+                if (magnetTimer <= 0) player.magnet = false;
+            }
+            if (burstTimer > 0) {
+                burstTimer--;
+                if (burstTimer <= 0) player.burst = false;
+            }
+            if (reverseTimer > 0) {
+                reverseTimer--;
+                if (reverseTimer <= 0) player.reverse = false;
+            }
+        }
+
+        // Update game time
+        function updateGameTime() {
+            if (!gameRunning) return;
+            gameTime++;
+            const minutes = Math.floor(gameTime / 3600);
+            const seconds = Math.floor((gameTime % 3600) / 60);
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Spawn enemies
+        function spawnEnemies() {
+            if (gameRunning) {
+                enemySpawnTimer++;
+                if (enemySpawnTimer >= 90 && enemies.length < maxEnemies) {
+                    createEnemy();
+                    enemySpawnTimer = 0;
+                }
+            }
+        }
+
+        // Update max enemies
+        function updateMaxEnemies() {
+            maxEnemies = Math.min(24, 18 + Math.floor(player.score / 100));
+        }
+
+        // Increase difficulty
+        function increaseDifficulty() {
+            if (player.score > 0 && player.score % 50 === 0) {
+                difficulty += 0.1;
+                enemies.forEach(enemy => {
+                    enemy.speed = Math.min(5, enemy.speed * 1.1);
+                });
+            }
+        }
+
+        // Update scoreboard
+        function updateScoreboard() {
+            const allEntities = [player, ...enemies];
+            allEntities.sort((a, b) => b.score - a.score);
+            const topEntities = allEntities.slice(0, 10); // Zwiększono limit do 10
+            const leaderScore = topEntities[0]?.score || 1;
+            let newScoreboardHTML = `<strong>Scoreboard (High Kills: ${highScoreKills})</strong>`;
+            
+            topEntities.forEach((entity, index) => {
+                const className = index === 0 ? 'top-score' : '';
+                const typeIcon = entity.hunter ? '🗡️' : entity.opportunist ? '🔍' : '🌾';
+                const isPlayer = entity.id === 'player';
+                const percent = leaderScore > 0 ? Math.round((entity.score / leaderScore) * 100) : 0;
+                const leaderIcon = index === 0 ? '🏆 ' : '';
+                newScoreboardHTML += `<div class="${className}"><span class="color-dot" style="background-color: ${entity.color}"></span>${index + 1}. ${leaderIcon}${entity.name}${isPlayer ? ' (You)' : ''} ${entity.id === 'player' || entity.id === 'decoy' ? '' : typeIcon}: ${entity.score} (${percent}%)</div>`;
+            });
+
+            // Aktualizuj tylko jeśli treść się zmieniła
+            if (scoreboard.innerHTML !== newScoreboardHTML) {
+                scoreboard.innerHTML = newScoreboardHTML;
+            }
+            botsDisplay.textContent = enemies.length;
+            difficultyDisplay.textContent = difficulty.toFixed(1);
+        }
+
+        // Draw minimap
+        function drawMinimap() {
+            minimapFrame++;
+            if (minimapFrame % 2 !== 0) return;
+            minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+            minimapCtx.fillStyle = nightMode ? 'rgba(20, 20, 40, 0.9)' : 'rgba(0, 0, 0, 0.1)';
+            minimapCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+            // Rysuj granice mapy
+            minimapCtx.strokeStyle = nightMode ? '#4a4a6e' : '#333';
+            minimapCtx.lineWidth = 1;
+            minimapCtx.strokeRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+            // Sprawdź, czy gracz jest blisko krawędzi
+            const edgeThreshold = 100;
+            const nearEdge = player.x < edgeThreshold || player.x > mapWidth - edgeThreshold ||
+                             player.y < edgeThreshold || player.y > mapHeight - edgeThreshold;
+            minimapCanvas.classList.toggle('near-edge', nearEdge);
+
+            // Skala minimapy
+            const scale = minimapCanvas.width / mapWidth;
+
+            // Rysuj gracza
+            minimapCtx.beginPath();
+            minimapCtx.arc(player.x * scale, player.y * scale, 3, 0, Math.PI * 2);
+            minimapCtx.fillStyle = player.color;
+            minimapCtx.shadowColor = nightMode ? '#e0e0ff' : '#000';
+            minimapCtx.shadowBlur = 3;
+            minimapCtx.fill();
+            minimapCtx.shadowBlur = 0;
+
+            // Rysuj wabik
+            if (decoy) {
+                minimapCtx.beginPath();
+                minimapCtx.arc(decoy.x * scale, decoy.y * scale, 2, 0, Math.PI * 2);
+                minimapCtx.fillStyle = decoy.color;
+                minimapCtx.globalAlpha = 0.7;
+                minimapCtx.fill();
+                minimapCtx.globalAlpha = 1;
+            }
+
+            // Rysuj wrogów
+            enemies.forEach(enemy => {
+                minimapCtx.beginPath();
+                minimapCtx.arc(enemy.x * scale, enemy.y * scale, enemy.hunter ? 2.5 : enemy.opportunist ? 2 : 1.5, 0, Math.PI * 2);
+                minimapCtx.fillStyle = enemy.color;
+                minimapCtx.fill();
+            });
+
+            // Rysuj power-upy
+            powerups.forEach(powerup => {
+                minimapCtx.beginPath();
+                minimapCtx.arc(powerup.x * scale, powerup.y * scale, 1, 0, Math.PI * 2);
+                minimapCtx.fillStyle = powerup.color;
+                minimapCtx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 500);
+                minimapCtx.fill();
+                minimapCtx.globalAlpha = 1;
+            });
+        }
+
+        // Draw game
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const scale = getCameraScale();
+            const viewWidth = canvas.width / scale;
+            const viewHeight = canvas.height / scale;
+            const viewX = player.x - viewWidth / 2;
+            const viewY = player.y - viewHeight / 2;
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(scale, scale);
+            ctx.translate(-player.x, -player.y);
+
+            // Dynamic background gradient
+            const gradient = ctx.createRadialGradient(player.x, player.y, 200, player.x, player.y, viewWidth);
+            gradient.addColorStop(0, nightMode ? 'rgba(40, 40, 60, 0.3)' : 'rgba(255, 255, 255, 0.05)');
+            gradient.addColorStop(1, nightMode ? 'rgba(20, 20, 40, 0.5)' : 'rgba(200, 200, 200, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(viewX, viewY, viewWidth, viewHeight);
+
+            // Draw clouds
+            clouds.forEach(cloud => {
+                if (cloud.x >= viewX - cloud.radius && cloud.x <= viewX + viewWidth + cloud.radius && 
+                    cloud.y >= viewY - cloud.radius && cloud.y <= viewY + viewHeight + cloud.radius) {
+                    ctx.beginPath();
+                    ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = nightMode ? `rgba(100, 100, 150, ${cloud.opacity})` : `rgba(255, 255, 255, ${cloud.opacity})`;
+                    ctx.fill();
+                }
+            });
+
+            // Draw background dots
+            backgroundDots.forEach(dot => {
+                if (dot.x >= viewX && dot.x <= viewX + viewWidth && dot.y >= viewY && dot.y <= viewY + viewHeight) {
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = dot.color;
+                    ctx.fill();
+                }
+            });
+
+            // Draw grid
+            ctx.strokeStyle = nightMode ? '#4a4a6e' : '#e0e0e0';
+            ctx.lineWidth = 1 / scale;
+            for (let x = 0; x <= mapWidth; x += 75) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, mapHeight);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= mapHeight; y += 75) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(mapWidth, y);
+                ctx.stroke();
+            }
+
+            // Draw particles
+            explosionParticles.forEach(particle => {
+                if (particle.x >= viewX && particle.x <= viewX + viewWidth && particle.y >= viewY && particle.y <= viewY + viewHeight) {
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.radius * (particle.life / 60), 0, Math.PI * 2);
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = particle.life / 60;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            trailParticles.forEach(particle => {
+                if (particle.x >= viewX && particle.x <= viewX + viewWidth && particle.y >= viewY && particle.y <= viewY + viewHeight) {
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.radius * (particle.life / 30), 0, Math.PI * 2);
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = particle.life / 30;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            powerupParticles.forEach(particle => {
+                if (particle.x >= viewX && particle.x <= viewX + viewWidth && particle.y >= viewY && particle.y <= viewY + viewHeight) {
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.radius * (particle.life / 90), 0, Math.PI * 2);
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = particle.life / 90;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            // Draw food
+            foods.forEach(food => {
+                if (food.x >= viewX && food.x <= viewX + viewWidth && food.y >= viewY && food.y <= viewY + viewHeight) {
+                    ctx.beginPath();
+                    ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ctx.createRadialGradient(food.x, food.y, food.radius / 2, food.x, food.y, food.radius);
+                    ctx.fillStyle.addColorStop(0, food.color);
+                    ctx.fillStyle.addColorStop(1, darkenColor(food.color));
+                    ctx.fill();
+                    ctx.shadowColor = nightMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 3;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            });
+
+            // Draw power-ups
+            powerups.forEach(powerup => {
+                if (powerup.x >= viewX && powerup.x <= viewX + viewWidth && powerup.y >= viewY && powerup.y <= viewY + viewHeight) {
+                    ctx.save();
+                    ctx.translate(powerup.x, powerup.y);
+                    ctx.scale(Math.sin(Date.now() / 500) * 0.1 + 1, Math.sin(Date.now() / 500) * 0.1 + 1);
+                    ctx.translate(-powerup.x, -powerup.y);
+                    ctx.beginPath();
+                    ctx.arc(powerup.x, powerup.y, powerup.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ctx.createRadialGradient(powerup.x, powerup.y, powerup.radius / 2, powerup.x, powerup.y, powerup.radius);
+                    ctx.fillStyle.addColorStop(0, powerup.color);
+                    ctx.fillStyle.addColorStop(1, darkenColor(powerup.color));
+                    ctx.fill();
+                    ctx.shadowColor = powerup.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.restore();
+                }
+            });
+
+            // Draw enemies
+            enemies.forEach(enemy => {
+                if (enemy.x >= viewX && enemy.x <= viewX + viewWidth && enemy.y >= viewY && enemy.y <= viewY + viewHeight) {
+                    ctx.save();
+                    if (enemy.fleeing) {
+                        ctx.translate(enemy.x, enemy.y);
+                        ctx.translate(Math.sin(Date.now() / 100) * 2, 0);
+                        ctx.translate(-enemy.x, -enemy.y);
+                    }
+                    ctx.beginPath();
+                    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ctx.createRadialGradient(enemy.x, enemy.y, enemy.radius / 2, enemy.x, enemy.y, enemy.radius);
+                    ctx.fillStyle.addColorStop(0, enemy.color);
+                    ctx.fillStyle.addColorStop(1, darkenColor(enemy.color));
+                    ctx.fill();
+                    ctx.shadowColor = nightMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    if (enemy.hunter) {
+                        ctx.beginPath();
+                        ctx.moveTo(enemy.x, enemy.y - enemy.radius - 5);
+                        ctx.lineTo(enemy.x - 5, enemy.y - enemy.radius);
+                        ctx.lineTo(enemy.x + 5, enemy.y - enemy.radius);
+                        ctx.fillStyle = '#FF0000';
+                        ctx.fill();
+                    } else if (enemy.opportunist) {
+                        ctx.beginPath();
+                        ctx.arc(enemy.x, enemy.y - enemy.radius - 5, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fill();
+                    }
+                    if (enemy.speed > 4) {
+                        ctx.beginPath();
+                        ctx.moveTo(enemy.x, enemy.y);
+                        ctx.lineTo(enemy.x - (enemy.target ? (enemy.target.x - enemy.x) : 0) * 0.2, enemy.y - (enemy.target ? (enemy.target.y - enemy.y) : 0) * 0.2);
+                        ctx.strokeStyle = nightMode ? 'rgba(200, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+                        ctx.lineWidth = 2 / scale;
+                        ctx.stroke();
+                    }
+                    ctx.font = `${Math.max(10, enemy.radius / 3)}px Arial`;
+                    ctx.fillStyle = nightMode ? '#e0e0ff' : '#FFFFFF';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(enemy.score, enemy.x, enemy.y);
+                    ctx.restore();
+                }
+            });
+
+            // Draw decoy
+            if (decoy && decoy.x >= viewX && decoy.x <= viewX + viewWidth && decoy.y >= viewY && decoy.y <= viewY + viewHeight) {
+                ctx.beginPath();
+                ctx.arc(decoy.x, decoy.y, decoy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ctx.createRadialGradient(decoy.x, decoy.y, decoy.radius / 2, decoy.x, decoy.y, decoy.radius);
+                ctx.fillStyle.addColorStop(0, decoy.color);
+                ctx.fillStyle.addColorStop(1, darkenColor(decoy.color));
+                ctx.globalAlpha = 0.7;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.shadowColor = nightMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.font = `${Math.max(10, decoy.radius / 3)}px Arial`;
+                ctx.fillStyle = nightMode ? '#e0e0ff' : '#FFFFFF';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Decoy', decoy.x, decoy.y);
+            }
+
+            // Draw player
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ctx.createRadialGradient(player.x, player.y, player.radius / 2, player.x, player.y, player.radius);
+            ctx.fillStyle.addColorStop(0, player.color);
+            ctx.fillStyle.addColorStop(1, darkenColor(player.color));
+            ctx.fill();
+            ctx.shadowColor = nightMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            if (player.speed > 4 || player.powerup === 'speed') {
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y);
+                ctx.lineTo(player.x - (targetX - player.x) * 0.2, player.y - (targetY - player.y) * 0.2);
+                ctx.strokeStyle = nightMode ? 'rgba(200, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+            }
+            ctx.font = `${Math.max(10, player.radius / 3)}px Arial`;
+            ctx.fillStyle = nightMode ? '#e0e0ff' : '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(player.score, player.x, player.y);
+            if (player.shield) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 5, 0, Math.PI * 2);
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 3 / scale;
+                ctx.stroke();
+            }
+            if (player.ghost) {
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = nightMode ? '#e0e0ff' : '#FFFFFF';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+            if (player.magnet) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FF69B4';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+            }
+            if (player.burst) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 15, 0, Math.PI * 2);
+                ctx.strokeStyle = '#DC143C';
+                ctx.lineWidth = 3 / scale;
+                ctx.stroke();
+            }
+            if (player.reverse) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 12, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FF4500';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // Reset game
+        function resetGame() {
+            player.x = mapWidth / 2;
+            player.y = mapHeight / 2;
+            player.radius = 20;
+            player.speed = 3.5;
+            player.score = 0;
+            player.color = getRandomColor();
+            player.powerup = null;
+            player.powerupTimer = 0;
+            player.shield = false;
+            player.massBoost = false;
+            player.ghost = false;
+            player.magnet = false;
+            player.burst = false;
+            player.reverse = false;
+            scoreDisplay.textContent = player.score;
+            kills = 0;
+            killsDisplay.textContent = kills;
+            sizeDisplay.textContent = player.radius.toFixed(1);
+            powerupDisplay.textContent = 'Power-up: None';
+            powerupProgress.style.width = '0%';
+            targetX = player.x;
+            targetY = player.y;
+            gameRunning = true;
+            gameOverScreen.style.display = 'none';
+            difficulty = 1;
+            enemySpawnTimer = 0;
+            freezeTimer = 0;
+            shrinkTimer = 0;
+            decoyTimer = 0;
+            magnetTimer = 0;
+            burstTimer = 0;
+            reverseTimer = 0;
+            gameTime = 0;
+            timeDisplay.textContent = '00:00';
+            decoy = null;
+            maxEnemies = 18;
+            enemies.length = 0;
+            explosionParticles.length = 0;
+            trailParticles.length = 0;
+            powerupParticles.length = 0;
+            createFoods();
+            createPowerups();
+            createBackgroundDots();
+            createClouds();
+        }
+
+        // Night mode toggle
+        function toggleNightMode() {
+            nightMode = !nightMode;
+            document.body.classList.toggle('night-mode', nightMode);
+            canvas.classList.toggle('night-mode', nightMode);
+            minimapCanvas.classList.toggle('night-mode', nightMode);
+            document.getElementById('ui').classList.toggle('night-mode', nightMode);
+            document.getElementById('powerup').classList.toggle('night-mode', nightMode);
+            document.getElementById('powerup-bar').classList.toggle('night-mode', nightMode);
+            document.getElementById('night-mode-toggle').classList.toggle('night-mode', nightMode);
+            document.getElementById('scoreboard').classList.toggle('night-mode', nightMode);
+            document.getElementById('gameOver').classList.toggle('night-mode', nightMode);
+            nightModeToggle.textContent = nightMode ? 'Day Mode' : 'Night Mode';
+            createBackgroundDots();
+        }
+
+        // Initialize game
+        createFoods();
+        createPowerups();
+        createBackgroundDots();
+        createClouds();
+        for (let i = 0; i < 5; i++) createEnemy();
+        scoreDisplay.textContent = player.score;
+        killsDisplay.textContent = kills;
+        sizeDisplay.textContent = player.radius.toFixed(1);
+
+        // Event listeners
+        restartButton.addEventListener('click', resetGame);
+        restartGameOverButton.addEventListener('click', resetGame);
+        nightModeToggle.addEventListener('click', toggleNightMode);
+
+        // FPS calculation
+        function calculateFPS() {
+            const now = performance.now();
+            frameCount++;
+            if (now - lastFrameTime >= 1000) {
+                fps = frameCount;
+                fpsDisplay.textContent = fps;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            try {
+                calculateFPS();
+                movePlayer();
+                moveDecoy();
+                moveEnemies();
+                moveBackgroundDots();
+                moveClouds();
+                updateExplosionParticles();
+                updateTrailParticles();
+                updatePowerupParticles();
+                updateMagnet();
+                updateBurst();
+                checkCollisions();
+                updatePowerup();
+                updateGameTime();
+                spawnEnemies();
+                updateMaxEnemies();
+                increaseDifficulty();
+                updateScoreboard();
+                draw();
+                drawMinimap();
+                if (gameRunning) {
+                    requestAnimationFrame(gameLoop);
+                }
+            } catch (e) {
+                console.error('Game loop error:', e);
+            }
+        }
+
+        // Start game
+        gameLoop();
+    </script>
+</body>
+</html>

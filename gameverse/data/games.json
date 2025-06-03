@@ -1,0 +1,182 @@
+[
+    {
+        "id": "01",
+        "name": "Sandbox",
+        "link": "sandbox/index.html",
+        "status": "Beta",
+        "tooltip": "Stwórz własny świat",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "02",
+        "name": "Pet Simulator",
+        "link": "petsim/index.html",
+        "status": "Testy",
+        "tooltip": "Wykluwaj zwierzęta i niszcz sejfy",
+        "classes": ["testy"],
+        "ulubione": false
+    },
+    {
+        "id": "03",
+        "name": "RPG",
+        "link": "rpghtml/index.html",
+        "status": "Testy",
+        "tooltip": "Gra RPG w której wcielasz się w bohatera",
+        "classes": ["testy"],
+        "ulubione": false
+    },
+    {
+        "id": "04",
+        "name": "Bloki 1",
+        "link": "game/bloki1.html",
+        "status": "",
+        "tooltip": "Strzelaj w bloki lub uciekaj przed nimi",
+        "classes": ["ukonczona"],
+        "ulubione": false
+    },
+    {
+        "id": "05",
+        "name": "Dino Game",
+        "link": "dino/index.html",
+        "status": "Konserwacje",
+        "tooltip": "Klasyczna gra Dino",
+        "classes": ["konserwacje"],
+        "ulubione": false
+    },
+    {
+        "id": "06",
+        "name": "DuoPlayer",
+        "link": "duoplayer/index.html",
+        "status": "Testy",
+        "tooltip": "Rywalizuj z innym graczem",
+        "classes": ["testy"],
+        "ulubione": false
+    },
+    {
+        "id": "07",
+        "name": "Snake",
+        "link": "snake/index.html",
+        "status": "Konserwacje",
+        "tooltip": "Klasyczny Snake",
+        "classes": ["konserwacje"],
+        "ulubione": false
+    },
+    {
+        "id": "08",
+        "name": "Zgadywanie Liczb",
+        "link": "game/zgadywanieliczb.html",
+        "status": "",
+        "tooltip": "Zgaduj liczby z zakresu 1-100",
+        "classes": ["ukonczona"],
+        "ulubione": false
+    },
+    {
+        "id": "09",
+        "name": "Rizz Party Tycoon",
+        "link": "rizzpartytycoon/index.html",
+        "status": "Beta",
+        "tooltip": "Stwórz imperium imprezowe",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "10",
+        "name": "Kółko-Krzyżyk",
+        "link": "game/kolkokrzyzyk.html",
+        "status": "",
+        "tooltip": "Rywalizuj z innym graczem lub botem w tej klasycznej grze",
+        "classes": ["ukonczona"],
+        "ulubione": false
+    },
+    {
+        "id": "11",
+        "name": "Tetris",
+        "link": "game/tetris.html",
+        "status": "",
+        "tooltip": "Klasyczny Tetris",
+        "classes": ["ukonczona"],
+        "ulubione": false
+    },
+    {
+        "id": "12",
+        "name": "Obby",
+        "link": "obby/index.html",
+        "status": "Beta",
+        "tooltip": "Przejdź tor przeszkód",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "13",
+        "name": "Bitcoin Miner",
+        "link": "game/bitcoinminer.html",
+        "status": "HOT",
+        "tooltip": "Klikaj i zdobywaj BitCoiny",
+        "classes": ["ukonczona", "money", "hot"],
+        "ulubione": false
+    },
+    {
+        "id": "14",
+        "name": "Memory",
+        "link": "game/memory.html",
+        "status": "",
+        "tooltip": "Szukaj podobnych kart",
+        "classes": ["ukonczona"],
+        "ulubione": false
+    },
+    {
+        "id": "15",
+        "name": "Nonogram",
+        "link": "nonogram/index.html",
+        "status": "Beta",
+        "tooltip": "Rozwiąż te puzzle",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "16",
+        "name": "Ping Pong",
+        "link": "pingpong/index.html",
+        "status": "Beta",
+        "tooltip": "Odbijaj piłkę",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "17",
+        "name": "Flappy Bird",
+        "link": "flappybird/index.html",
+        "status": "Beta",
+        "tooltip": "Skacz, aby przejść przez dziury",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "18",
+        "name": "Solitaire",
+        "link": "game/solitaire.html",
+        "status": "",
+        "tooltip": "Skacz, aby przejść przez dziury",
+        "classes": ["ukonczona", "internet"],
+        "ulubione": false
+    },
+    {
+        "id": "19",
+        "name": "Bloki 2",
+        "link": "bloki2/index.html",
+        "status": "Beta",
+        "tooltip": "Odbijaj piłkę i niszcz bloki",
+        "classes": ["beta"],
+        "ulubione": false
+    },
+    {
+        "id": "20",
+        "name": "Wisielec",
+        "link": "wisielec/index.html",
+        "status": "Nowość",
+        "tooltip": "Zgadywaj słowa",
+        "classes": ["konserwacje", "nowosc"],
+        "ulubione": false
+    }
+]

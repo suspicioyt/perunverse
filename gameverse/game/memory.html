@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #7b7b7b;
+    margin: 0;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(4, 100px);
+    grid-gap: 10px;
+}
+
+.card {
+    width: 100px;
+    height: 100px;
+    background-color: #3498db;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    transform: rotateY(0deg);
+    transition: transform 0.3s;
+}
+
+.card.flipped {
+    transform: rotateY(360deg);
+}
+
+.card.matched {
+    background-color: #2ecc71;
+    pointer-events: none;
+}
+
+    </style>
+</head>
+<body>
+    <div class="game-board" id="game-board"></div>
+    <script>
+        const gameBoard = document.getElementById('game-board');
+const cardValues = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+let cards = [...cardValues, ...cardValues]; // podwajamy wartości kart
+cards = shuffle(cards);
+
+let flippedCards = [];
+let matchedCards = 0;
+
+function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+}
+
+function createCard(value) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.dataset.value = value;
+    card.innerHTML = '?';
+    card.addEventListener('click', flipCard);
+    return card;
+}
+
+function flipCard(event) {
+    const card = event.target;
+    
+    if (flippedCards.length === 2 || card.classList.contains('flipped') || card.classList.contains('matched')) {
+        return;
+    }
+
+    card.classList.add('flipped');
+    card.innerHTML = card.dataset.value;
+    flippedCards.push(card);
+
+    if (flippedCards.length === 2) {
+        checkMatch();
+    }
+}
+
+function checkMatch() {
+    const [card1, card2] = flippedCards;
+
+    if (card1.dataset.value === card2.dataset.value) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedCards += 2;
+        flippedCards = [];
+
+        if (matchedCards === cards.length) {
+            setTimeout(() => alert('Wygrałeś!'), 500);
+            let perunPLN = parseFloat(localStorage.getItem("perunPLN")) || 0;
+            perunPLN += game.score * 0.1;
+            localStorage.setItem("perunPLN", perunPLN);        
+        }
+    } else {
+        setTimeout(() => {
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            card1.innerHTML = '?';
+            card2.innerHTML = '?';
+            flippedCards = [];
+        }, 1000);
+    }
+}
+
+function startGame() {
+    cards.forEach(value => {
+        const card = createCard(value);
+        gameBoard.appendChild(card);
+    });
+}
+
+startGame();
+
+    </script>
+</body>
+</html>

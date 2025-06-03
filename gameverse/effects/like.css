@@ -1,0 +1,305 @@
+  .hand {
+    animation: hand 1.5s ease-in;
+    fill: #fff;
+    transform-origin: center;
+  }
+  
+  .line {
+    fill: transparent;
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  
+  .line-1 {
+    stroke: #fb493f;
+    stroke-width: 2;
+    animation: first 1.5s ease-in;
+  }
+  
+  .line-2 {
+    stroke: #cbfcc9;
+    stroke-width: 1.5;
+    animation: first 1.5s ease-in;
+  }
+  
+  .line-3 {
+    stroke: #dec83c;
+    stroke-width: 3;
+    animation: second 1.5s ease-in;
+  }
+  
+  .line-4 {
+    stroke: #cbfcc9;
+    stroke-width: 2;
+    animation: second 1.5s ease-in;
+  }
+  
+  .line-5 {
+    stroke: #fb493f;
+    stroke-width: 2;
+    animation: third 1.5s ease-in;
+  }
+  
+  .line-6 {
+    stroke: #ab71f7;
+    stroke-width: 2;
+    animation: third 1.5s ease-in;
+  }
+  
+  .line-7 {
+    stroke: #dec83c;
+    stroke-width: 2;
+    animation: third 1.8s ease-in;
+  }
+  
+  .circle-1 {
+    fill: #dec83c;
+    opacity: 0;
+    animation: circle 1.5s ease-in;
+  }
+  
+  .circle-2 {
+    fill: #fb493f;
+    opacity: 0;
+    animation: circle 1.5s ease-in;
+  }
+  
+  .circle-3 {
+    fill: #cbfcc9;
+    opacity: 0;
+    animation: circle 1.5s ease-in;
+  }
+  
+  .flower-1 {
+    fill: #dec83c;
+    opacity: 0;
+    animation: flower-1 1.5s ease-in;
+  }
+  
+  .flower-2 {
+    fill: #cbfcc9;
+    opacity: 0;
+    animation: flower-2 1.5s ease-in;
+  }
+  
+  .flower-3 {
+    fill: #fb493f;
+    opacity: 0;
+    animation: flower-1 1.5s ease-in;
+  }
+  
+  @keyframes flower-1 {
+    0% {
+      opacity: 0;
+    }
+    49% {
+      opacity: 0;
+    }
+    50% {
+      opacity: .5;
+    }
+    55% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  
+  @keyframes flower-2 {
+    0% {
+      opacity: 0;
+    }
+    55% {
+      opacity: 0;
+    }
+    60% {
+      opacity: .5;
+    }
+    65% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  
+  @keyframes circle {
+    0% {
+      opacity: 0;
+    }
+    49% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  
+  @keyframes first {
+    20% {
+      stroke-dashoffset: 40;
+    }
+    40% {
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dashoffset: 40;
+    }
+  }
+  
+  @keyframes second {
+    30% {
+      stroke-dashoffset: 40;
+    }
+    40% {
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dashoffset: 40;
+    }
+  }
+  
+  @keyframes third {
+    35% {
+      stroke-dashoffset: 40;
+    }
+    40% {
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dashoffset: 40;
+    }
+  }
+  
+  @keyframes hand {
+    0% {
+      fill: #fff;
+      transform: scale(.3) rotate(10deg);
+    }
+    5%{
+      transform: rotate(10deg);
+    }
+    20% {
+      fill: #cbfcc9;
+      transform: rotate(-15deg);
+    }
+    40% {
+      fill: #ab71f7;
+      transform: rotate(-30deg);
+    }
+    55% {
+      transform: rotate(-30deg);
+    }
+    60% {
+      fill: #ddd926;
+      transform: rotate(10deg);
+    }
+    66% {
+      fill: #f28032;
+      transform: scale(1) rotate(2deg);
+    }
+    70% {
+      fill: #fe443b;
+      transform: scale(1) rotate(0deg);
+    }
+    100%{
+      fill: #fff;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  
+  .favorite-button input {
+    display: none;
+  }
+  
+  .favorite-button input + label {
+    cursor: pointer;
+  }
+  
+  .favorite-button input + label > .checked {
+    display: none;
+  }
+  
+  .favorite-button input:checked + label > .checked {
+    display: block;
+  }
+  
+  .favorite-button input:checked + label > .unchecked {
+    display: none;
+  }
+  
+  .favorite-button svg {
+    vertical-align: middle;
+  }
+
+
+
+
+
+
+
+
+  .effect-text {
+    font-size: 50px;
+    color: #000000;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer
+  }
+  
+  .tiny-heart {
+    position: absolute;
+    z-index: 10000000000;
+    opacity: 0;
+    background-color: #D90429;
+    box-shadow: 0px 0px 50px 4px transparentize(#EF233C, .3);
+    animation: animated-heart infinite ease-in;
+    &:before, &:after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #D90429;
+    }
+    &:before {
+      transform: translateX(-50%);
+    }
+    &:after {
+      transform: translateY(-50%)
+    }
+  }
+  
+  @keyframes animated-heart {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) rotate(45deg)
+    }
+    50% {
+      opacity: 1;
+      transform: translate(0, -40%) rotate(45deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0, -1000%) rotate(45deg);
+    }
+  }

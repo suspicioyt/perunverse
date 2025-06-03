@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jajka Wielkanocne | Perun Studios</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            background-color: #7CFC00;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 600px;
+            height: 800px;
+            background: linear-gradient(to bottom, #87CEFA 60%, #32CD32 60%);
+            border: 4px solid #FFD700;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        #gameArea::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20%;
+            background: repeating-linear-gradient(45deg, #228B22, #228B22 10px, #32CD32 10px, #32CD32 20px);
+            z-index: 0;
+        }
+
+        #gameArea::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 60%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI0MCIgZmlsbD0iI2ZmZiIgcnZhZD0iMjAiIHJ4PSIyMCIgc3R5bGU9Im9wYWNpdHk6MC41O2FuaW1hdGlvbjogY2xvdWRNb3ZlIDMwcyBpbmZpbml0ZSIvPjwvc3ZnPg==') repeat-x;
+            animation: cloudMove 30s linear infinite;
+        }
+
+        .egg {
+            position: absolute;
+            width: 35px;
+            height: 45px;
+            border-radius: 50% 50% 70% 70%;
+            border: 2px solid #8B4513;
+            opacity: 0.9;
+            transition: transform 0.1s ease;
+        }
+
+        .egg:nth-child(3n+1) { background: radial-gradient(circle, #FF69B4 20%, #FFB6C1 80%); }
+        .egg:nth-child(3n+2) { background: radial-gradient(circle, #00CED1 20%, #40E0D0 80%); }
+        .egg:nth-child(3n) { background: radial-gradient(circle, #FFD700 20%, #FFEC8B 80%); }
+
+        .egg.collected {
+            animation: flash 0.2s ease;
+        }
+
+        .carrot {
+            position: absolute;
+            width: 18px;
+            height: 55px;
+            background: linear-gradient(to bottom, #FFA500, #FF4500);
+            clip-path: polygon(50% 0%, 70% 85%, 50% 100%, 30% 85%);
+            opacity: 0.9;
+        }
+
+        .carrot.fast {
+            width: 12px;
+            height: 65px;
+            background: linear-gradient(to bottom, #FF4500, #8B0000);
+        }
+
+        .carrot.hit {
+            animation: shake 0.3s ease;
+        }
+
+        #basket {
+            position: absolute;
+            bottom: 30px;
+            width: 40px;
+            height: 50px;
+            background: #A0522D;
+            border: 3px solid #8B4513;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            background-image: linear-gradient(45deg, #8B4513 25%, transparent 25%), 
+                             linear-gradient(-45deg, #8B4513 25%, transparent 25%);
+            background-size: 10px 10px;
+            transition: width 0.2s ease, transform 0.1s ease;
+            z-index: 1;
+        }
+
+        #basket.moving {
+            transform: scale(1.05);
+        }
+
+        #powerUp {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            border: 3px solid #FFD700;
+            background-image: radial-gradient(circle, #FFD700, #FFA500);
+            display: none;
+            animation: pulse 0.8s infinite;
+        }
+
+        #scoreboard, #timer, #highScore, #level, #combo {
+            position: absolute;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 2px 2px 4px #000;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+        #scoreboard { top: 10px; left: 10px; }
+        #timer { top: 10px; right: 10px; }
+        #highScore { top: 60px; left: 10px; }
+        #level { top: 110px; left: 10px; }
+        #combo { top: 160px; left: 10px; }
+
+        #startScreen, #endScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+        }
+
+        #endScreen {
+            display: none;
+        }
+
+        #startButton, #playAgainButton {
+            padding: 25px 50px;
+            font-size: 28px;
+            background: #FF4500;
+            color: #fff;
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        #startButton:hover, #playAgainButton:hover {
+            transform: scale(1.1);
+            background: #FF6347;
+        }
+
+        #endMessage, #cooldownMessage {
+            color: #FFD700;
+            font-size: 32px;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 6px #000;
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-6px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes cloudMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 600px 0; }
+        }
+
+        @keyframes bgShift {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 60px; }
+        }
+    </style>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+</head>
+<body>
+    <div id="gameArea">
+        <div id="scoreboard">Wynik: 0</div>
+        <div id="timer">Czas: 60s</div>
+        <div id="highScore">Najlepszy: 0</div>
+        <div id="level">Poziom: 1</div>
+        <div id="combo">Combo: 1x</div>
+        <div id="basket"></div>
+        <div id="powerUp"></div>
+        <div id="startScreen">
+            <button id="startButton">Rozpocznij Grę</button>
+        </div>
+        <div id="endScreen">
+            <button buttonId="19" class="add-button">🥚</button>
+            <div id="endMessage"></div>
+            <div id="cooldownMessage"></div>
+            <button id="playAgainButton">Zagraj Ponownie</button>
+        </div>
+    </div>
+    <script src="../script/event2.js"></script>
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const basket = document.getElementById('basket');
+        const scoreboard = document.getElementById('scoreboard');
+        const timerDisplay = document.getElementById('timer');
+        const highScoreDisplay = document.getElementById('highScore');
+        const levelDisplay = document.getElementById('level');
+        const comboDisplay = document.getElementById('combo');
+        const powerUp = document.getElementById('powerUp');
+        const startScreen = document.getElementById('startScreen');
+        const endScreen = document.getElementById('endScreen');
+        const startButton = document.getElementById('startButton');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const endMessage = document.getElementById('endMessage');
+        const cooldownMessage = document.getElementById('cooldownMessage');
+
+        const gameWidth = gameArea.clientWidth;
+        const gameHeight = gameArea.clientHeight;
+
+        const game = {
+            score: 0,
+            timeLeft: 60,
+            basketSize: 40,
+            eggs: [],
+            carrots: [],
+            basketPositionX: (gameWidth - 40) / 2,
+            basketSpeed: 35,
+            gameInterval: null,
+            spawnInterval: null,
+            powerUpInterval: null,
+            countdownInterval: null,
+            highScore: localStorage.getItem('eventGameHighScore') || 0,
+            level: 1,
+            isPaused: false,
+            comboMultiplier: 1,
+            consecutiveEggs: 0
+        };
+
+        highScoreDisplay.textContent = `Najlepszy: ${game.highScore}`;
+
+        function updateScoreboard() {
+            scoreboard.textContent = `Wynik: ${game.score} (${game.score*0.01} perunPLN)`;
+            timerDisplay.textContent = `Czas: ${game.timeLeft}s`;
+            levelDisplay.textContent = `Poziom: ${game.level}`;
+            comboDisplay.textContent = `Combo: ${game.comboMultiplier}x`;
+        }
+
+        function createEgg() {
+            const egg = document.createElement('div');
+            egg.classList.add('egg');
+            egg.style.left = Math.random() * (gameWidth - 35) + 'px';
+            egg.style.top = '-45px';
+            gameArea.appendChild(egg);
+            game.eggs.push(egg);
+        }
+
+        function createCarrot() {
+            const carrot = document.createElement('div');
+            carrot.classList.add('carrot');
+            if (Math.random() < 0.15) carrot.classList.add('fast');
+            carrot.style.left = Math.random() * (gameWidth - 18) + 'px';
+            carrot.style.top = '-55px';
+            gameArea.appendChild(carrot);
+            game.carrots.push(carrot);
+        }
+
+        function moveBasket(event) {
+            if (game.isPaused) return;
+            if (event.key === 'ArrowLeft' && game.basketPositionX > 0) {
+                game.basketPositionX -= game.basketSpeed;
+                basket.classList.add('moving');
+                setTimeout(() => basket.classList.remove('moving'), 100);
+            } else if (event.key === 'ArrowRight' && game.basketPositionX < gameWidth - game.basketSize) {
+                game.basketPositionX += game.basketSpeed;
+                basket.classList.add('moving');
+                setTimeout(() => basket.classList.remove('moving'), 100);
+            } else if (event.key === 'p' || event.key === 'P') {
+                togglePause();
+            }
+            basket.style.left = game.basketPositionX + 'px';
+        }
+
+        function togglePause() {
+            game.isPaused = !game.isPaused;
+            if (game.isPaused) {
+                clearIntervals();
+                alert('Gra wstrzymana. Naciśnij "P", aby wznowić.');
+            } else {
+                startIntervals();
+            }
+        }
+
+        function activatePowerUp() {
+            powerUp.style.left = Math.random() * (gameWidth - 30) + 'px';
+            powerUp.style.top = '-30px';
+            powerUp.style.display = 'block';
+
+            let position = -30;
+            const fallSpeed = 5 + game.level * 0.7;
+
+            const fallInterval = setInterval(() => {
+                if (!game.isPaused) {
+                    position += fallSpeed;
+                    powerUp.style.top = position + 'px';
+
+                    if (position > gameHeight - 50) {
+                        const basketRect = basket.getBoundingClientRect();
+                        const powerUpRect = powerUp.getBoundingClientRect();
+
+                        if (checkCollision(powerUpRect, basketRect)) {
+                            game.basketSize += 15;
+                            basket.style.width = game.basketSize + 'px';
+                            setTimeout(() => {
+                                game.basketSize -= 15;
+                                basket.style.width = game.basketSize + 'px';
+                            }, 4000);
+                        }
+                        powerUp.style.display = 'none';
+                        clearInterval(fallInterval);
+                    }
+                }
+            }, 20);
+        }
+
+        function checkCollision(rect1, rect2) {
+            return (rect1.bottom >= rect2.top &&
+                    rect1.top <= rect2.bottom &&
+                    rect1.right >= rect2.left &&
+                    rect1.left <= rect2.right);
+        }
+
+        function endGame() {
+            clearIntervals();
+            document.removeEventListener('keydown', moveBasket);
+
+            if (game.score > game.highScore) {
+                game.highScore = game.score;
+                localStorage.setItem('eventGameHighScore', game.highScore); // Fixed this line too
+                highScoreDisplay.textContent = `Najlepszy: ${game.highScore}`;
+            }
+        
+            // Get existing perunPLN and add new earnings
+            let perunPLN = parseFloat(localStorage.getItem("perunPLN") || 0);
+            perunPLN += game.score * 0.01; // Add new earnings (1 point = 0.01 perunPLN)
+            localStorage.setItem("perunPLN", perunPLN.toString());
+        
+            const cooldownTime = Date.now() + 120000; // 2 minutes cooldown
+            localStorage.setItem("eventGameCooldownTime", cooldownTime);
+            console.log(`Cooldown set to: ${new Date(cooldownTime).toLocaleTimeString()}`);
+        
+            endMessage.textContent = `Koniec gry! Wynik: ${game.score} (${perunPLN.toFixed(2)} perunPLN)`;
+            updateCooldownMessage();
+            endScreen.style.display = 'flex';
+        }
+
+        function updateCooldownMessage() {
+            const cooldownTime = parseInt(localStorage.getItem("eventGameCooldownTime") || 0);
+            const remainingTime = cooldownTime - Date.now();
+            if (remainingTime > 0) {
+                cooldownMessage.textContent = `Kolejna gra za: ${Math.ceil(remainingTime / 1000)}s`;
+                setTimeout(updateCooldownMessage, 1000);
+            } else {
+                cooldownMessage.textContent = '';
+            }
+        }
+
+        function checkCooldown() {
+            const cooldownTime = parseInt(localStorage.getItem("eventGameCooldownTime") || 0);
+            const remainingTime = cooldownTime - Date.now();
+
+            console.log(`Checking cooldown: ${remainingTime}ms remaining`);
+            if (remainingTime > 0) {
+                alert(`Poczekaj ${Math.ceil(remainingTime / 1000)} sekund przed kolejną grą!`);
+                updateCooldownMessage();
+                return false;
+            }
+            return true;
+        }
+
+        function updateFallingElements() {
+    if (game.isPaused) return;
+
+    const eggSpeed = 4 + game.level * 0.7;
+    const carrotSpeed = game.carrots.map(c => c.classList.contains('fast') ? 10 : 7 + game.level * 0.7);
+
+    game.eggs.forEach((egg, index) => {
+        let pos = parseFloat(egg.style.top) + (Math.random() * eggSpeed);
+        egg.style.top = pos + 'px';
+        egg.style.transform = `rotate(${pos % 360}deg)`;
+
+        if (pos > gameHeight - 50) {
+            const basketRect = basket.getBoundingClientRect();
+            const eggRect = egg.getBoundingClientRect();
+
+            if (checkCollision(eggRect, basketRect)) {
+                game.consecutiveEggs++;
+                game.comboMultiplier = Math.min(3, Math.floor(game.consecutiveEggs / 3) + 1);
+                game.score += 1 * game.comboMultiplier; // 1 point per egg
+                egg.classList.add('collected');
+                setTimeout(() => egg.remove(), 200);
+                if (game.score % 10 === 0) game.timeLeft += 2;
+                updateScoreboard();
+                updateLevel();
+            } else {
+                game.consecutiveEggs = 0;
+                game.comboMultiplier = 1;
+                egg.remove();
+                updateScoreboard();
+            }
+            game.eggs.splice(index, 1);
+        }
+    });
+
+    game.carrots.forEach((carrot, index) => {
+        let pos = parseFloat(carrot.style.top) + carrotSpeed[index];
+        carrot.style.top = pos + 'px';
+
+        const basketRect = basket.getBoundingClientRect();
+        const carrotRect = carrot.getBoundingClientRect();
+
+        if (checkCollision(carrotRect, basketRect)) {
+            game.consecutiveEggs = 0;
+            game.comboMultiplier = 1;
+            carrot.classList.add('hit');
+            carrot.remove(); // Usuwamy marchewkę natychmiast
+            game.carrots.splice(index, 1); // Usuwamy z tablicy
+            endGame(); // Kończymy grę natychmiast, bez opóźnienia
+            return; // Przerywamy dalsze przetwarzanie tej funkcji
+        } else if (pos > gameHeight) {
+            carrot.remove();
+            game.carrots.splice(index, 1);
+        }
+    });
+}
+
+        function updateLevel() {
+            const newLevel = Math.min(15, Math.floor(game.score / 20) + 1);
+            if (newLevel > game.level) {
+                game.level = newLevel;
+                updateScoreboard();
+            }
+        }
+
+        function countdown() {
+            if (game.isPaused) return;
+            if (game.timeLeft <= 0) {
+                endGame();
+                return;
+            }
+            game.timeLeft--;
+            updateScoreboard();
+        }
+
+        function clearIntervals() {
+            clearInterval(game.gameInterval);
+            clearInterval(game.spawnInterval);
+            clearInterval(game.powerUpInterval);
+            clearInterval(game.countdownInterval);
+        }
+
+        function startIntervals() {
+            game.gameInterval = setInterval(updateFallingElements, 20);
+            game.spawnInterval = setInterval(() => {
+                if (Math.random() < Math.min(0.9, 0.7 + game.level * 0.07)) createEgg();
+                if (Math.random() < Math.min(0.7, 0.4 + game.level * 0.05)) createCarrot();
+            }, Math.max(400, 800 - game.level * 70));
+            game.powerUpInterval = setInterval(activatePowerUp, 20000);
+            game.countdownInterval = setInterval(countdown, 1000);
+        }
+
+        function resetGameState() {
+            game.eggs.forEach(egg => egg.remove());
+            game.carrots.forEach(carrot => carrot.remove());
+            powerUp.style.display = 'none';
+            game.eggs = [];
+            game.carrots = [];
+        }
+
+        function startGame() {
+            if (!checkCooldown()) return;
+
+            resetGameState();
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+            game.score = 0;
+            game.timeLeft = 60;
+            game.basketSize = 40;
+            game.level = 1;
+            game.isPaused = false;
+            game.comboMultiplier = 1;
+            game.consecutiveEggs = 0;
+            basket.style.width = game.basketSize + 'px';
+            game.basketPositionX = (gameWidth - game.basketSize) / 2;
+            basket.style.left = game.basketPositionX + 'px';
+            updateScoreboard();
+
+            startIntervals();
+            document.addEventListener('keydown', moveBasket);
+        }
+
+        startButton.addEventListener('click', startGame);
+        playAgainButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

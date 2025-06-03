@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 25px;
+            color: #00d4ff;
+            text-shadow: 0 0 12px rgba(0, 212, 255, 0.7);
+        }
+        #category-select {
+            margin-bottom: 25px;
+        }
+        select, button, input {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select:hover, button:hover {
+            background-color: #555;
+            border-color: #666;
+        }
+        #game-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            margin: 6px 0;
+        }
+        .letter {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            margin: 4px;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: #3a3a3a;
+            border: 2px solid #555;
+            border-radius: 8px;
+            transition: transform 0.3s, background-color 0.5s;
+        }
+        .letter.green {
+            background-color: #6aaa64;
+            transform: scale(1.1);
+            border-color: #5a9a54;
+        }
+        .letter.yellow {
+            background-color: #c9b458;
+            transform: scale(1.1);
+            border-color: #b9a448;
+        }
+        .letter.gray {
+            background-color: #787c7e;
+            border-color: #686c6e;
+        }
+        #input-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        #guess-input {
+            background-color: #333;
+            text-transform: uppercase;
+            width: 160px;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #ff6b6b;
+            text-shadow: 0 0 6px rgba(255, 107, 107, 0.6);
+        }
+        #restart-btn {
+            background-color: #ff6b6b;
+            margin-top: 15px;
+        }
+        #restart-btn:hover {
+            background-color: #ff8787;
+        }
+        @media (max-width: 500px) {
+            .letter {
+                width: 50px;
+                height: 50px;
+                line-height: 50px;
+                font-size: 24px;
+            }
+            #guess-input {
+                width: 130px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Wordle</h1>
+    <div id="category-select">
+
+        <label for="category">Wybierz kategorię: </label>
+        <select id="category" onchange="loadWords()"></select>
+    </div>
+    <div id="game-container"></div>
+    <div id="input-container">
+        <input type="text" id="guess-input" maxlength="5" placeholder="5 liter">
+        <button onclick="submitGuess()">Zgaduj</button>
+    </div>
+    <button id="restart-btn" onclick="restartGame()">Restart</button>
+    <div id="message"></div>
+
+    <script>
+        let targetWord = '';
+        let guesses = [];
+        const maxGuesses = 6;
+        let wordsData = {};
+
+        // Pobieranie słów i kategorii
+        async function loadWords() {
+            try {
+                const response = await fetch('https://suspicioyt.github.io/perungameverse/data/words.json');
+                wordsData = await response.json();
+                populateCategories();
+                selectRandomWord();
+                guesses = [];
+                initializeGame();
+                document.getElementById('message').textContent = '';
+                enableInput();
+            } catch (error) {
+                document.getElementById('message').textContent = 'Błąd ładowania słów!';
+                console.error(error);
+            }
+        }
+
+        // Wypełnianie selecta kategoriami
+        function populateCategories() {
+            const select = document.getElementById('category');
+            select.innerHTML = '';
+            Object.keys(wordsData.categories).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category.charAt(0).toUpperCase() + category.slice(1); // Kapitalizacja
+                select.appendChild(option);
+            });
+        }
+
+        // Losowanie słowa z wybranej kategorii
+        function selectRandomWord() {
+            const category = document.getElementById('category').value;
+            const fiveLetterWords = wordsData.categories[category].filter(word => word.length === 5);
+            if (fiveLetterWords.length === 0) {
+                document.getElementById('message').textContent = 'Brak 5-literowych słów w tej kategorii!';
+                targetWord = '';
+                return;
+            }
+            targetWord = fiveLetterWords[Math.floor(Math.random() * fiveLetterWords.length)].toLowerCase();
+            console.log('Target word (for debugging):', targetWord); // Usuń w wersji produkcyjnej
+        }
+
+        // Inicjalizacja planszy
+        function initializeGame() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = '';
+            for (let i = 0; i < maxGuesses; i++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                for (let j = 0; j < 5; j++) {
+                    const letter = document.createElement('div');
+                    letter.className = 'letter';
+                    row.appendChild(letter);
+                }
+                container.appendChild(row);
+            }
+        }
+
+        // Zgadywanie
+        function submitGuess() {
+            const input = document.getElementById('guess-input');
+            const guess = input.value.trim().toLowerCase();
+
+            if (guess.length !== 5) {
+                document.getElementById('message').textContent = 'Wpisz dokładnie 5 liter!';
+                return;
+            }
+
+            if (guesses.length >= maxGuesses) {
+                document.getElementById('message').textContent = 'Wyczerpałeś próby!';
+                return;
+            }
+
+            guesses.push(guess);
+            updateBoard();
+            input.value = '';
+
+            if (guess === targetWord) {
+                document.getElementById('message').textContent = 'Gratulacje! Wygrałeś!';
+                disableInput();
+            } else if (guesses.length === maxGuesses) {
+                document.getElementById('message').textContent = `Przegrałeś! Słowo: ${targetWord}`;
+                disableInput();
+            } else {
+                document.getElementById('message').textContent = 'Spróbuj jeszcze raz!';
+            }
+        }
+
+        // Aktualizacja planszy
+        function updateBoard() {
+            const rows = document.querySelectorAll('.row');
+            guesses.forEach((guess, rowIndex) => {
+                const letters = rows[rowIndex].querySelectorAll('.letter');
+                const targetArray = targetWord.split('');
+                const guessArray = guess.split('');
+
+                guessArray.forEach((letter, i) => {
+                    if (letter === targetArray[i]) {
+                        letters[i].textContent = letter;
+                        letters[i].classList.add('green');
+                        targetArray[i] = null;
+                        guessArray[i] = null;
+                    }
+                });
+
+                guessArray.forEach((letter, i) => {
+                    if (letter && targetArray.includes(letter)) {
+                        letters[i].textContent = letter;
+                        letters[i].classList.add('yellow');
+                        targetArray[targetArray.indexOf(letter)] = null;
+                    } else if (letter) {
+                        letters[i].textContent = letter;
+                        letters[i].classList.add('gray');
+                    }
+                });
+            });
+        }
+
+        // Restart gry
+        function restartGame() {
+            guesses = [];
+            selectRandomWord();
+            initializeGame();
+            document.getElementById('message').textContent = '';
+            enableInput();
+        }
+
+        // Włączanie inputu i przycisku
+        function enableInput() {
+            document.getElementById('guess-input').disabled = false;
+            document.querySelector('#input-container button').disabled = false;
+        }
+
+        // Wyłączanie inputu i przycisku
+        function disableInput() {
+            document.getElementById('guess-input').disabled = true;
+            document.querySelector('#input-container button').disabled = true;
+        }
+
+        // Start gry
+        window.onload = loadWords;
+
+        // Obsługa Enter
+        document.getElementById('guess-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitGuess();
+        });
+    </script>
+</body>
+</html>

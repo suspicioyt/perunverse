@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pet Simulator | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom, #00b4db, #0083b0);
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        #game {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        button:hover {
+            background-color: #cc0000;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #stats, #objects, #shop, #worlds {
+            margin: 20px 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+        }
+        .object {
+            display: inline-block;
+            width: 220px;
+            margin: 12px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+            transition: transform 0.2s;
+        }
+        .object:hover {
+            transform: scale(1.03);
+        }
+        .hp-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #fff;
+        }
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(to right, #00ff00, #66ff66);
+            transition: width 0.3s ease-in-out;
+        }
+        .pet-list, .assigned-pets {
+            font-size: 15px;
+            margin-top: 10px;
+            color: #ddd;
+        }
+        h1 {
+            color: #ff4444;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: #ffcc00;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .resource {
+            font-size: 22px;
+            margin: 8px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        #inventory-modal, #trader-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            color: #fff;
+        }
+        .tab {
+            padding: 10px;
+            margin: 5px;
+            background-color: #ff8800;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .tab:hover {
+            background-color: #cc6600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .active-tab {
+            background-color: #cc6600;
+        }
+        .active-content {
+            display: block;
+        }
+        .tooltip {
+            font-size: 14px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        #notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            z-index: 2000;
+        }
+        .notification {
+            background-color: #00cc00;
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #fixed-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1500;
+        }
+        #fixed-buttons button {
+            margin: 5px 0;
+            display: block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pet Simulator 🥚✨</h1>
+    <div id="game">
+        <div id="stats">
+            <p class="resource">Pieniądze: 💰 <span id="money">0</span></p>
+            <p class="resource">Diamenty: 💎 <span id="diamonds">0</span></p>
+            <p class="resource">Jajka: <button buttonId="15" class="add-button">🥚</button> <span id="eggs">Podstawowe: 5, Złote: 0, Wulkaniczne: 0</span></p>
+            <p class="resource">Zwierzaki: 🐾 <span id="pets-count">0</span></p>
+            <div class="pet-list" id="pet-list">Wylęgaj jajka, aby zdobyć zwierzaki!</div>
+        </div>
+        <div id="shop">
+            <h3>Sklep 🏪</h3>
+            <button onclick="buyUpgrade('damage')">+0.5 obrażeń/zwierzak (50 💰)</button>
+            <button onclick="buyUpgrade('egg')">+1 jajko/klik (100 💰)</button>
+            <button onclick="buyUpgrade('pet-level')">Ulepsz zwierzaki (+1 poziom, 200 💰)</button>
+            <button onclick="buyUpgrade('crit-chance')">+5% szansy na krytyk (150 💰)</button>
+            <div class="tooltip">Ulepszaj swoje zwierzaki i jajka!</div>
+        </div>
+        <div id="worlds">
+            <h3>Światy 🌍</h3>
+            <button onclick="changeWorld(0)">Las 🌲 (Darmowy)</button>
+            <button onclick="unlockWorld(1)">Pustynia 🏜️ (500 💰)</button>
+            <button onclick="unlockWorld(2)">Wulkan 🌋 (1000 💰)</button>
+            <button onclick="unlockWorld(3)">Arktyka ❄️ (2000 💰)</button>
+            <button onclick="unlockWorld(4)">Kosmiczne Ruiny 🌌 (5000 💰)</button>
+            <div class="tooltip">Odblokuj nowe światy za pieniądze!</div>
+        </div>
+        <div id="objects">
+            <h3>Obiekty do zniszczenia 🛠️</h3>
+            <div id="object-list"></div>
+            <div class="tooltip">Atakuj obiekty i przypisuj zwierzaki, aby zdobywać nagrody!</div>
+        </div>
+    </div>
+
+    <div id="fixed-buttons">
+        <button onclick="hatchEgg()">Wylęgaj jajko 🥚</button>
+        <button onclick="buyEgg()">Kup jajko (10 💰)</button>
+        <button onclick="unlockEgg('golden')">Odblokuj Złote Jajko (200 💰)</button>
+        <button onclick="unlockEgg('volcanic')">Odblokuj Wulkaniczne Jajko (500 💰)</button>
+        <button onclick="openInventory()">Ekwipunek 🎒</button>
+        <button onclick="openTrader()">Handlarz 💱</button>
+    </div>
+
+    <div id="notifications"></div>
+
+    <div id="inventory-modal">
+        <div class="modal-content">
+            <h2>Ekwipunek 🎒</h2>
+            <div id="tabs">
+                <span class="tab" onclick="switchTab('potions')">Mikstury 🍵</span>
+                <span class="tab" onclick="switchTab('pets')">Zwierzaki 🐾</span>
+                <span class="tab" onclick="switchTab('items')">Przedmioty 🛠️</span>
+            </div>
+            <div id="potions" class="tab-content">
+                <p>Użyj mikstur, aby wzmocnić grę:</p>
+                <ul id="potions-list"></ul>
+            </div>
+            <div id="pets" class="tab-content">
+                <p>Twoje zwierzaki:</p>
+                <ul id="pets-inventory-list"></ul>
+            </div>
+            <div id="items" class="tab-content">
+                <p>Zebrane przedmioty:</p>
+                <ul id="items-list"></ul>
+            </div>
+            <button onclick="closeInventory()">Zamknij</button>
+        </div>
+    </div>
+
+    <div id="trader-modal">
+        <div class="modal-content">
+            <h2>Handlarz 💱</h2>
+            <p>Wymieniaj zasoby u handlarza!</p>
+            <button onclick="trade('money-to-diamonds')">10 💰 → 1 💎</button>
+            <button onclick="trade('diamonds-to-money')">1 💎 → 50 💰</button>
+            <button onclick="trade('diamonds-to-potion')">5 💎 → Mikstura Szczęścia</button>
+            <button onclick="closeTrader()">Zamknij</button>
+        </div>
+    </div>
+    <script src="../script/event2.js"></script>
+    <script>
+        let money = 0;
+        let diamonds = 0;
+        let eggs = { basic: 5, golden: 0, volcanic: 0 };
+        let unlockedEggs = { basic: true, golden: false, volcanic: false };
+        let pets = [];
+        let damageMultiplier = 1;
+        let eggMultiplier = 1;
+        let petLevel = 1;
+        let critChance = 0;
+        let inventory = {
+            potions: [
+                { name: "Mikstura Siły", effect: "damageMultiplier += 0.5", count: 1, desc: "Zwiększa obrażenia zwierzaków o 0.5x" },
+                { name: "Mikstura Szczęścia", effect: "critChance += 10", count: 0, desc: "Zwiększa szansę na krytyk o 10%" }
+            ],
+            items: [{ name: "Magiczny klucz", count: 1, desc: "Może odblokować sekrety gry!" }]
+        };
+        let currentWorld = 0;
+        let unlockedWorlds = [true, false, false, false, false];
+
+        const petTypes = [
+            { name: "Piesek", emoji: "🐶", chance: 0.5, baseDamage: 1, egg: "basic" },
+            { name: "Kotek", emoji: "🐱", chance: 0.3, baseDamage: 2, egg: "basic" },
+            { name: "Smok", emoji: "🐉", chance: 0.15, baseDamage: 5, egg: "golden" },
+            { name: "Jednorożec", emoji: "🦄", chance: 0.05, baseDamage: 10, egg: "golden" },
+            { name: "Feniks", emoji: "🔥", chance: 0.1, baseDamage: 15, egg: "volcanic" }
+        ];
+
+        const worlds = [
+            {
+                name: "Las",
+                objects: [
+                    { name: "Skrzynia", emoji: "📦", hp: 100, maxHp: 100, reward: 30, assignedPets: [] },
+                    { name: "Drzewo", emoji: "🌳", hp: 200, maxHp: 200, reward: 50, assignedPets: [] },
+                    { name: "Kamień", emoji: "🪨", hp: 500, maxHp: 500, reward: 100, assignedPets: [] }
+                ],
+                biomeEgg: "basic",
+                cost: 0,
+                desc: "Spokojny las z podstawowymi jajkami."
+            },
+            {
+                name: "Pustynia",
+                objects: [
+                    { name: "Kaktus", emoji: "🌵", hp: 150, maxHp: 150, reward: 40, assignedPets: [] },
+                    { name: "Piramida", emoji: "🏜️", hp: 300, maxHp: 300, reward: 70, assignedPets: [] },
+                    { name: "Oaza", emoji: "💧", hp: 600, maxHp: 600, reward: 120, assignedPets: [] }
+                ],
+                biomeEgg: "golden",
+                cost: 500,
+                desc: "Gorąca pustynia ze złotymi jajkami."
+            },
+            {
+                name: "Wulkan",
+                objects: [
+                    { name: "Lawa", emoji: "🌋", hp: 200, maxHp: 200, reward: 50, assignedPets: [] },
+                    { name: "Magmion", emoji: "🪨🔥", hp: 400, maxHp: 400, reward: 90, assignedPets: [] },
+                    { name: "Krater", emoji: "🔥", hp: 800, maxHp: 800, reward: 150, assignedPets: [] }
+                ],
+                biomeEgg: "volcanic",
+                cost: 1000,
+                desc: "Niebezpieczny wulkan z wulkanicznymi jajkami."
+            },
+            {
+                name: "Arktyka",
+                objects: [
+                    { name: "Śnieżka", emoji: "❄️", hp: 250, maxHp: 250, reward: 60, assignedPets: [] },
+                    { name: "Igloo", emoji: "🏔️", hp: 500, maxHp: 500, reward: 100, assignedPets: [] },
+                    { name: "Lodowiec", emoji: "🧊", hp: 1000, maxHp: 1000, reward: 200, assignedPets: [] }
+                ],
+                biomeEgg: "golden",
+                cost: 2000,
+                desc: "Mroźna kraina z cennymi nagrodami."
+            },
+            {
+                name: "Kosmiczne Ruiny",
+                objects: [
+                    { name: "Asteroida", emoji: "☄️", hp: 300, maxHp: 300, reward: 80, assignedPets: [] },
+                    { name: "UFO", emoji: "🛸", hp: 600, maxHp: 600, reward: 150, assignedPets: [] },
+                    { name: "Czarna Dziura", emoji: "🌌", hp: 1200, maxHp: 1200, reward: 300, assignedPets: [] }
+                ],
+                biomeEgg: "volcanic",
+                cost: 5000,
+                desc: "Tajemnicza przestrzeń z kosmicznymi skarbami."
+            }
+        ];
+
+        let objects = worlds[currentWorld].objects;
+
+        function showNotification(message, color = "#00cc00") {
+            const notif = document.createElement("div");
+            notif.className = "notification";
+            notif.innerText = message;
+            notif.style.backgroundColor = color;
+            document.getElementById("notifications").appendChild(notif);
+            setTimeout(() => notif.style.opacity = "1", 10);
+            setTimeout(() => {
+                notif.style.opacity = "0";
+                setTimeout(() => notif.remove(), 500);
+            }, 3000);
+        }
+
+        function updateStats() {
+            document.getElementById("money").innerText = money;
+            document.getElementById("diamonds").innerText = diamonds;
+            document.getElementById("eggs").innerText = `Podstawowe: ${eggs.basic}, Złote: ${eggs.golden}, Wulkaniczne: ${eggs.volcanic}`;
+            document.getElementById("pets-count").innerText = pets.length;
+
+            let petList = document.getElementById("pet-list");
+            petList.innerHTML = pets.length > 0 ? pets.map((p, i) => `${p.emoji} ${p.name} (Lv${p.level})${p.assignedTo !== null ? ` → ${objects[p.assignedTo].name}` : ''}`).join(", ") : "Wylęgaj jajka, aby zdobyć zwierzaki!";
+            updateObjects();
+            updateWorldButtons();
+            updateFixedButtons();
+        }
+
+        function hatchEgg() {
+            const eggTypes = Object.keys(unlockedEggs).filter(type => unlockedEggs[type]);
+            if (eggTypes.length === 0) {
+                showNotification("Odblokuj najpierw jakieś jajko!", "#ff4444");
+                return;
+            }
+            let eggType = eggTypes[Math.floor(Math.random() * eggTypes.length)]; // Losowe jajko z odblokowanych
+            if (eggs[eggType] >= 1) {
+                eggs[eggType] -= 1;
+                let availablePets = petTypes.filter(p => p.egg === eggType);
+                let rand = Math.random();
+                let pet = availablePets.find(p => rand <= p.chance) || availablePets[0];
+                pets.push({ ...pet, level: petLevel, damage: pet.baseDamage * petLevel, assignedTo: null });
+                showNotification(`Wylęgłeś: ${pet.emoji} ${pet.name} (Lv${petLevel})! Obrażenia: ${pet.damage * damageMultiplier}`);
+                updateStats();
+            } else {
+                showNotification(`Nie masz jajek typu ${eggType}! Kup je u handlarza lub w sklepie.`, "#ff4444");
+            }
+        }
+
+        function buyEgg() {
+            if (money >= 10) {
+                money -= 10;
+                eggs[worlds[currentWorld].biomeEgg] += eggMultiplier;
+                showNotification(`Kupiłeś ${eggMultiplier} jajko typu ${worlds[currentWorld].biomeEgg}!`);
+                updateStats();
+            } else {
+                showNotification("Za mało pieniędzy!", "#ff4444");
+            }
+        }
+
+        function unlockEgg(eggType) {
+            const costs = { golden: 200, volcanic: 500 };
+            if (unlockedEggs[eggType]) {
+                showNotification(`Jajko ${eggType} jest już odblokowane!`, "#ff4444");
+                return;
+            }
+            if (money >= costs[eggType]) {
+                money -= costs[eggType];
+                unlockedEggs[eggType] = true;
+                showNotification(`Odblokowano jajko: ${eggType}!`);
+                updateStats();
+            } else {
+                showNotification(`Za mało pieniędzy! Potrzeba ${costs[eggType]} 💰`, "#ff4444");
+            }
+        }
+
+        function buyUpgrade(type) {
+            const costs = { damage: 50, egg: 100, 'pet-level': 200, 'crit-chance': 150 };
+            if (money >= costs[type]) {
+                money -= costs[type];
+                if (type === "damage") {
+                    damageMultiplier += 0.5;
+                    showNotification(`Zwierzaki zadają teraz ${damageMultiplier}x więcej obrażeń!`);
+                } else if (type === "egg") {
+                    eggMultiplier += 1;
+                    showNotification(`Kupujesz teraz ${eggMultiplier} jajek za kliknięcie!`);
+                } else if (type === "pet-level") {
+                    petLevel += 1;
+                    pets.forEach(p => {
+                        p.level = petLevel;
+                        p.damage = p.baseDamage * petLevel;
+                    });
+                    showNotification(`Zwierzaki ulepszone do poziomu ${petLevel}!`);
+                } else if (type === "crit-chance") {
+                    critChance = Math.min(100, critChance + 5);
+                    showNotification(`Szansa na krytyczne uderzenie: ${critChance}%!`);
+                }
+                updateStats();
+            } else {
+                showNotification(`Za mało pieniędzy! Potrzeba ${costs[type]} 💰`, "#ff4444");
+            }
+        }
+
+        function updateObjects() {
+            let objectList = document.getElementById("object-list");
+            objectList.innerHTML = "";
+            objects.forEach((obj, index) => {
+                let div = document.createElement("div");
+                div.className = "object";
+                let hpPercent = (obj.hp / obj.maxHp) * 100;
+                div.innerHTML = `${obj.emoji} ${obj.name}<br>HP: ${obj.hp}/${obj.maxHp}<br>
+                    <div class="hp-bar"><div class="hp-fill" style="width: ${hpPercent}%"></div></div><br>
+                    <button onclick="attackObject(${index})">Atakuj (1)</button><br>
+                    <button onclick="assignPet(${index})" ${pets.filter(p => p.assignedTo === null).length === 0 ? 'disabled' : ''}>Przydziel zwierzaka</button><br>
+                    <button onclick="removePet(${index})" ${obj.assignedPets.length === 0 ? 'disabled' : ''}>Usuń zwierzaka</button><br>
+                    <div class="assigned-pets">Zwierzaki: ${obj.assignedPets.map(p => p.emoji).join(' ')} (${obj.assignedPets.length})</div>`;
+                objectList.appendChild(div);
+            });
+        }
+
+        function attackObject(index) {
+            objects[index].hp -= 1;
+            if (objects[index].hp <= 0) {
+                money += objects[index].reward;
+                if (Math.random() < 0.05) diamonds += 1; // 5% szansy na diament
+                if (Math.random() < 0.15) {
+                    let drop = Math.random() < 0.5 ? inventory.items[0] : inventory.potions[1];
+                    drop.count += 1;
+                    showNotification(`Znalazłeś: ${drop.name}!`);
+                }
+                objects[index].hp = objects[index].maxHp;
+                showNotification(`Zniszczono ${objects[index].name}! Zdobyto ${objects[index].reward} 💰 ${diamonds > 0 ? 'i być może 💎!' : ''}`);
+            }
+            updateStats();
+        }
+
+        function assignPet(index) {
+            let availablePet = pets.find(p => p.assignedTo === null);
+            if (availablePet) {
+                availablePet.assignedTo = index;
+                objects[index].assignedPets.push(availablePet);
+                showNotification(`Przypisano ${availablePet.emoji} ${availablePet.name} do ${objects[index].name}!`);
+                updateStats();
+            }
+        }
+
+        function removePet(index) {
+            if (objects[index].assignedPets.length > 0) {
+                let pet = objects[index].assignedPets.pop();
+                pet.assignedTo = null;
+                showNotification(`Usunięto ${pet.emoji} ${pet.name} z ${objects[index].name}!`);
+                updateStats();
+            }
+        }
+
+        function petAttackLoop() {
+            objects.forEach((obj, index) => {
+                if (obj.assignedPets.length > 0) {
+                    let totalDamage = obj.assignedPets.reduce((sum, pet) => {
+                        let damage = pet.damage * damageMultiplier;
+                        if (Math.random() * 100 < critChance) {
+                            damage *= 2;
+                            showNotification(`${pet.emoji} ${pet.name} zadał krytyczne uderzenie!`, "#FFD700");
+                        }
+                        return sum + damage;
+                    }, 0);
+                    obj.hp -= totalDamage;
+                    if (obj.hp <= 0) {
+                        money += obj.reward;
+                        if (Math.random() < 0.05) diamonds += 1;
+                        if (Math.random() < 0.15) {
+                            let drop = Math.random() < 0.5 ? inventory.items[0] : inventory.potions[1];
+                            drop.count += 1;
+                            showNotification(`Znalazłeś: ${drop.name}!`);
+                        }
+                        obj.hp = obj.maxHp;
+                        showNotification(`Zniszczono ${obj.name}! Zdobyto ${obj.reward} 💰 ${diamonds > 0 ? 'i być może 💎!' : ''}`);
+                    }
+                }
+            });
+            updateStats();
+        }
+
+        function changeWorld(worldIndex) {
+            if (!unlockedWorlds[worldIndex]) {
+                showNotification(`Ten świat nie jest odblokowany!`, "#ff4444");
+                return;
+            }
+            currentWorld = worldIndex;
+            objects = worlds[currentWorld].objects;
+            showNotification(`Witaj w ${worlds[currentWorld].name}! ${worlds[currentWorld].desc}`);
+            updateStats();
+        }
+
+        function unlockWorld(worldIndex) {
+            if (unlockedWorlds[worldIndex]) {
+                changeWorld(worldIndex);
+                return;
+            }
+            if (money >= worlds[worldIndex].cost) {
+                money -= worlds[worldIndex].cost;
+                unlockedWorlds[worldIndex] = true;
+                showNotification(`Odblokowano ${worlds[worldIndex].name}!`);
+                changeWorld(worldIndex);
+            } else {
+                showNotification(`Za mało pieniędzy! Potrzeba ${worlds[worldIndex].cost} 💰`, "#ff4444");
+            }
+        }
+
+        function updateWorldButtons() {
+            const worldButtons = document.querySelectorAll("#worlds button");
+            worldButtons.forEach((btn, i) => {
+                btn.style.backgroundColor = i === currentWorld ? '#cc0000' : unlockedWorlds[i] ? '#ff4444' : '#666';
+                btn.disabled = !unlockedWorlds[i] && i !== currentWorld && money < worlds[i].cost;
+            });
+        }
+
+        function updateFixedButtons() {
+            document.querySelector("#fixed-buttons button:nth-child(1)").disabled = eggs.basic + eggs.golden + eggs.volcanic < 1;
+            document.querySelector("#fixed-buttons button:nth-child(2)").disabled = money < 10;
+            document.querySelector("#fixed-buttons button:nth-child(3)").disabled = unlockedEggs.golden || money < 200;
+            document.querySelector("#fixed-buttons button:nth-child(4)").disabled = unlockedEggs.volcanic || money < 500;
+        }
+
+        function openInventory() {
+            document.getElementById("inventory-modal").style.display = "flex";
+            updateInventory();
+            switchTab("potions");
+        }
+
+        function closeInventory() {
+            document.getElementById("inventory-modal").style.display = "none";
+        }
+
+        function openTrader() {
+            document.getElementById("trader-modal").style.display = "flex";
+        }
+
+        function closeTrader() {
+            document.getElementById("trader-modal").style.display = "none";
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active-tab"));
+            document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active-content"));
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add("active-tab");
+            document.getElementById(tabName).classList.add("active-content");
+        }
+
+        function updateInventory() {
+            let potionsList = document.getElementById("potions-list");
+            potionsList.innerHTML = inventory.potions.map(p => `<li>${p.name} (x${p.count}) - ${p.desc} <button onclick="usePotion('${p.name}')">Użyj</button></li>`).join("") || "Brak mikstur.";
+
+            let petsInventoryList = document.getElementById("pets-inventory-list");
+            petsInventoryList.innerHTML = pets.map(p => `<li>${p.emoji} ${p.name} (Lv${p.level}) ${p.assignedTo !== null ? '(Przypisany do ' + objects[p.assignedTo].name + ')' : '(Wolny)'}</li>`).join("") || "Brak zwierzaków.";
+
+            let itemsList = document.getElementById("items-list");
+            itemsList.innerHTML = inventory.items.map(i => `<li>${i.name} (x${i.count}) - ${i.desc}</li>`).join("") || "Brak przedmiotów.";
+        }
+
+        function usePotion(name) {
+            let potion = inventory.potions.find(p => p.name === name);
+            if (potion && potion.count > 0) {
+                eval(potion.effect);
+                potion.count -= 1;
+                showNotification(`Użyto ${potion.name}! ${potion.desc}`);
+                updateStats();
+                updateInventory();
+            } else {
+                showNotification(`Nie masz ${potion.name}!`, "#ff4444");
+            }
+        }
+
+        function trade(type) {
+            if (type === "money-to-diamonds" && money >= 10) {
+                money -= 10;
+                diamonds += 1;
+                showNotification("Wymieniono 10 💰 na 1 💎!");
+            } else if (type === "diamonds-to-money" && diamonds >= 1) {
+                diamonds -= 1;
+                money += 50;
+                showNotification("Wymieniono 1 💎 na 50 💰!");
+            } else if (type === "diamonds-to-potion" && diamonds >= 5) {
+                diamonds -= 5;
+                inventory.potions[1].count += 1;
+                showNotification("Wymieniono 5 💎 na Miksturę Szczęścia!");
+            } else {
+                showNotification("Za mało zasobów do wymiany!", "#ff4444");
+                return;
+            }
+            updateStats();
+        }
+
+        // Start gry
+        updateStats();
+        setInterval(petAttackLoop, 800);
+        showNotification("Witaj w Egg Pet Simulator! Odblokuj jajka i światy, wylęgaj zwierzaki i zdobywaj diamenty!", "#00cc00");
+    </script>
+</body>
+</html>

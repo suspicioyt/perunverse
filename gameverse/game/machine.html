@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automat | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            background: linear-gradient(145deg, #1a1a1a, #333333);
+            color: #F0F0F0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #slotMachine {
+            background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
+            padding: 50px;
+            border-radius: 25px;
+            border: 8px solid #FFD700;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), inset 0 0 20px rgba(0, 0, 0, 0.9);
+            width: 500px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        #slotMachine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to bottom, rgba(255, 215, 0, 0.4), transparent);
+        }
+        #slotMachine::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to top, rgba(255, 215, 0, 0.4), transparent);
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #FFD700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
+            margin: 0 0 25px;
+            letter-spacing: 2px;
+        }
+        #reels {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: linear-gradient(145deg, #111, #222);
+            padding: 25px;
+            border: 5px inset #FFD700;
+            border-radius: 15px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 1), 0 0 20px rgba(255, 215, 0, 0.3);
+            margin-bottom: 35px;
+        }
+        .reel {
+            width: 110px;
+            height: 110px;
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border: 4px solid #FF9800;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.6);
+            overflow: hidden;
+            position: relative;
+            transition: background 0.2s ease;
+        }
+        .reel.spinning {
+            background: #333;
+        }
+        .reel .symbol {
+            position: absolute;
+            top: 0;
+            animation: reelSpin 0.1s linear infinite;
+        }
+        .reel.star {
+            background: linear-gradient(135deg, #FFD700, #FFFF99);
+            border: 4px solid #FFFF00;
+            box-shadow: 0 0 25px rgba(255, 255, 0, 0.9);
+        }
+        .reel.win {
+            animation: winGlow 0.5s infinite alternate;
+        }
+        #spinButton {
+            background: linear-gradient(135deg, #FF4500, #FFD700);
+            color: #FFF;
+            padding: 18px 50px;
+            border: 3px solid #FFD700;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+        }
+        #spinButton:hover:not(:disabled) {
+            background: linear-gradient(135deg, #FFD700, #FF4500);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 69, 0, 0.9);
+        }
+        #spinButton:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+        #spinButton:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        #balance {
+            font-size: 1.8rem;
+            color: #FFD700;
+            margin: 25px 0;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: 2px solid #FF9800;
+        }
+        #message {
+            font-size: 1.4rem;
+            color: #FF9800;
+            margin-top: 20px;
+            text-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+            font-weight: bold;
+            transition: opacity 0.5s ease;
+        }
+        @keyframes reelSpin {
+            0% { transform: translateY(-110px); }
+            100% { transform: translateY(110px); }
+        }
+        @keyframes winGlow {
+            0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+            100% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="slotMachine">
+        <h1>Automat</h1>
+        <div id="reels">
+            <div class="reel" id="reel1">?</div>
+            <div class="reel" id="reel2">?</div>
+            <div class="reel" id="reel3">?</div>
+        </div>
+        <button id="spinButton">Zakręć (0.25 PLN)</button>
+        <div id="balance">Saldo: 0.00 PLN</div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const icons = ['🍒', '🍋', '🍇', '⭐', '🔔'];
+        const reel1 = document.getElementById('reel1');
+        const reel2 = document.getElementById('reel2');
+        const reel3 = document.getElementById('reel3');
+        const balanceDisplay = document.getElementById('balance');
+        const messageDisplay = document.getElementById('message');
+        const spinButton = document.getElementById('spinButton');
+        let balance = parseFloat(localStorage.getItem('perunPLN')) || 10.00;
+        let isSpinning = false;
+
+        // Początkowe ikony
+        let currentIcons = {
+            reel1: reel1.textContent === '?' ? getRandomIcon() : reel1.textContent,
+            reel2: reel2.textContent === '?' ? getRandomIcon() : reel2.textContent,
+            reel3: reel3.textContent === '?' ? getRandomIcon() : reel3.textContent
+        };
+
+        // Funkcja formatowania liczb
+        const formatNumber = (num) => num.toFixed(2);
+
+        // Aktualizacja salda
+        function updateBalance(saveToStorage = false) {
+            balance = parseFloat(balance.toFixed(2));
+            balanceDisplay.textContent = `Saldo: ${formatNumber(balance)} PLN`;
+            if (saveToStorage) {
+                localStorage.setItem('perunPLN', balance);
+            }
+        }
+
+        // Synchronizacja z localStorage
+        function syncBalance() {
+            const storedBalance = parseFloat(localStorage.getItem('perunPLN')) || 0;
+            if (storedBalance !== balance) {
+                balance = storedBalance;
+                updateBalance();
+            }
+        }
+
+        function getRandomIcon() {
+            return icons[Math.floor(Math.random() * icons.length)];
+        }
+
+        function getRandomWin() {
+            return Math.floor(Math.random() * (5 - 2 + 1)) + 3; // 3-5 PLN
+        }
+
+        async function spin() {
+            if (isSpinning) return;
+            syncBalance(); // Sprawdź saldo przed kręceniem
+            if (balance < 0.25) {
+                messageDisplay.textContent = 'Brak wystarczających środków!';
+                return;
+            }
+
+            balance -= 0.25;
+            updateBalance(true); // Zapisz po odjęciu kosztu
+            messageDisplay.textContent = '';
+            isSpinning = true;
+            spinButton.disabled = true;
+
+            // Reset klas
+            reel1.classList.remove('star', 'win');
+            reel2.classList.remove('star', 'win');
+            reel3.classList.remove('star', 'win');
+
+            // Start animacji
+            reel1.innerHTML = '<div class="symbol">' + currentIcons.reel1 + '</div>';
+            reel2.innerHTML = '<div class="symbol">' + currentIcons.reel2 + '</div>';
+            reel3.innerHTML = '<div class="symbol">' + currentIcons.reel3 + '</div>';
+
+            let spins = 0;
+            const spinInterval = setInterval(() => {
+                reel1.querySelector('.symbol').textContent = getRandomIcon();
+                reel2.querySelector('.symbol').textContent = getRandomIcon();
+                reel3.querySelector('.symbol').textContent = getRandomIcon();
+                reel1.classList.add('spinning');
+                reel2.classList.add('spinning');
+                reel3.classList.add('spinning');
+                spins++;
+                if (spins >= 20) {
+                    clearInterval(spinInterval);
+                    stopReels();
+                }
+            }, 80);
+        }
+
+        function stopReels() {
+            const stopReel = (reel, iconKey, delay, callback) => {
+                setTimeout(() => {
+                    reel.classList.remove('spinning');
+                    currentIcons[iconKey] = getRandomIcon();
+                    reel.innerHTML = currentIcons[iconKey];
+                    if (callback) callback();
+                }, delay);
+            };
+
+            stopReel(reel1, 'reel1', 500, () => {
+                stopReel(reel2, 'reel2', 500, () => {
+                    stopReel(reel3, 'reel3', 500, setResult);
+                });
+            });
+        }
+
+        function setResult() {
+            if (currentIcons.reel1 === currentIcons.reel2 && currentIcons.reel2 === currentIcons.reel3) {
+                let winAmount;
+                if (currentIcons.reel1 === '⭐') {
+                    winAmount = 10;
+                    reel1.classList.add('star');
+                    reel2.classList.add('star');
+                    reel3.classList.add('star');
+                    messageDisplay.textContent = `Wielka Wygrana! +${formatNumber(winAmount)} PLN`;
+                } else {
+                    winAmount = getRandomWin();
+                    messageDisplay.textContent = `Wygrana! +${formatNumber(winAmount)} PLN`;
+                }
+                balance += winAmount;
+                reel1.classList.add('win');
+                reel2.classList.add('win');
+                reel3.classList.add('win');
+                updateBalance(true); // Zapisz po wygranej
+            } else {
+                messageDisplay.textContent = 'Przegrałeś. Spróbuj ponownie!';
+            }
+
+            isSpinning = false;
+            spinButton.disabled = false;
+        }
+
+        // Synchronizacja przy zmianie localStorage przez inną stronę
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'perunPLN') {
+                balance = parseFloat(event.newValue) || 0;
+                updateBalance();
+            }
+        });
+
+        // Inicjalizacja
+        reel1.innerHTML = currentIcons.reel1;
+        reel2.innerHTML = currentIcons.reel2;
+        reel3.innerHTML = currentIcons.reel3;
+        updateBalance();
+        spinButton.addEventListener('click', spin);
+
+        // Ciągła synchronizacja
+        setInterval(syncBalance, 100); // Synchronizuj co 0.1 sekundy
+    </script>
+</body>
+</html>

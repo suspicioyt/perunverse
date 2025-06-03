@@ -1,0 +1,95 @@
+{
+    "categories": {
+      "zwierzeta": [
+        "KOT", "PIES", "WILK", "SARNA", "ŻABA", "WĄŻ", "NIEDŹWIEDŹ", "LIS", "JELEŃ", "ZAJĄC",
+        "MYSZ", "SOWA", "ORZEŁ", "JASTZĄB", "KROKODYL", "SŁOŃ", "TYGRYS", "LEW", "MAŁPA", "PINGWIN",
+        "FLAMING", "PANDA", "KOALA", "WIEWIÓRKA", "KONIK", "ŻÓŁW", "REKIN", "Delfin", "BOCIAN", "KURA",
+        "KOGUT", "KACZKA", "GĘŚ", "PAW", "KRUK", "Wrona", "Sęp", "Nietoperz", "Pszczoła", "OSA",
+        "MOTYL", "Biedronka", "Żuk", "Pająk", "Skorpion", "Ryba", "Meduza", "Ośmiornica", "Homar", "KrAB"
+      ],
+      "rosliny": [
+        "DRZEWO", "KWIAT", "RÓŻA", "TULIPAN", "BRZOZA", "SOSNA", "DĄB", "KAKTUS", "FIOŁEK", "LILIA",
+        "STOKROTKA", "JAŚMIN", "MAGNOLIA", "WIŚNIA", "JABŁOŃ", "GRUSZA", "PALMA", "BAMBUS", "TRAWA", "PAPROĆ",
+        "MECH", "BLUSZCZ", "LAUR", "ORCHIDEA", "SŁONECZNIK", "MIĘTA", "BAZYLIA", "LAWENDA", "RUMIANEK", "KONWALIA",
+        "IGLAK", "KLON", "LIPA", "TOPOLA", "WIERZBA", "CZEREŚNIA", "ŚLIWA", "MORELA", "BRZOSKWINIA", "WINOROŚL",
+        "DYNIA", "KUKURYDZA", "PSZENICA", "ŻYTO", "OWIES", "RYŻ", "LEN", "KONOPIE", "ALOES", "KOKOS"
+      ],
+      "przedmioty": [
+        "DOM", "BIURKO", "KRZESŁO", "STÓŁ", "LAMPA", "OKNO", "DRZWI", "ŁÓŻKO", "SOFA", "FOTEL",
+        "SZAFA", "LUSTRO", "TELEWIZOR", "RADIO", "KSIĄŻKA", "DŁUGOPIS", "OŁÓWEK", "ZEGAR", "KUBEK", "TALERZ",
+        "NÓŻ", "WIDELEC", "ŁYŻKA", "KOMPUTER", "TELEFON", "KAMERA", "APARAT", "MIKROFON", "SŁUCHAWKI", "KLAWIATURA",
+        "MYSZKA", "MONITOR", "DRUKARKA", "SKANER", "LODÓWKA", "KUCHENKA", "PIEKARNIK", "MIKROFALA", "CZAJNIK", "TOSTER",
+        "PATELNIA", "GARNEK", "MISKA", "SZKLANKA", "BUTELKA", "KRAN", "PRYSZNIC", "WANNA", "UMYWALKA", "PRALKA"
+      ],
+      "jedzenie": [
+        "CHLEB", "MASŁO", "SER", "MLEKO", "MIÓD", "JAJKO", "RYŻ", "MAKARON", "ZUPA", "PIZZA",
+        "KOTLET", "KURCZAK", "RYBA", "KREWETKI", "SAŁATA", "POMIDOR", "OGÓREK", "MARCHEW", "JABŁKO", "BANAN",
+        "TRUSKAWKA", "WINOGRONO", "ORZECH", "CIASTO", "BUŁKA", "ROGAL", "PĄCZEK", "TORT", "LODY", "GALARETKA",
+        "KISIEL", "BUDYŃ", "SOS", "KETCHUP", "MAJONEZ", "MUSZTARDA", "OLIWA", "OCET", "SÓL", "PIEPRZ",
+        "CUKIER", "KAKAO", "KAWA", "HERBATA", "SOK", "WODA", "PIWO", "WINO", "WÓDKA", "KOKTAJL"
+      ],
+      "miejsca": [
+        "MIASTO", "WIEŚ", "LAS", "GÓRY", "RZEKA", "JEZIORO", "MORZE", "PLAŻA", "PARK", "OGROD",
+        "SZKOŁA", "SZPITAL", "SKLEP", "KINO", "TEATR", "MUZEUM", "LOTNISKO", "DWORZEC", "KOŚCIÓŁ", "ZAMEK",
+        "MOST", "WIEŻA", "STADION", "BIBLIOTEKA", "FABRYKA", "BIURO", "URZĄD", "BANK", "APTEKA", "RESTAURACJA",
+        "KAWIARNIA", "BAR", "KLUB", "HOTEL", "MOTEL", "KEMPING", "WULKAN", "Pustynia", "Step", "Tundra",
+        "DŻUNGLA", "SAWANA", "WYSPA", "PÓŁWYSEP", "ZATOKA", "PRZYLĄDEK", "JASKINIA", "KOPALNIA", "Farma", "Winnica"
+      ],
+      "transport": [
+        "SAMOCHÓD", "ROWER", "AUTOBUS", "POCIĄG", "SAMOLOT", "STATEK", "MOTOCYKL", "TRAMWAJ", "TAXI", "HELKOPTER",
+        "ŁÓDŹ", "KARETKA", "CIĘŻARÓWKA", "TRACTOR", "SKUTER", "WÓZEK", "SANKI", "NARTY", "DESKOROLKA", "HULAJNOGA",
+        "BALON", "RAKIETA", "KONIE", "WÓZ", "JACHT", "Kajak", "Ponton", "Prom", "Cysterna", "Dźwig",
+        "KOPARKA", "WALEC", "SPADOCHRON", "SZYBOWIEC", "DRON", "METRO", "FURGONETKA", "LIMUZYNA", "KABRIOLET", "TIR",
+        "Riksza", "Wózek widłowy", "Sanie", "Karoca", "Bryczka", "Rower elektryczny", "Segway", "Monocykl", "Taczka"
+      ],
+      "pogoda": [
+        "SŁOŃCE", "DESZCZ", "ŚNIEG", "WIATR", "MGŁA", "CHMURY", "BURZA", "TĘCZA", "GRAD", "MRÓZ",
+        "UPAŁ", "CIEMNOŚĆ", "PORANEK", "WIECZÓR", "NOC", "DZIEŃ", "PIORUN", "ROS", "LOD", "FALE",
+        "SUSZA", "POGODA", "ZIMA", "LATO", "Wiosna", "Jesień", "Sztorm", "Zamieć", "Bryza", "Cisza",
+        "Mżawka", "Ulewa", "Powódź", "Tornado", "Huragan", "Trąba", "Światło", "Cień", "Zmrok", "Brzask",
+        "Rosa", "Szron", "Gołoledź", "Pochmurno", "Słota", "Przymrozek", "Odwilż", "Skwar", "Chłód"
+      ],
+      "zawody": [
+        "LEKARZ", "PIELĘGNIARKA", "NAUCZYCIEL", "INŻYNIER", "PROGRAMISTA", "KIEROWCA", "KUCHARZ", "KELNER", "SPRZEDAWCA", "ROLNIK",
+        "OGRODNIK", "ARCHITEKT", "PRAWNIK", "SĘDZIA", "POLICJANT", "STRAŻAK", "ŻOŁNIERZ", "PILOT", "STEWARDESA", "MECHANIK",
+        "ELEKTRYK", "HYDRAULIK", "STOLARZ", "MURARZ", "MALARZ", "FOTOGRAF", "DZIENNIKARZ", "REDAKTOR", "PISARZ", "MUZYK",
+        "AKTOR", "REŻYSER", "TANCERZ", "SPORTWIEC", "TRENER", "LEŚNIK", "RYBAK", "GÓRNIK", "KSIĘGOWY", "BANKIER",
+        "FRYZJER", "KOSMETYCZKA", "DENTYSTA", "FARMACEUTA", "WETERYNARZ", "BIBLIOTEKARZ", "KASJER", "KRAWIEC", "SZEWc"
+      ],
+      "sport": [
+        "PIŁKA", "SIATKÓWKA", "KOSZYKÓWKA", "TENIS", "PINGPONG", "BOKS", "ZAPASY", "JUDO", "KARATE", "TAEKWONDO",
+        "BIEGI", "SKOKI", "PŁYWANIE", "NURKOWANIE", "WIOŚLARSTWO", "ŻEGLARSTWO", "KOLARSTWO", "GIMNASTYKA", "ŁYŻWIARSTWO", "NARCIARSTWO",
+        "SNOWBOARD", "Hokej", "Rugby", "Golf", "Krykiet", "Baseball", "Siatka", "Strzelectwo", "Łucznictwo", "Wspinaczka",
+        "Biatlon", "Triatlon", "Maraton", "Sprint", "Rzut", "Szachy", "Brydż", "Bilard", "Kręgle", "Sumo",
+        "Futsal", "Lacrosse", "Curling", "Bobsleje", "Saneczkarstwo", "Kajakarstwo", "Rafting", "Surfing", "Kitesurfing"
+      ],
+      "kolory": [
+        "CZERWONY", "NIEBIESKI", "ZIELONY", "ŻÓŁTY", "POMARAŃCZOWY", "FIOLETOWY", "RÓŻOWY", "BIAŁY", "CZARNY", "SZARY",
+        "BRĄZOWY", "BEŻOWY", "ZŁOTY", "SREBRNY", "BŁĘKITNY", "TURKUSOWY", "PURPUROWY", "KREMOWY", "OLIWKOWY", "GRANATOWY",
+        "KORALOWY", "INDYGO", "LAZUROWY", "MALINOWY", "CYJAN", "MAGENTA", "SEPIA", "KHAKI", "MIĘTOWY", "WANILIOWY",
+        "RUDY", "AMARANT", "KARMEL", "OCHRA", "SIENNA", "UMBRA", "ECRU", "Kobalt", "Bordo", "Fuksja",
+        "Lila", "Szafir", "Szmaragd", "Rubin", "Topaz", "Bursztyn", "Perła", "Heban", "Ivor"
+      ],
+      "czas": [
+        "SEKUNDA", "MINUTA", "GODZINA", "DZIEŃ", "TYDZIEŃ", "MIESIĄC", "ROK", "DEKADA", "WIEK", "ERA",
+        "PORANEK", "POŁUDNIE", "POPOŁUDNIE", "WIECZÓR", "NOC", "ŚWIT", "ZMROK", "BRZASK", "PRZESZŁOŚĆ", "TERAŹNIEJSZOŚĆ",
+        "PRZYSZŁOŚĆ", "CHWILA", "OKRES", "FAZA", "ETAP", "CYKL", "RANO", "JUTRO", "WCZORAJ", "DZIŚ",
+        "SEZON", "KWARTAŁ", "SEMESTR", "TRYMESTR", "LATO", "ZIMA", "Wiosna", "Jesień", "Święto", "Weekend",
+        "Pora", "Rok przestępny", "Stulecie", "Milennium", "Doba", "Sylwester", "Nowy Rok", "Środek", "Koniec"
+      ],
+      "emocje": [
+        "RADOŚĆ", "SMUTEK", "STRACH", "GNIEW", "ZASKOCZENIE", "ODRAZA", "DUMA", "WSTYD", "MIŁOŚĆ", "NIENAWIŚĆ",
+        "ZAZDROŚĆ", "SPOKÓJ", "NERWOWOŚĆ", "EUFORIA", "LĘK", "ZADOWOLENIE", "FRUSTRACJA", "NUDY", "PODNIECENIE", "ULGA",
+        "TĘSKNOTA", "ZAŻENOWANIE", "ENTUZJAZM", "APATIA", "WSPÓŁCZUCIE", "ZŁOŚĆ", "OPTIMIZM", "PESYMIZM", "CIEKAWOŚĆ", "ZNUDZENIE",
+        "POKORA", "AROGANCJA", "UFNOŚĆ", "NIEUFNOŚĆ", "SATYSFAKCJA", "ROZPACZ", "EKSCYTACJA", "ZAKŁOPOTANIE", "BEZTROSKA", "PRZYGNĘBIENIE",
+        "NADZIEJA", "BEZNADZIEJA", "PASJA", "OBojętność", "WRAŻLIWOŚĆ", "ZIMNA KREW", "Panika", "Szał", "Uniesienie"
+      ],
+      "technologia": [
+        "KOMPUTER", "TELEFON", "INTERNET", "SOFTWARE", "HARDWARE", "SERWER", "KLAWIATURA", "MYSZKA", "MONITOR", "DRUKARKA",
+        "SKANER", "KAMERA", "MIKROFON", "SŁUCHAWKI", "PROCESOR", "DYSK", "PAMIĘĆ", "KARTA", "SIEC", "ROUTER",
+        "MODEM", "KABEL", "BATERIA", "ŁADOWARKA", "EKRAN", "PIXEL", "ROZDZIELCZOŚĆ", "SYSTEM", "PROGRAM", "APLIKACJA",
+        "BAZA", "DANE", "CHMURA", "KOD", "ALGORYTM", "AI", "ROBOT", "DRON", "SATELITA", "GPS",
+        "BLUETOOTH", "WIFI", "USB", "HDMI", "VR", "AR", "KONSOLA", "GRA", "UPDATE", "PATCH"
+      ]
+    }
+  }

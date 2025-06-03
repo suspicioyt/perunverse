@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nonogram | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #e0e7ff, #f4f4f9);
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .game-container {
+            display: grid;
+            grid-template-areas: 
+                ". col-clues"
+                "row-clues nonogram";
+            gap: 10px;
+            max-width: 500px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .row-clues {
+            grid-area: row-clues;
+            display: grid;
+            grid-template-rows: repeat(5, 50px);
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 10px;
+        }
+        .row-clues > div {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            gap: 8px;
+            max-width: 120px;
+            overflow: hidden;
+        }
+        .col-clues {
+            grid-area: col-clues;
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            justify-items: center;
+            align-items: flex-end;
+            padding-bottom: 10px;
+        }
+        .col-clues > div {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 8px;
+            max-height: 120px;
+            overflow: hidden;
+        }
+        .nonogram {
+            grid-area: nonogram;
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-gap: 3px;
+            background: #34495e;
+            padding: 8px;
+            border-radius: 10px;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+        }
+        .cell:hover {
+            transform: scale(1.05);
+        }
+        .cell.filled {
+            background: #2c3e50;
+        }
+        .cell.cross {
+            background: #ecf0f1;
+        }
+        .cell.cross::after, .cell.cross::before {
+            content: "";
+            position: absolute;
+            width: 70%;
+            height: 3px;
+            background: #e74c3c;
+            top: 50%;
+            left: 15%;
+            transform-origin: center;
+            transition: transform 0.15s ease;
+        }
+        .cell.cross::after {
+            transform: rotate(45deg);
+        }
+        .cell.cross::before {
+            transform: rotate(-45deg);
+        }
+        .clue {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            min-width: 18px;
+            padding: 4px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        .controls button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.1s ease;
+        }
+        .controls button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .controls button:active {
+            transform: translateY(0);
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #bdc3c7;
+            transition: 0.3s;
+            border-radius: 34px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background: #fff;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        input:checked + .slider {
+            background: #3498db;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .switch-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nonogram</h1>
+    <div class="game-container">
+        <div id="colClues" class="col-clues"></div>
+        <div id="rowClues" class="row-clues"></div>
+        <div class="nonogram" id="nonogram"></div>
+    </div>
+    <div class="controls">
+        <div class="switch-container">
+            <span class="switch-label">Zamaluj</span>
+            <label class="switch">
+                <input type="checkbox" id="modeSwitch">
+                <span class="slider"></span>
+            </label>
+            <span class="switch-label">Krzyżyk</span>
+        </div>
+        <button id="checkSolution">Sprawdź rozwiązanie</button>
+        <button id="resetBoard">Resetuj planszę</button>
+        <button id="newGame">Nowa gra</button>
+        <button buttonId="18" class="add-button">🐇</button>
+    </div>
+    <script src="../script/event2.js"></script>
+    <script>
+        const nonogram = document.getElementById('nonogram');
+        const rowCluesElement = document.getElementById('rowClues');
+        const colCluesElement = document.getElementById('colClues');
+        const modeSwitch = document.getElementById('modeSwitch');
+
+        const size = 5;
+        let solution = [];
+        let isDragging = false;
+
+        function generateSolvableSolution(size) {
+            const solution = Array.from({ length: size }, () => Array(size).fill(0));
+            const minFilled = Math.floor(size * size * 0.3); // Min. 30% wypełnienia
+            const maxFilled = Math.floor(size * size * 0.6); // Max. 60% wypełnienia
+            let filledCount = 0;
+            const targetFilled = minFilled + Math.floor(Math.random() * (maxFilled - minFilled + 1));
+
+            // Generowanie wzorców liniowych
+            for (let row = 0; row < size; row++) {
+                if (Math.random() < 0.7) {
+                    const start = Math.floor(Math.random() * (size - 2));
+                    const length = Math.min(2 + Math.floor(Math.random() * 3), size - start);
+                    for (let col = start; col < start + length && filledCount < targetFilled; col++) {
+                        if (!solution[row][col]) {
+                            solution[row][col] = 1;
+                            filledCount++;
+                        }
+                    }
+                }
+            }
+
+            // Uzupełnienie losowymi komórkami
+            while (filledCount < targetFilled) {
+                const row = Math.floor(Math.random() * size);
+                const col = Math.floor(Math.random() * size);
+                if (!solution[row][col]) {
+                    solution[row][col] = 1;
+                    filledCount++;
+                }
+            }
+
+            return solution;
+        }
+
+        function calculateClues(solution) {
+            const size = solution.length;
+            const rowClues = solution.map(row => {
+                const clues = [];
+                let count = 0;
+                row.forEach(cell => {
+                    if (cell === 1) count++;
+                    else if (count > 0) {
+                        clues.push(count);
+                        count = 0;
+                    }
+                });
+                if (count > 0) clues.push(count);
+                return clues.length ? clues : [0];
+            });
+
+            const colClues = Array.from({ length: size }, (_, col) => {
+                const clues = [];
+                let count = 0;
+                for (let row = 0; row < size; row++) {
+                    if (solution[row][col] === 1) count++;
+                    else if (count > 0) {
+                        clues.push(count);
+                        count = 0;
+                    }
+                };
+                if (count > 0) clues.push(count);
+                return clues.length ? clues : [0];
+            });
+
+            return { rowClues, colClues };
+        }
+
+        function initializeGame() {
+            solution = generateSolvableSolution(size);
+            const clues = calculateClues(solution);
+
+            // Czyszczenie poprzednich wskazówek i planszy
+            rowCluesElement.innerHTML = '';
+            colCluesElement.innerHTML = '';
+            nonogram.innerHTML = '';
+
+            // Dodawanie wskazówek wierszy
+            clues.rowClues.forEach(clueSet => {
+                const clueRow = document.createElement('div');
+                clueSet.forEach(clue => {
+                    const clueElement = document.createElement('div');
+                    clueElement.className = 'clue';
+                    clueElement.textContent = clue;
+                    clueRow.appendChild(clueElement);
+                });
+                rowCluesElement.appendChild(clueRow);
+            });
+
+            // Dodawanie wskazówek kolumn
+            clues.colClues.forEach(clueSet => {
+                const clueColumn = document.createElement('div');
+                clueSet.forEach(clue => {
+                    const clueElement = document.createElement('div');
+                    clueElement.className = 'clue';
+                    clueElement.textContent = clue;
+                    clueColumn.appendChild(clueElement);
+                });
+                colCluesElement.appendChild(clueColumn);
+            });
+
+            // Tworzenie planszy
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    cell.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        isDragging = true;
+                        toggleCell(cell);
+                    });
+
+                    cell.addEventListener('mousemove', () => {
+                        if (isDragging) toggleCell(cell);
+                    });
+
+                    cell.addEventListener('mouseup', () => {
+                        if (!isDragging) toggleCell(cell);
+                        isDragging = false;
+                    });
+
+                    document.addEventListener('mouseup', () => {
+                        isDragging = false;
+                    });
+
+                    nonogram.appendChild(cell);
+                }
+            }
+        }
+
+        // Tryb rysowania (false = Zamaluj, true = Krzyżyk)
+        let currentMode = modeSwitch.checked;
+        modeSwitch.addEventListener('change', () => {
+            currentMode = modeSwitch.checked;
+        });
+
+        function toggleCell(cell) {
+            if (currentMode) { // Krzyżyk
+                if (cell.classList.contains('cross')) {
+                    cell.classList.remove('cross');
+                } else {
+                    cell.classList.remove('filled');
+                    cell.classList.add('cross');
+                }
+            } else { // Zamaluj
+                if (cell.classList.contains('filled')) {
+                    cell.classList.remove('filled');
+                } else {
+                    cell.classList.remove('cross');
+                    cell.classList.add('filled');
+                }
+            }
+        }
+
+        // Sprawdzanie rozwiązania
+        function checkSolution() {
+            let isCorrect = true;
+            document.querySelectorAll('.cell').forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const isFilled = cell.classList.contains('filled');
+                if ((solution[row][col] === 1 && !isFilled) || (solution[row][col] === 0 && isFilled)) {
+                    isCorrect = false;
+                }
+            });
+            alert(isCorrect ? 'Gratulacje! Rozwiązałeś nonogram!' : 'Błąd! Spróbuj ponownie.');
+        }
+
+        // Resetowanie planszy
+        function resetBoard() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('filled', 'cross');
+            });
+        }
+
+        // Obsługa przycisków
+        document.getElementById('checkSolution').addEventListener('click', checkSolution);
+        document.getElementById('resetBoard').addEventListener('click', resetBoard);
+        document.getElementById('newGame').addEventListener('click', initializeGame);
+
+        // Inicjalizacja gry
+        initializeGame();
+    </script>
+</body>
+</html>

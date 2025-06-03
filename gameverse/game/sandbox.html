@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox | Perun Studios</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1a1a1a, #121212);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 950px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: #252525;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .controls button {
+            padding: 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(to right, #444, #333);
+            color: #fff;
+            transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(to right, #555, #444);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls button.active {
+            background: linear-gradient(to right, #7f39fb, #6200ea);
+            box-shadow: 0 0 12px rgba(98, 0, 234, 0.6);
+        }
+
+        .controls button.unique {
+            background: linear-gradient(to right, #00b7eb, #0097c7);
+        }
+
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .controls input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+            accent-color: #6200ea;
+        }
+
+        canvas {
+            border: 3px solid #444;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            background: #1c1c1c;
+            display: block;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .stats {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+            background: #252525;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-mode {
+            background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+            color: #222;
+        }
+
+        body.light-mode .controls {
+            background: #f0f0f0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .controls button {
+            background: linear-gradient(to right, #fff, #eee);
+            color: #333;
+        }
+
+        body.light-mode .controls button:hover {
+            background: linear-gradient(to right, #eee, #ddd);
+        }
+
+        body.light-mode .controls button.active {
+            background: linear-gradient(to right, #7f39fb, #6200ea);
+        }
+
+        body.light-mode canvas {
+            background: #fff;
+            border-color: #ccc;
+        }
+
+        body.light-mode .stats {
+            color: #555;
+            background: #f0f0f0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: #2a2a2a;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        body.light-mode .modal-content {
+            background: #fff;
+            color: #222;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 1.8em;
+        }
+
+        .modal-content button {
+            margin-top: 15px;
+            padding: 12px;
+            width: 100%;
+            background: #6200ea;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .modal-content button:hover {
+            background: #7f39fb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sandbox | Perun Studios</h1>
+        </div>
+        <div class="controls">
+            <button id="sand">Piasek</button>
+            <button id="water">Woda</button>
+            <button class="unique" id="fire">Ogień</button>
+            <button id="stone">Kamień</button>
+            <button id="soil">Gleba</button>
+            <button id="salt">Sól</button>
+            <button id="saltwater">Woda z solą</button>
+            <button id="ash">Popiół</button>
+            <button id="ice">Lód</button>
+            <button id="iron">Żelazo</button>
+            <button class="unique" id="oxygen">Tlen</button>
+            <button id="wood">Drewno</button>
+            <button id="coal">Węgiel</button>
+            <button id="acid">Kwas</button>
+            <button class="unique" id="flower">Kwiatek</button>
+            <button class="unique" id="plant">Roślina</button>
+            <button id="rust">Rdza</button>
+            <button id="snow">Śnieg</button>
+            <button id="mud">Błoto</button>
+            <button class="unique" id="intensefire">Intensywny Ogień</button>
+            <button id="steam">Para</button>
+            <button id="oil">Olej</button>
+            <button id="lava">Lawa</button>
+            <button id="glass">Szkło</button>
+            <button id="smoke">Dym</button>
+            <button id="spark">Iskra</button>
+            <button id="clear">Wyczyść</button>
+            <button id="toggle-theme">Motyw</button>
+            <button id="brush-size">Rozmiar: 4</button>
+            <input type="range" id="gravity-slider" min="0.0" max="2.0" step="0.1" value="1.0">
+            <button id="wind-toggle">Wiatr: Wył</button>
+            <button id="pause">Pauza</button>
+            <button id="undo">Cofnij</button>
+            <button id="save">Zapisz</button>
+            <button id="load">Wczytaj</button>
+            <button id="help">Pomoc</button>
+        </div>
+        <canvas id="sandbox" width="800" height="500"></canvas>
+        <div class="stats" id="stats">Cząstek: 0 | FPS: 0 | Grawitacja: 1.0</div>
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Pomoc</h2>
+            <p>Eksploruj fizykę w Sandbox!</p>
+            <ul>
+                <li>Wybierz materiał przyciskiem.</li>
+                <li>Kliknij/przeciągnij na płótnie.</li>
+                <li>Zmień rozmiar pędzla ("Rozmiar").</li>
+                <li>Suwak grawitacji: 0.0-2.0.</li>
+                <li>Włącz wiatr dla lekkich cząstek.</li>
+                <li>Reakcje: lawa + woda = kamień.</li>
+                <li>Ogień znika po 0.5s.</li>
+                <li>Pauza, Cofnij, Zapisz/Wczytaj.</li>
+                <li>Podgląd cząstek po najechaniu.</li>
+            </ul>
+            <button id="close-modal">Zamknij</button>
+        </div>
+    </div>
+    <div id="tooltip" class="tooltip" style="display: none;"></div>
+    <script>
+        const canvas = document.getElementById('sandbox');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        const particles = new Map();
+        let selectedType = 'sand';
+        let isMouseDown = false;
+        let brushSize = 4;
+        let isPaused = false;
+        let gravity = 1.0;
+        let windEnabled = false;
+        let lastUpdate = 0;
+        let frameCount = 0;
+        let lastFPSUpdate = 0;
+        let fps = 0;
+        let savedState = null;
+        let undoStates = [];
+        let particleCounts = {};
+
+        // Spatial Grid
+        const gridSize = brushSize * 2;
+        const grid = new Map();
+
+        const particleTypes = {
+            sand: { color: '#FFD700', density: 1.6, reactsWith: { water: 'mud' }, burnable: false, interaction: moveDown, description: 'Sypki, osiada.' },
+            water: { color: '#1E90FF', density: 1.0, reactsWith: { salt: 'saltwater', iron: 'rust', fire: 'steam', oil: 'oil', lava: 'stone' }, burnable: false, interaction: moveLiquid, description: 'Płynny, rozlewa się.' },
+            fire: { color: '#FF4500', density: 0.1, reactsWith: { wood: 'ash', iron: 'rust', oxygen: 'intensefire', oil: 'intensefire' }, burnable: true, interaction: moveFire, description: 'Spala, znika po 0.5s.' },
+            stone: { color: '#808080', density: 2.5, burnable: false, interaction: () => {}, description: 'Nieruchomy.' },
+            soil: { color: '#8B4513', density: 1.5, reactsWith: { fire: 'ash' }, burnable: false, interaction: moveDown, description: 'Podatny na ogień.' },
+            salt: { color: '#FFFACD', density: 2.1, reactsWith: { water: 'saltwater' }, burnable: false, interaction: moveDown, description: 'Rozpuszcza się.' },
+            saltwater: { color: '#87CEEB', density: 1.2, burnable: false, interaction: moveLiquid, description: 'Słona woda.' },
+            ash: { color: '#A9A9A9', density: 0.5, burnable: false, interaction: moveDown, description: 'Lekki popiół.' },
+            ice: { color: '#E0FFFF', density: 0.9, reactsWith: { fire: 'water', lava: 'steam' }, burnable: false, interaction: moveDown, description: 'Topi się.' },
+            iron: { color: '#C0C0C0', density: 7.8, reactsWith: { fire: 'rust', acid: 'rust', water: 'rust' }, burnable: false, interaction: moveDown, description: 'Rdzewieje.' },
+            oxygen: { color: '#F0F8FF', density: 0.001, reactsWith: { fire: 'intensefire' }, burnable: false, interaction: moveUp, description: 'Podsyca ogień.' },
+            wood: { color: '#DEB887', density: 0.7, reactsWith: { fire: 'ash', spark: 'fire' }, burnable: true, interaction: moveDown, description: 'Łatwo się pali.' },
+            coal: { color: '#2F2F2F', density: 1.3, reactsWith: { fire: 'ash', spark: 'fire' }, burnable: true, interaction: moveDown, description: 'Pali się wolno.' },
+            acid: { color: '#00FF00', density: 1.1, reactsWith: { iron: 'rust', plant: 'ash' }, burnable: false, interaction: moveLiquid, description: 'Korozyjny.' },
+            flower: { color: '#FF69B4', density: 0.3, reactsWith: { water: 'plant', fire: 'ash', spark: 'fire' }, burnable: true, interaction: moveDown, description: 'Rośnie.' },
+            plant: { color: '#228B22', density: 0.5, reactsWith: { fire: 'ash', acid: 'ash', spark: 'fire' }, burnable: true, interaction: moveDown, description: 'Organiczny.' },
+            rust: { color: '#B7410E', density: 5.2, burnable: false, interaction: moveDown, description: 'Produkt korozji.' },
+            snow: { color: '#F0F8FF', density: 0.1, reactsWith: { fire: 'water', lava: 'steam' }, burnable: false, interaction: moveDown, description: 'Topi się.' },
+            mud: { color: '#4A3728', density: 1.8, burnable: false, interaction: moveDown, description: 'Mokry, ciężki.' },
+            intensefire: { color: '#FF0000', density: 0.05, reactsWith: { wood: 'ash', iron: 'rust', coal: 'ash', oil: 'ash' }, burnable: true, interaction: moveFire, description: 'Gorętszy, znika po 0.5s.' },
+            steam: { color: '#D3D3D3', density: 0.001, burnable: false, interaction: moveUp, description: 'Para wodna.' },
+            oil: { color: '#3C2F2F', density: 0.8, reactsWith: { fire: 'intensefire', water: 'oil', spark: 'intensefire' }, burnable: true, interaction: moveLiquid, description: 'Łatwopalny.' },
+            lava: { color: '#FF4500', density: 2.7, reactsWith: { water: 'stone', ice: 'steam', snow: 'steam' }, burnable: false, interaction: moveLiquid, description: 'Topi, krzepnie.' },
+            glass: { color: '#E6E6FA', density: 2.5, burnable: false, interaction: moveDown, description: 'Kruche, osiada.' },
+            smoke: { color: '#696969', density: 0.01, burnable: false, interaction: moveUp, description: 'Rozprasza się.' },
+            spark: { color: '#FFFFE0', density: 0.1, reactsWith: { wood: 'fire', coal: 'fire', oil: 'intensefire', flower: 'fire', plant: 'fire' }, burnable: true, interaction: moveFire, description: 'Zapala.' }
+        };
+
+        class Particle {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.color = particleTypes[type]?.color || '#000000';
+                this.density = particleTypes[type]?.density || 1;
+                this.size = brushSize;
+                this.lifeTime = (type === 'fire' || type === 'intensefire') ? 30 : type === 'spark' ? 20 : type === 'smoke' ? 50 : Infinity; // 0.5s = 30 frames
+                this.id = `${x}_${y}_${Date.now()}_${Math.random()}`;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.alpha = 1.0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                if (this.type === 'fire' || this.type === 'intensefire' || this.type === 'lava') {
+                    ctx.globalAlpha = this.alpha * 0.4;
+                    ctx.fillStyle = '#FF4500';
+                    ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            update(deltaTime) {
+                if (isPaused || this.lifeTime <= 0) {
+                    particles.delete(this.id);
+                    updateGrid(this, null);
+                    return;
+                }
+                this.checkReactions();
+                if (this.type === 'fire' || this.type === 'intensefire' || this.type === 'spark') {
+                    this.lifeTime--;
+                    this.alpha = Math.max(0.5, this.lifeTime / 30);
+                    this.burnNearby();
+                }
+                if (this.type === 'smoke' || this.type === 'steam') {
+                    this.alpha = Math.max(0.3, this.alpha - 0.01);
+                    if (this.alpha <= 0.3) this.lifeTime = 0;
+                }
+                particleTypes[this.type]?.interaction(this, deltaTime);
+                particleCounts[this.type] = (particleCounts[this.type] || 0) + 1;
+            }
+
+            burnNearby() {
+                const radius = this.type === 'intensefire' ? 12 : 8;
+                const burnChance = this.type === 'intensefire' ? 0.25 : this.type === 'spark' ? 0.15 : 0.1;
+                const gridX = Math.floor(this.x / gridSize);
+                const gridY = Math.floor(this.y / gridSize);
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const key = `${gridX + dx}_${gridY + dy}`;
+                        const cell = grid.get(key) || [];
+                        for (const other of cell) {
+                            if (other !== this && particleTypes[other.type]?.burnable && Math.hypot(other.x - this.x, other.y - this.y) < radius && Math.random() < burnChance) {
+                                particles.delete(other.id);
+                                updateGrid(other, null);
+                                const newParticle = new Particle(other.x, other.y, this.type === 'spark' ? 'fire' : this.type);
+                                particles.set(newParticle.id, newParticle);
+                                updateGrid(newParticle, newParticle);
+                            }
+                        }
+                    }
+                }
+            }
+
+            checkReactions() {
+                const type = particleTypes[this.type];
+                if (!type?.reactsWith) return;
+                const radius = 8;
+                const gridX = Math.floor(this.x / gridSize);
+                const gridY = Math.floor(this.y / gridSize);
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const key = `${gridX + dx}_${gridY + dy}`;
+                        const cell = grid.get(key) || [];
+                        for (const other of cell) {
+                            if (other !== this && type.reactsWith[other.type] && type.reactsWith[other.type] !== this.type && Math.hypot(other.x - this.x, other.y - this.y) < radius) {
+                                particles.delete(other.id);
+                                particles.delete(this.id);
+                                updateGrid(other, null);
+                                updateGrid(this, null);
+                                const newType = type.reactsWith[other.type];
+                                if (particleTypes[newType]) {
+                                    const newParticle = new Particle(this.x, this.y, newType);
+                                    particles.set(newParticle.id, newParticle);
+                                    updateGrid(newParticle, newParticle);
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateGrid(particle, newParticle) {
+            const gridX = Math.floor(particle.x / gridSize);
+            const gridY = Math.floor(particle.y / gridSize);
+            const key = `${gridX}_${gridY}`;
+            let cell = grid.get(key) || [];
+            if (newParticle) {
+                cell.push(newParticle);
+            } else {
+                cell = cell.filter(p => p.id !== particle.id);
+            }
+            if (cell.length > 0) {
+                grid.set(key, cell);
+            } else {
+                grid.delete(key);
+            }
+        }
+
+        function moveDown(p, deltaTime) {
+            if (p.y >= canvas.height - p.size) {
+                p.y = canvas.height - p.size;
+                p.velocityY = 0;
+                return;
+            }
+            const g = gravity * 9.8;
+            p.velocityY += g * deltaTime;
+            p.velocityY = Math.min(p.velocityY, 50 / Math.sqrt(p.density));
+            const moveDistance = p.velocityY * deltaTime;
+            let newY = p.y + moveDistance;
+            let blocked = false;
+            const gridX = Math.floor(p.x / gridSize);
+            const gridY = Math.floor((newY + p.size) / gridSize);
+            const cell = grid.get(`${gridX}_${gridY}`) || [];
+            for (const other of cell) {
+                if (other !== p && Math.floor(other.x) === Math.floor(p.x) && Math.floor(other.y) === Math.floor(newY + p.size)) {
+                    if (particleTypes[other.type].density >= p.density) {
+                        blocked = true;
+                        newY = other.y - p.size;
+                        p.velocityY = 0;
+                        break;
+                    }
+                }
+            }
+            if (!blocked && newY < canvas.height - p.size && !particles.has(`${Math.floor(p.x)}_${Math.floor(newY + p.size)}`)) {
+                particles.delete(p.id);
+                updateGrid(p, null);
+                p.y = newY;
+                p.id = `${Math.floor(p.x)}_${Math.floor(p.y)}`;
+                particles.set(p.id, p);
+                updateGrid(p, p);
+            } else {
+                p.y = Math.floor(newY);
+                // Slide to form mounds
+                const directions = [
+                    { x: p.x - p.size, y: p.y },
+                    { x: p.x + p.size, y: p.y }
+                ].filter(d => d.x >= 0 && d.x < canvas.width);
+                let moved = false;
+                for (const dir of directions.sort(() => Math.random() - 0.5)) {
+                    const dirKey = `${Math.floor(dir.x)}_${Math.floor(dir.y)}`;
+                    const belowKey = `${Math.floor(dir.x)}_${Math.floor(dir.y + p.size)}`;
+                    if (!particles.has(dirKey) && (!particles.has(belowKey) || particleTypes[particles.get(belowKey)?.type]?.density < p.density)) {
+                        particles.delete(p.id);
+                        updateGrid(p, null);
+                        p.x = dir.x;
+                        p.velocityX = dir.x > p.x ? 1 : -1;
+                        p.id = dirKey;
+                        particles.set(p.id, p);
+                        updateGrid(p, p);
+                        moved = true;
+                        break;
+                    }
+                }
+                if (!moved) {
+                    p.velocityX = 0;
+                    p.velocityY = 0;
+                }
+            }
+            if (windEnabled && p.density < 0.5) {
+                const wind = (Math.sin(Date.now() / 1000) * 0.2);
+                p.velocityX += wind * deltaTime;
+                const newX = p.x + p.velocityX * deltaTime * 60;
+                if (newX >= 0 && newX < canvas.width && !particles.has(`${Math.floor(newX)}_${Math.floor(p.y)}`)) {
+                    particles.delete(p.id);
+                    updateGrid(p, null);
+                    p.x = newX;
+                    p.id = `${Math.floor(p.x)}_${Math.floor(p.y)}`;
+                    particles.set(p.id, p);
+                    updateGrid(p, p);
+                }
+            }
+        }
+
+        function moveUp(p, deltaTime) {
+            if (p.y <= 0) {
+                p.y = 0;
+                p.velocityY = 0;
+                return;
+            }
+            const g = gravity * 2.0;
+            p.velocityY -= g * deltaTime;
+            p.velocityY = Math.max(p.velocityY, -20);
+            const moveDistance = p.velocityY * deltaTime;
+            let newY = p.y + moveDistance;
+            if (newY <= 0) {
+                newY = 0;
+                p.velocityY = 0;
+            }
+            const newKey = `${Math.floor(p.x)}_${Math.floor(newY)}`;
+            if (!particles.has(newKey)) {
+                particles.delete(p.id);
+                updateGrid(p, null);
+                p.y = newY;
+                p.id = newKey;
+                particles.set(p.id, p);
+                updateGrid(p, p);
+            } else {
+                p.velocityY = 0;
+            }
+            if (windEnabled) {
+                const wind = (Math.sin(Date.now() / 1000) * 0.2);
+                p.velocityX += wind * deltaTime;
+                const newX = p.x + p.velocityX * deltaTime * 60;
+                if (newX >= 0 && newX < canvas.width && !particles.has(`${Math.floor(newX)}_${Math.floor(p.y)}`)) {
+                    particles.delete(p.id);
+                    updateGrid(p, null);
+                    p.x = newX;
+                    p.id = `${Math.floor(p.x)}_${Math.floor(p.y)}`;
+                    particles.set(p.id, p);
+                    updateGrid(p, p);
+                }
+            }
+        }
+
+        function moveLiquid(p, deltaTime) {
+            if (p.y >= canvas.height - p.size) {
+                p.y = canvas.height - p.size;
+                p.velocityY = 0;
+                return;
+            }
+            const belowKey = `${Math.floor(p.x)}_${Math.floor(p.y + p.size)}`;
+            const below = particles.get(belowKey);
+            if (!below || particleTypes[below.type].density < p.density) {
+                moveDown(p, deltaTime);
+                return;
+            }
+            const directions = [
+                { x: p.x - p.size, y: p.y },
+                { x: p.x + p.size, y: p.y }
+            ].filter(d => d.x >= 0 && d.x < canvas.width);
+            let moved = false;
+            for (const dir of directions.sort(() => Math.random() - 0.5)) {
+                const dirKey = `${Math.floor(dir.x)}_${Math.floor(dir.y)}`;
+                const dirBelowKey = `${Math.floor(dir.x)}_${Math.floor(dir.y + p.size)}`;
+                const dirBelow = particles.get(dirBelowKey);
+                if (!particles.has(dirKey) && (!dirBelow || particleTypes[dirBelow.type].density < p.density)) {
+                    particles.delete(p.id);
+                    updateGrid(p, null);
+                    p.x = dir.x;
+                    p.velocityX = dir.x > p.x ? 2 : -2;
+                    p.id = dirKey;
+                    particles.set(p.id, p);
+                    updateGrid(p, p);
+                    moved = true;
+                    break;
+                }
+            }
+            if (!moved) {
+                p.velocityX *= 0.9;
+                p.velocityY = 0;
+            }
+        }
+
+        function moveFire(p, deltaTime) {
+            moveUp(p, deltaTime);
+            const spreadChance = p.type === 'intensefire' ? 0.3 : p.type === 'spark' ? 0.2 : 0.2;
+            if (Math.random() < spreadChance) {
+                const directions = [
+                    { x: p.x - p.size, y: p.y },
+                    { x: p.x + p.size, y: p.y },
+                    { x: p.x, y: p.y - p.size }
+                ].filter(d => d.x >= 0 && d.x < canvas.width && d.y >= 0);
+                for (const dir of directions) {
+                    const dirKey = `${Math.floor(dir.x)}_${Math.floor(dir.y)}`;
+                    if (!particles.has(dirKey)) {
+                        const newParticle = new Particle(dir.x, dir.y, p.type);
+                        particles.set(newParticle.id, newParticle);
+                        updateGrid(newParticle, newParticle);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function addParticle(x, y, type) {
+            if (particles.size >= 3000) return;
+            x = Math.floor(x / brushSize) * brushSize;
+            y = Math.floor(y / brushSize) * brushSize;
+            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+            const key = `${x}_${y}`;
+            if (!particles.has(key)) {
+                const particle = new Particle(x, y, type);
+                particles.set(key, particle);
+                updateGrid(particle, particle);
+                saveUndoState();
+            }
+        }
+
+        function handleInteraction(event) {
+            event.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX || (event.touches && event.touches[0].clientX)) - rect.left;
+            const y = (event.clientY || (event.touches && event.touches[0].clientY)) - rect.top;
+            const radius = brushSize;
+            for (let dx = -radius; dx <= radius; dx += brushSize) {
+                for (let dy = -radius; dy <= radius; dy += brushSize) {
+                    if (Math.hypot(dx, dy) <= radius) {
+                        addParticle(x + dx, y + dy, selectedType);
+                    }
+                }
+            }
+        }
+
+        function showTooltip(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX || (event.touches && event.touches[0].clientX)) - rect.left;
+            const y = (event.clientY || (event.touches && event.touches[0].clientY)) - rect.top;
+            const particle = particles.get(`${Math.floor(x / brushSize) * brushSize}_${Math.floor(y / brushSize) * brushSize}`);
+            const tooltip = document.getElementById('tooltip');
+            if (particle && particleTypes[particle.type]?.description) {
+                tooltip.textContent = `${particle.type}: ${particleTypes[particle.type].description}`;
+                tooltip.style.left = `${event.clientX + 15}px`;
+                tooltip.style.top = `${event.clientY + 15}px`;
+                tooltip.style.display = 'block';
+            } else {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function saveState() {
+            savedState = Array.from(particles.entries()).map(([key, p]) => ({
+                x: p.x,
+                y: p.y,
+                type: p.type,
+                size: p.size,
+                lifeTime: p.lifeTime,
+                velocityX: p.velocityX,
+                velocityY: p.velocityY,
+                alpha: p.alpha
+            }));
+            alert('Zapisano stan!');
+        }
+
+        function loadState() {
+            if (!savedState) {
+                alert('Brak zapisanego stanu!');
+                return;
+            }
+            particles.clear();
+            grid.clear();
+            savedState.forEach(p => {
+                const particle = new Particle(p.x, p.y, p.type);
+                particle.size = p.size;
+                particle.lifeTime = p.lifeTime;
+                particle.velocityX = p.velocityX;
+                particle.velocityY = p.velocityY;
+                particle.alpha = p.alpha;
+                particles.set(`${p.x}_${p.y}`, particle);
+                updateGrid(particle, particle);
+            });
+            alert('Wczytano stan!');
+        }
+
+        function saveUndoState() {
+            undoStates.push(Array.from(particles.entries()).map(([key, p]) => ({
+                x: p.x,
+                y: p.y,
+                type: p.type,
+                size: p.size,
+                lifeTime: p.lifeTime,
+                velocityX: p.velocityX,
+                velocityY: p.velocityY,
+                alpha: p.alpha
+            })));
+            if (undoStates.length > 5) undoStates.shift();
+        }
+
+        function undo() {
+            if (undoStates.length === 0) {
+                alert('Brak stanów do cofnięcia!');
+                return;
+            }
+            const lastState = undoStates.pop();
+            particles.clear();
+            grid.clear();
+            lastState.forEach(p => {
+                const particle = new Particle(p.x, p.y, p.type);
+                particle.size = p.size;
+                particle.lifeTime = p.lifeTime;
+                particle.velocityX = p.velocityX;
+                particle.velocityY = p.velocityY;
+                particle.alpha = p.alpha;
+                particles.set(`${p.x}_${p.y}`, particle);
+                updateGrid(particle, particle);
+            });
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.controls button:not(#clear):not(#toggle-theme):not(#brush-size):not(#wind-toggle):not(#pause):not(#undo):not(#save):not(#load):not(#help)').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelector('.controls button.active')?.classList.remove('active');
+                button.classList.add('active');
+                selectedType = button.id;
+            });
+        });
+
+        document.getElementById('clear').addEventListener('click', () => {
+            particles.clear();
+            grid.clear();
+            saveUndoState();
+        });
+
+        document.getElementById('toggle-theme').addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+        });
+
+        document.getElementById('brush-size').addEventListener('click', () => {
+            brushSize = brushSize === 4 ? 8 : brushSize === 8 ? 12 : 4;
+            document.getElementById('brush-size').textContent = `Rozmiar: ${brushSize}`;
+        });
+
+        document.getElementById('gravity-slider').addEventListener('input', (e) => {
+            gravity = parseFloat(e.target.value);
+            document.getElementById('stats').textContent = `Cząstek: ${particles.size} | FPS: ${fps} | Grawitacja: ${gravity.toFixed(1)}`;
+        });
+
+        document.getElementById('wind-toggle').addEventListener('click', () => {
+            windEnabled = !windEnabled;
+            document.getElementById('wind-toggle').textContent = `Wiatr: ${windEnabled ? 'Wł' : 'Wył'}`;
+        });
+
+        document.getElementById('pause').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pause').textContent = isPaused ? 'Wznów' : 'Pauza';
+        });
+
+        document.getElementById('undo').addEventListener('click', undo);
+        document.getElementById('save').addEventListener('click', saveState);
+        document.getElementById('load').addEventListener('click', loadState);
+
+        document.getElementById('help').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'flex';
+        });
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        canvas.addEventListener('mousedown', () => { isMouseDown = true; });
+        canvas.addEventListener('mouseup', () => { isMouseDown = false; });
+        canvas.addEventListener('mousemove', (e) => {
+            if (isMouseDown) handleInteraction(e);
+            showTooltip(e);
+        });
+        canvas.addEventListener('click', handleInteraction);
+        canvas.addEventListener('touchstart', (e) => {
+            isMouseDown = true;
+            handleInteraction(e);
+            showTooltip(e);
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            handleInteraction(e);
+            showTooltip(e);
+        });
+        canvas.addEventListener('touchend', () => { isMouseDown = false; });
+
+        // Game Loop
+        function gameLoop(timestamp) {
+            const deltaTime = Math.min((timestamp - lastUpdate) / 1000, 0.05);
+            if (deltaTime >= 1 / 60) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particleCounts = {};
+                particles.forEach(particle => {
+                    particle.update(deltaTime);
+                    particle.draw();
+                });
+
+                frameCount++;
+                if (timestamp - lastFPSUpdate >= 1000) {
+                    fps = frameCount;
+                    frameCount = 0;
+                    lastFPSUpdate = timestamp;
+                    const topTypes = Object.entries(particleCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(([type, count]) => `${type}: ${count}`)
+                        .join(', ');
+                    document.getElementById('stats').textContent = `Cząstek: ${particles.size} | FPS: ${fps} | Grawitacja: ${gravity.toFixed(1)} | ${topTypes}`;
+                }
+
+                lastUpdate = timestamp;
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        document.querySelector(`#${selectedType}`).classList.add('active');
+        saveUndoState();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

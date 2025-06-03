@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloki 1 | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #ecf0f1;
+            font-family: Arial, sans-serif;
+        }
+        #gameArea {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #3498db;
+            overflow: hidden;
+        }
+        #moveableArea {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 70px;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px dashed #2ecc71;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            background-color: #2ecc71;
+            border-radius: 10px;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.2s ease;
+        }
+        #player:hover {
+            background-color: #27ae60;
+        }
+        .obstacle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #e74c3c;
+            border-radius: 10px;
+            transition: top 0.1s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .collectible {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            transition: top 0.1s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .points {
+            background-color: #f1c40f;
+        }
+        .life {
+            background-color: #e67e22;
+        }
+        .ammo {
+            background-color: #3498db;
+        }
+        .timeFreeze {
+            background-color: #9b59b6;
+        }
+        .bullet {
+            position: absolute;
+            width: 5px;
+            height: 15px;
+            background-color: #f1c40f;
+            border-radius: 5px;
+            animation: shoot 0.5s forwards;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes shoot {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100vh); }
+        }
+        #score, #lives, #ammo {
+            position: absolute;
+            top: 10px;
+            color: white;
+            font-size: 24px;
+            z-index: 10;
+        }
+        #lives {
+            right: 10px;
+        }
+        #ammo {
+            right: 10px;
+            top: 40px;
+        }
+        .notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            z-index: 20;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="moveableArea"></div>
+        <div id="player"></div>
+        <div id="score">Punkty: 0</div>
+        <div id="lives">Życia: 3</div>
+        <div id="ammo">Amunicja: 10</div>
+        <div class="notification" id="notification"></div>
+    </div>
+
+<script>
+    const player = document.getElementById('player');
+    const gameArea = document.getElementById('gameArea');
+    const scoreElement = document.getElementById('score');
+    const livesElement = document.getElementById('lives');
+    const ammoElement = document.getElementById('ammo');
+    const notificationElement = document.getElementById('notification');
+
+    let playerPosition = 50; // Pozycja gracza (w %)
+    let score = 0;           // Wynik
+    let lives = 3;          // Życia
+    let ammo = 5;          // Amunicja
+    let gameInterval;        // Interval gry
+    let obstacles = [];      // Przeszkody
+    let collectibles = [];   // Zbierane przedmioty
+    let gameRunning = false; // Status gry
+    let timeFrozen = false;  // Status zatrzymania czasu
+
+    // Funkcja do przesuwania gracza
+    document.addEventListener('keydown', (event) => {
+        if (!gameRunning) return; // Jeśli gra nie działa, nie reaguj na klawisze
+        if (event.key === 'ArrowLeft' && playerPosition > 0) {
+            playerPosition -= 2.5; // Ruch w lewo (zmniejszone o połowę)
+        } else if (event.key === 'ArrowRight' && playerPosition < 95) {
+            playerPosition += 2.5; // Ruch w prawo (zmniejszone o połowę)
+        } else if (event.key === ' ') {
+            shootBullet(); // Strzał
+        }
+        player.style.left = playerPosition + '%'; // Aktualizacja pozycji gracza
+    });
+
+    // Funkcja do tworzenia przeszkód
+    function createObstacle() {
+        if (Math.random() > 0.7) { // 30% szans na utworzenie przeszkody
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+            obstacle.style.top = '-50px'; // Początkowa pozycja nad ekranem
+            gameArea.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+    }
+
+    // Funkcja do tworzenia zbieranych przedmiotów
+    function createCollectible() {
+        if (Math.random() > 0.9) { // 10% szans na utworzenie zbieranego przedmiotu
+            const collectible = document.createElement('div');
+            collectible.classList.add('collectible');
+            
+            const type = Math.random(); // Losowy typ przedmiotu
+            if (type < 0.5) {
+                collectible.classList.add('points');
+                collectible.title = "Zwiększa punkty o 5!"; // Opis umiejętności
+            } else if (type < 0.8) {
+                collectible.classList.add('life');
+                collectible.title = "Przywraca jedno życie!"; // Opis umiejętności
+            } else if (type < 0.9) {
+                collectible.classList.add('ammo');
+                collectible.title = "Dodaje 3 punktów amunicji!"; // Opis umiejętności
+            } else if (type < 0.95) {
+                collectible.classList.add('timeFreeze');
+                collectible.title = "Zatrzymuje czas na 5 sekund!"; // Opis umiejętności
+            }
+
+            collectible.style.left = Math.random() * (window.innerWidth - 30) + 'px';
+            collectible.style.top = '-30px'; // Początkowa pozycja nad ekranem
+            gameArea.appendChild(collectible);
+            collectibles.push(collectible);
+        }
+    }
+
+    // Funkcja do strzału
+    function shootBullet() {
+        if (ammo <= 0) return; // Sprawdzenie, czy amunicja jest dostępna
+        ammo--; // Zmniejszenie amunicji
+        ammoElement.innerText = 'Amunicja: ' + ammo;
+
+        const bullet = document.createElement('div');
+        bullet.classList.add('bullet');
+        bullet.style.left = player.offsetLeft + 22.5 + 'px'; // Wyśrodkowanie pocisku
+        bullet.style.bottom = '70px'; // Pozycja pocisku
+        gameArea.appendChild(bullet);
+
+        // Animacja pocisku
+        const bulletInterval = setInterval(() => {
+            const bulletTop = bullet.offsetTop;
+            if (bulletTop < -15) {
+                clearInterval(bulletInterval);
+                gameArea.removeChild(bullet);
+            } else {
+                bullet.style.top = (bulletTop - 5) + 'px'; // Ruch pocisku w górę
+                checkBulletCollision(bullet, bulletInterval);
+            }
+        }, 20);
+    }
+
+    // Funkcja sprawdzająca kolizję pocisku z przeszkodami
+    function checkBulletCollision(bullet, bulletInterval) {
+        obstacles.forEach((obstacle, index) => {
+            const bulletRect = bullet.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            if (
+                bulletRect.left < obstacleRect.right &&
+                bulletRect.right > obstacleRect.left &&
+                bulletRect.top < obstacleRect.bottom &&
+                bulletRect.bottom > obstacleRect.top
+            ) {
+                clearInterval(bulletInterval);
+                gameArea.removeChild(bullet);
+                gameArea.removeChild(obstacle); // Usunięcie przeszkody
+                obstacles.splice(index, 1); // Usunięcie przeszkody z tablicy
+                score += 10; // Dodanie punktów za zestrzeloną przeszkodę
+                scoreElement.innerText = 'Punkty: ' + score;
+            }
+        });
+    }
+
+    // Funkcja do zbierania przedmiotów
+    function collectItems() {
+        collectibles.forEach((collectible, index) => {
+            const collectibleRect = collectible.getBoundingClientRect();
+            const playerRect = player.getBoundingClientRect();
+
+            if (
+                collectibleRect.left < playerRect.right &&
+                collectibleRect.right > playerRect.left &&
+                collectibleRect.top < playerRect.bottom &&
+                collectibleRect.bottom > playerRect.top
+            ) {
+                handleCollectible(collectible); // Obsłuż zbierany przedmiot
+                gameArea.removeChild(collectible);
+                collectibles.splice(index, 1); // Usunięcie zbieranego przedmiotu
+            }
+        });
+    }
+
+    // Funkcja do obsługi zbieranych przedmiotów
+    function handleCollectible(collectible) {
+        const type = collectible.classList[1];
+        switch (type) {
+            case 'points':
+                score += 5;
+                scoreElement.innerText = 'Punkty: ' + score;
+                break;
+            case 'life':
+                lives++;
+                livesElement.innerText = 'Życia: ' + lives;
+                break;
+            case 'ammo':
+                ammo += 3;
+                ammoElement.innerText = 'Amunicja: ' + ammo;
+                break;
+            case 'timeFreeze':
+                timeFrozen = true;
+                showNotification("Zatrzymano czas na 5 sekund!");
+                setTimeout(() => { timeFrozen = false; }, 5000); // Zatrzymanie czasu na 5 sekund
+                break;
+        }
+        showNotification(collectible.title); // Wyświetlanie powiadomienia
+    }
+
+    // Funkcja do wyświetlania powiadomień
+    function showNotification(message) {
+        notificationElement.innerText = message;
+        notificationElement.style.display = 'block';
+        setTimeout(() => {
+            notificationElement.style.display = 'none';
+        }, 2000);
+    }
+
+    // Funkcja aktualizująca grę
+    function updateGame() {
+        if (!gameRunning) return;
+
+        // Aktualizacja przeszkód
+        obstacles.forEach((obstacle, index) => {
+            const obstacleTop = obstacle.offsetTop;
+            if (obstacleTop > window.innerHeight) {
+                gameArea.removeChild(obstacle);
+                obstacles.splice(index, 1); // Usunięcie przeszkody, gdy wyjdzie poza ekran
+            } else {
+                obstacle.style.top = (obstacleTop + 5) + 'px'; // Ruch przeszkody w dół
+                checkPlayerCollision(obstacle); // Sprawdzanie kolizji z graczem
+            }
+        });
+
+        // Aktualizacja zbieranych przedmiotów
+        collectibles.forEach((collectible, index) => {
+            const collectibleTop = collectible.offsetTop;
+            if (collectibleTop > window.innerHeight) {
+                gameArea.removeChild(collectible);
+                collectibles.splice(index, 1); // Usunięcie zbieranego przedmiotu, gdy wyjdzie poza ekran
+            } else {
+                collectible.style.top = (collectibleTop + 5) + 'px'; // Ruch zbieranego przedmiotu w dół
+            }
+        });
+
+        collectItems(); // Sprawdzanie zbieranych przedmiotów
+        if (!timeFrozen) createObstacle(); // Tworzenie przeszkód, jeśli czas nie jest zatrzymany
+        if (!timeFrozen) createCollectible(); // Tworzenie zbieranych przedmiotów, jeśli czas nie jest zatrzymany
+    }
+
+    // Funkcja sprawdzająca kolizję gracza z przeszkodami
+    function checkPlayerCollision(obstacle) {
+        const obstacleRect = obstacle.getBoundingClientRect();
+        const playerRect = player.getBoundingClientRect();
+
+        if (
+            playerRect.left < obstacleRect.right &&
+            playerRect.right > obstacleRect.left &&
+            playerRect.top < obstacleRect.bottom &&
+            playerRect.bottom > obstacleRect.top
+        ) {
+            lives--; // Utrata życia
+            livesElement.innerText = 'Życia: ' + lives;
+            gameArea.removeChild(obstacle); // Usunięcie bloku po dotknięciu
+
+            if (lives <= 0) {
+                endGame(); // Zakończenie gry, gdy życie spadnie do 0
+            }
+        }
+    }
+
+    // Funkcja kończąca grę
+    function endGame() {
+        clearInterval(gameInterval);
+        alert('Koniec gry! Twój wynik to: ' + score);
+        location.reload(); // Przeładuj stronę, aby zresetować grę
+    }
+
+    // Funkcja do uruchomienia gry
+    function startGame() {
+        gameRunning = true;
+        score = 0;
+        lives = 3;
+        ammo = 3;
+        scoreElement.innerText = 'Punkty: ' + score;
+        livesElement.innerText = 'Życia: ' + lives;
+        ammoElement.innerText = 'Amunicja: ' + ammo;
+
+        obstacles = [];
+        collectibles = [];
+
+        gameInterval = setInterval(() => {
+            updateGame();
+        }, 100); // Aktualizacja co 100ms
+    }
+
+    startGame(); // Rozpoczęcie gry
+</script>
+
+</body>
+</html>

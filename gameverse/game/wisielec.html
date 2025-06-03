@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wisielec | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            margin: 20px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #hangman-drawing {
+            width: 100%;
+            height: 200px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #category-display {
+            font-size: 1.5em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        #word-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 30px 0;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+
+        #guessed-letters {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin: 15px 0;
+        }
+
+        #message {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        #message.win {
+            color: #27ae60;
+        }
+
+        #message.lose {
+            color: #c0392b;
+        }
+
+        #letter-input {
+            padding: 10px;
+            font-size: 1.2em;
+            width: 60px;
+            text-align: center;
+            text-transform: uppercase;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            margin-right: 10px;
+            transition: border-color 0.3s;
+        }
+
+        #letter-input:focus {
+            border-color: #2980b9;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        svg {
+            width: 200px;
+            height: 200px;
+        }
+
+        .hangman-part {
+            stroke: #2c3e50;
+            stroke-width: 4;
+            fill: none;
+        }
+
+        .hangman-head {
+            stroke: #e74c3c;
+            stroke-width: 4;
+            fill: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wisielec</h1>
+        <div id="category-display"></div>
+        <div id="hangman-drawing">
+            <svg id="hangman-svg" viewBox="0 0 200 200">
+                <line id="base" class="hangman-part" x1="20" y1="180" x2="180" y2="180" style="display: none;" />
+                <line id="pole" class="hangman-part" x1="50" y1="180" x2="50" y2="20" style="display: none;" />
+                <line id="beam" class="hangman-part" x1="50" y1="20" x2="120" y2="20" style="display: none;" />
+                <line id="rope" class="hangman-part" x1="120" y1="20" x2="120" y2="40" style="display: none;" />
+                <circle id="head" class="hangman-head" cx="120" cy="55" r="15" style="display: none;" />
+                <line id="body" class="hangman-part" x1="120" y1="70" x2="120" y2="110" style="display: none;" />
+                <line id="left-arm" class="hangman-part" x1="120" y1="80" x2="100" y2="100" style="display: none;" />
+                <line id="right-arm" class="hangman-part" x1="120" y1="80" x2="140" y2="100" style="display: none;" />
+                <line id="left-leg" class="hangman-part" x1="120" y1="110" x2="100" y2="140" style="display: none;" />
+                <line id="right-leg" class="hangman-part" x1="120" y1="110" x2="140" y2="140" style="display: none;" />
+            </svg>
+        </div>
+        <div id="word-display"></div>
+        <div id="guessed-letters"></div>
+        <div id="message"></div>
+        <input type="text" id="letter-input" maxlength="1" placeholder="Litera"><button buttonId="14" class="add-button">🥚</button>
+        <button onclick="guessLetter()">Zgadnij</button>
+        <button onclick="newGame()">Nowa gra</button>
+    </div>
+    <script src="../script/event2.js"></script>
+    <script>
+        let word = "";
+        let guessedLetters = [];
+        let wrongGuesses = 0;
+        const maxWrongGuesses = 6;
+        let categoriesData = null;
+        let currentCategory = "";
+
+        // Mapa zamiany polskich znaków na bezdiakrytyczne odpowiedniki
+        const polishChars = {
+            "Ą": "A", "Ć": "C", "Ę": "E", "Ł": "L", "Ń": "N",
+            "Ó": "O", "Ś": "S", "Ż": "Z", "Ź": "Z",
+            "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n",
+            "ó": "o", "ś": "s", "ż": "z", "ź": "z"
+        };
+
+        // Funkcja normalizująca tekst (usuwanie diakrytyków)
+        function normalizeText(text) {
+            return text.split('').map(char => polishChars[char] || char).join('');
+        }
+
+        // Funkcja pobierająca dane z JSON-a
+        async function loadCategories() {
+            try {
+                // Zastąp poniższy URL adresem swojego hostowanego pliku JSON
+                const response = await fetch("https://suspicioyt.github.io/perungameverse/data/words.json");
+                categoriesData = await response.json();
+                newGame(); // Rozpocznij grę po załadowaniu danych
+            } catch (error) {
+                console.error("Błąd przy pobieraniu kategorii:", error);
+                document.getElementById("message").textContent = "Błąd ładowania kategorii!";
+            }
+        }
+
+        // Funkcja losująca kategorię
+        function getRandomCategory() {
+            const categories = Object.keys(categoriesData.categories);
+            const randomIndex = Math.floor(Math.random() * categories.length);
+            return categories[randomIndex];
+        }
+
+        // Funkcja pobierająca losowe słowo z wybranej kategorii
+        function getRandomWordFromCategory(category) {
+            const words = categoriesData.categories[category];
+            const randomIndex = Math.floor(Math.random() * words.length);
+            return words[randomIndex];
+        }
+
+        // Funkcja aktualizująca rysunek wisielca
+        function updateHangmanDrawing() {
+            const parts = [
+                'base', 'pole', 'beam', 'rope',
+                'head', 'body', 'left-arm', 'right-arm', 'left-leg', 'right-leg'
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(parts[i]).style.display = 'block';
+            }
+
+            for (let i = 4; i < parts.length; i++) {
+                document.getElementById(parts[i]).style.display = i < wrongGuesses + 4 ? 'block' : 'none';
+            }
+        }
+
+        // Funkcja inicjująca nową grę z losową kategorią
+        async function newGame() {
+            if (!categoriesData) {
+                await loadCategories();
+                return;
+            }
+            currentCategory = getRandomCategory();
+            word = getRandomWordFromCategory(currentCategory);
+            guessedLetters = [];
+            wrongGuesses = 0;
+            document.getElementById("category-display").textContent = `Kategoria: ${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}`;
+            updateDisplay();
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").className = "";
+            document.getElementById("letter-input").value = "";
+            document.getElementById("letter-input").disabled = false;
+            document.getElementById("letter-input").focus();
+        }
+
+        // Funkcja aktualizująca wyświetlane elementy
+        function updateDisplay() {
+            updateHangmanDrawing();
+
+            let displayWord = "";
+            const normalizedWord = normalizeText(word);
+            guessedLetters = guessedLetters.map(letter => normalizeText(letter));
+
+            for (let i = 0; i < word.length; i++) {
+                if (guessedLetters.includes(normalizedWord[i])) {
+                    displayWord += word[i] + " ";
+                } else {
+                    displayWord += "_ ";
+                }
+            }
+            document.getElementById("word-display").textContent = displayWord.trim();
+
+            document.getElementById("guessed-letters").textContent = "Zgadnięte litery: " + (guessedLetters.length ? guessedLetters.join(", ") : "-");
+
+            if (wrongGuesses >= maxWrongGuesses) {
+                document.getElementById("message").textContent = "Przegrałeś! Słowo to: " + word;
+                document.getElementById("message").className = "lose";
+                document.getElementById("letter-input").disabled = true;
+            } else if (checkWin()) {
+                document.getElementById("message").textContent = "Wygrałeś! Gratulacje!";
+                document.getElementById("message").className = "win";
+                document.getElementById("letter-input").disabled = true;
+            }
+        }
+
+        // Funkcja sprawdzająca, czy gracz wygrał
+        function checkWin() {
+            const normalizedWord = normalizeText(word);
+            return normalizedWord.split('').every(char => guessedLetters.includes(char));
+        }
+
+        // Funkcja zgadywania litery
+        function guessLetter() {
+            const input = document.getElementById("letter-input");
+            let letter = input.value.toUpperCase();
+
+            if (letter.length !== 1 || !/[A-ZĄĆĘŁŃÓŚŻŹ]/.test(letter)) {
+                document.getElementById("message").textContent = "Proszę wpisać jedną literę!";
+                document.getElementById("message").className = "";
+                return;
+            }
+
+            const normalizedLetter = normalizeText(letter);
+            if (guessedLetters.includes(normalizedLetter)) {
+                document.getElementById("message").textContent = "Już zgadłeś tę literę!";
+                document.getElementById("message").className = "";
+                return;
+            }
+
+            guessedLetters.push(normalizedLetter);
+
+            const normalizedWord = normalizeText(word);
+            if (!normalizedWord.includes(normalizedLetter)) {
+                wrongGuesses++;
+            }
+
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").className = "";
+            input.value = "";
+            updateDisplay();
+        }
+
+        // Obsługa klawisza Enter
+        document.getElementById("letter-input").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                guessLetter();
+            }
+        });
+
+        // Wczytaj kategorie po załadowaniu strony
+        window.onload = loadCategories;
+    </script>
+</body>
+</html>

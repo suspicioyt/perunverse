@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Tycoon | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(#f5e8c7, #d9b99b), url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            margin: 0;
+            padding: 20px;
+            color: #3c2f2f;
+        }
+        #factory {
+            width: 1400px;
+            margin: 0 auto;
+            background: #fffef0 url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            border: 5px solid #8b4513;
+            position: relative;
+        }
+        h1 {
+            font-size: 48px;
+            color: #8b4513;
+            text-shadow: 3px 3px 6px #f4a261;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #conveyor {
+            position: relative;
+            height: 340px;
+            background: linear-gradient(#4a4a4a, #6a6a6a);
+            border: 6px solid #2a2a2a;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+        }
+        .machine {
+            position: absolute;
+            top: -90px;
+            width: 160px;
+            height: 90px;
+            background: linear-gradient(#ff6347, #d32f2f);
+            color: #fffef0;
+            text-align: center;
+            line-height: 90px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px #000;
+            transition: transform 0.3s ease, background 0.5s ease;
+        }
+        .machine:hover {
+            transform: scale(1.05);
+            background: linear-gradient(#d32f2f, #b71c1c);
+        }
+        #dough-machine { left: 100px; }
+        #sauce-machine { left: 300px; }
+        #cheese-machine { left: 500px; }
+        #topping-machine { left: 700px; }
+        #oven-machine { left: 900px; }
+        #packing-machine { left: 1100px; }
+        .pizza {
+            position: absolute;
+            top: 140px;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(#e6d7a8 40%, #c19a6b 85%);
+            border: 2px solid #a67c00;
+            border-radius: 50%;
+            transition: left 0.05s linear, width 0.3s ease, height 0.3s ease, background 0.5s ease, transform 0.5s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+        #basket {
+            position: absolute;
+            top: 220px;
+            left: 1300px;
+            width: 100px;
+            height: 100px;
+            background: url('https://www.transparenttextures.com/patterns/cardboard-flat.png');
+            border: 5px solid #3c2f2f;
+            border-radius: 20px;
+            transition: transform 0.5s ease, background-color 0.5s ease;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+        #stats, #resources, #management, #upgrades {
+            display: inline-block;
+            vertical-align: top;
+            width: 320px;
+            margin: 15px;
+            padding: 20px;
+            background: rgba(255, 254, 240, 0.95);
+            border-radius: 15px;
+            border: 3px solid #8b4513;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 6px;
+            background: linear-gradient(#ff6347, #d32f2f);
+            color: #fffef0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+        }
+        button:hover {
+            background: linear-gradient(#d32f2f, #b71c1c);
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .section-title {
+            font-size: 24px;
+            color: #8b4513;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px #f4a261;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="factory">
+        <h1>Fabryka Giuseppe - Imperium Pizzy</h1>
+        <div id="conveyor">
+            <div class="machine" id="dough-machine">Automat do Wałek</div>
+            <div class="machine" id="sauce-machine">Automat do Pomodoro</div>
+            <div class="machine" id="cheese-machine">Automat do Mozzarella</div>
+            <div class="machine" id="topping-machine">Automat do Zioła i Oliweki</div>
+            <div class="machine" id="oven-machine">Automat do Piec</div>
+            <div class="machine" id="packing-machine">Automat do Pakowanie</div>
+            <div class="pizza" id="pizza"></div>
+            <div id="basket"></div>
+        </div>
+        <div id="stats">
+            <div class="section-title">Statystyki</div>
+            <p>Pieniądze: <span id="money">50</span> zł</p>
+            <p>Pizze: <span id="totalPizzas">0</span></p>
+            <p>Prędkość taśmy: <span id="conveyorSpeed">1</span>x</p>
+            <p>Produkcja/s: <span id="productionRate">0</span></p>
+        </div>
+        <div id="resources">
+            <div class="section-title">Zasoby</div>
+            <p>Mąka: <span id="flour">10</span>/<span id="flourCap">100</span> kg</p>
+            <p>Sos: <span id="sauce">10</span>/<span id="sauceCap">100</span> l</p>
+            <p>Ser: <span id="cheese">10</span>/<span id="cheeseCap">100</span> kg</p>
+            <p>Oliwki: <span id="olives">20</span>/<span id="olivesCap">200</span> szt</p>
+            <button onclick="buyResources()">Kup zasoby (50 zł)</button>
+        </div>
+        <div id="management">
+            <div class="section-title">Zarządzanie</div>
+            <p>Pracownicy: <span id="workers">0</span></p>
+            <p>Efektywność: <span id="efficiency">100</span>%</p>
+            <button onclick="hireWorker()">Zatrudnij (200 zł)</button>
+            <button onclick="upgradeStorage()" id="storageButton">Magazyn (<span id="storageCost">150</span> zł)</button>
+        </div>
+        <div id="upgrades">
+            <div class="section-title">Ulepszenia</div>
+            <button onclick="startProduction()" id="startButton">Start Produkcji</button>
+            <button onclick="upgradeConveyor()" id="conveyorButton">Taśma (<span id="conveyorCost">100</span> zł)</button>
+            <button onclick="upgradeMachines()" id="machinesButton">Maszyny (<span id="machinesCost">200</span> zł)</button>
+            <button onclick="upgradeQuality()" id="qualityButton">Jakość (<span id="qualityCost">300</span> zł)</button>
+        </div>
+    </div>
+
+    <script>
+        let money = 50;
+        let totalPizzas = 0;
+        let conveyorSpeed = 1;
+        let machineEfficiency = 1;
+        let qualityLevel = 1;
+        let workers = 0;
+        let efficiency = 100;
+        let flour = 10;
+        let sauce = 10;
+        let cheese = 10;
+        let olives = 20;
+        let storageCapacity = 100;
+        let productionRate = 0;
+        let pizzaElement = document.getElementById('pizza');
+        let basketElement = document.getElementById('basket');
+        let isProducing = false;
+        let conveyorCost = 100;
+        let machinesCost = 200;
+        let qualityCost = 300;
+        let storageCost = 150;
+
+        // Aktualizacja wyświetlacza
+        function updateDisplay() {
+            document.getElementById('money').textContent = Math.floor(money);
+            document.getElementById('totalPizzas').textContent = totalPizzas;
+            document.getElementById('conveyorSpeed').textContent = conveyorSpeed.toFixed(1);
+            document.getElementById('productionRate').textContent = productionRate.toFixed(1);
+            document.getElementById('flour').textContent = Math.floor(flour);
+            document.getElementById('flourCap').textContent = storageCapacity;
+            document.getElementById('sauce').textContent = Math.floor(sauce);
+            document.getElementById('sauceCap').textContent = storageCapacity;
+            document.getElementById('cheese').textContent = Math.floor(cheese);
+            document.getElementById('cheeseCap').textContent = storageCapacity;
+            document.getElementById('olives').textContent = Math.floor(olives);
+            document.getElementById('olivesCap').textContent = storageCapacity * 2;
+            document.getElementById('workers').textContent = workers;
+            document.getElementById('efficiency').textContent = efficiency;
+            document.getElementById('conveyorCost').textContent = conveyorCost;
+            document.getElementById('machinesButton').textContent = `Maszyny (${machinesCost} zł)`;
+            document.getElementById('qualityCost').textContent = qualityCost;
+            document.getElementById('storageCost').textContent = storageCost;
+        }
+
+        // Kupowanie zasobów
+        function buyResources() {
+            if (money >= 50 && flour + 50 <= storageCapacity && sauce + 50 <= storageCapacity && cheese + 50 <= storageCapacity && olives + 100 <= storageCapacity * 2) {
+                money -= 50;
+                flour += 50;
+                sauce += 50;
+                cheese += 50;
+                olives += 100;
+                updateDisplay();
+            }
+        }
+
+        // Zatrudnianie pracownika
+        function hireWorker() {
+            if (money >= 200 && workers < 10) {
+                money -= 200;
+                workers++;
+                efficiency += 15;
+                productionRate = workers * conveyorSpeed * (efficiency / 100);
+                updateDisplay();
+            }
+        }
+
+        // Ulepszenie taśmy
+        function upgradeConveyor() {
+            if (money >= conveyorCost) { // Usunięto warunek !isProducing
+                money -= conveyorCost;
+                conveyorSpeed += 0.5;
+                conveyorCost = Math.floor(conveyorCost * 1.5);
+                productionRate = workers * conveyorSpeed * (efficiency / 100);
+                updateDisplay();
+            }
+        }
+
+        // Ulepszenie maszyn
+        function upgradeMachines() {
+            if (money >= machinesCost) { // Usunięto warunek !isProducing
+                money -= machinesCost;
+                machineEfficiency += 1;
+                machinesCost = Math.floor(machinesCost * 2);
+                updateDisplay();
+            }
+        }
+
+        // Ulepszenie jakości
+        function upgradeQuality() {
+            if (money >= qualityCost) { // Usunięto warunek !isProducing
+                money -= qualityCost;
+                qualityLevel += 1;
+                qualityCost = Math.floor(qualityCost * 2.5);
+                updateDisplay();
+            }
+        }
+
+        // Ulepszenie magazynu
+        function upgradeStorage() {
+            if (money >= storageCost) { // Usunięto warunek !isProducing
+                money -= storageCost;
+                storageCapacity += 100;
+                storageCost = Math.floor(storageCost * 1.8);
+                updateDisplay();
+            }
+        }
+
+        // Produkcja pizzy
+        function startProduction() {
+            if (isProducing || flour < 1 || sauce < 0.5 || cheese < 0.5 || olives < 2) return;
+            isProducing = true;
+            document.getElementById('startButton').disabled = true;
+
+            flour -= 1;
+            sauce -= 0.5;
+            cheese -= 0.5;
+            olives -= 2;
+
+            pizzaElement.style.left = '-60px';
+            pizzaElement.style.width = '60px';
+            pizzaElement.style.height = '60px';
+            pizzaElement.style.background = 'radial-gradient(#e6d7a8 40%, #c19a6b 85%)';
+            pizzaElement.style.borderRadius = '50%';
+            pizzaElement.style.transform = 'rotate(0deg)';
+            basketElement.style.transform = 'scale(1)';
+            basketElement.style.backgroundColor = 'transparent';
+
+            let position = -60;
+            const speed = 5 * conveyorSpeed;
+            let rotation = 0;
+
+            const movePizza = setInterval(() => {
+                position += speed;
+                rotation += speed * 0.5;
+                pizzaElement.style.left = position + 'px';
+                pizzaElement.style.transform = `rotate(${rotation}deg)`;
+
+                // Wałkowanie
+                if (position >= 100 && position < 150) {
+                    pizzaElement.style.width = '90px';
+                    pizzaElement.style.height = '90px';
+                    pizzaElement.style.background = 'radial-gradient(#f5e8c7 50%, #d9b99b 90%)';
+                }
+
+                // Sos Pomodoro
+                if (position >= 300 && position < 350) {
+                    pizzaElement.style.background = 'radial-gradient(#ff6347 60%, #b71c1c 95%)';
+                }
+
+                // Mozzarella
+                if (position >= 500 && position < 550) {
+                    pizzaElement.style.background = `
+                        radial-gradient(#fffef0 45%, #f0e68c 85%),
+                        radial-gradient(circle at 60% 60%, #fffef0 15%, transparent 20%),
+                        radial-gradient(circle at 30% 30%, #fffef0 10%, transparent 15%)
+                    `;
+                }
+
+                // Oregano i Oliwki
+                if (position >= 700 && position < 750) {
+                    pizzaElement.style.background = `
+                        radial-gradient(#fffef0 45%, #f0e68c 85%),
+                        radial-gradient(circle at 25% 25%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 75% 35%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 40% 65%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 50% 50%, #006400 4%, transparent 6%),
+                        radial-gradient(circle at 70% 70%, #006400 3%, transparent 5%)
+                    `;
+                }
+
+                // Piec Tunelowy
+                if (position >= 900 && position < 950) {
+                    pizzaElement.style.background = `
+                        radial-gradient(#d4a017 55%, #8b4513 90%),
+                        radial-gradient(circle at 25% 25%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 75% 35%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 40% 65%, #1a2f2f 8%, transparent 12%),
+                        radial-gradient(circle at 50% 50%, #004d00 4%, transparent 6%),
+                        radial-gradient(circle at 70% 70%, #004d00 3%, transparent 5%)
+                    `;
+                    pizzaElement.style.boxShadow = '0 0 25px #ff4500, 0 0 10px #ffa500';
+                }
+
+                // Pakowanie
+                if (position >= 1100 && position < 1150) {
+                    pizzaElement.style.transition = 'all 1s ease';
+                    pizzaElement.style.left = '1320px';
+                    pizzaElement.style.top = '230px';
+                    pizzaElement.style.width = '50px';
+                    pizzaElement.style.height = '50px';
+                    pizzaElement.style.transform = 'rotate(0deg)';
+                    basketElement.style.transform = 'scale(1.3)';
+                    basketElement.style.backgroundColor = '#d2b48c';
+                }
+
+                // Koniec taśmy
+                if (position >= 1400) {
+                    clearInterval(movePizza);
+                    totalPizzas++;
+                    money += 25 * machineEfficiency * (efficiency / 100) * qualityLevel;
+                    isProducing = false;
+                    document.getElementById('startButton').disabled = false;
+                    pizzaElement.style.transition = 'none';
+                    pizzaElement.style.left = '-60px';
+                    pizzaElement.style.top = '140px';
+                    pizzaElement.style.boxShadow = '0 8px 25px rgba(0,0,0,0.5)';
+                    basketElement.style.transform = 'scale(1)';
+                    basketElement.style.backgroundColor = 'transparent';
+                    updateDisplay();
+                }
+            }, 50);
+        }
+
+        // Automatyczna produkcja
+        setInterval(() => {
+            if (!isProducing && workers > 0) startProduction();
+            productionRate = workers * conveyorSpeed * (efficiency / 100);
+            updateDisplay();
+        }, 1000);
+
+        updateDisplay();
+    </script>
+</body>
+</html>

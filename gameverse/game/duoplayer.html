@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuoPlayer | Perun Studios</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #5DADE2, #85C1E9, #AED6F1);
+            color: #2c3e50;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 30px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            border: 1px solid #dfe6e9;
+        }
+
+        .controls button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls div {
+            font-size: 18px;
+            font-weight: 500;
+            padding: 5px 10px;
+            background: rgba(236, 240, 241, 0.8);
+            border-radius: 5px;
+        }
+
+        .stats {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-top: 15px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dfe6e9;
+            width: 300px;
+        }
+
+        canvas {
+            display: block;
+            border: 4px solid #2c3e50;
+            background: #ecf0f1;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .paused {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+            display: none;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px 40px;
+            border-radius: 10px;
+        }
+
+        .player1-stats { color: #3498db; font-weight: 600; }
+        .player2-stats { color: #e74c3c; font-weight: 600; }
+
+        .safe-zone {
+            position: absolute;
+            background: rgba(46, 204, 113, 0.3);
+            border: 2px dashed #2ecc71;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="reset">Resetuj</button>
+        <button id="pause">Pauza</button>
+        <button id="difficulty">Zmień poziom: Łatwy</button>
+        <div id="score">Punkty: 0</div>
+        <div id="wins">Wygrane: 0 : 0</div>
+        <div id="lives">Życia: 3 : 3</div>
+    </div>
+    <div class="stats" id="stats">
+        <div class="player1-stats" id="player1Stats">Gracz 1: Czas gry: 0s | Diamenty: 0 | Kolizje: 0</div>
+        <div class="player2-stats" id="player2Stats">Gracz 2: Czas gry: 0s | Diamenty: 0 | Kolizje: 0</div>
+    </div>
+    <canvas id="gameCanvas" width="1200" height="800"></canvas>
+    <div id="paused" class="paused">PAUZA</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const winDisplay = document.getElementById('wins');
+        const livesDisplay = document.getElementById('lives');
+        const player1StatsDisplay = document.getElementById('player1Stats');
+        const player2StatsDisplay = document.getElementById('player2Stats');
+        const pauseText = document.getElementById('paused');
+
+        const player1 = {
+            x: 50,
+            y: 50,
+            width: 40,
+            height: 40,
+            color: '#3498db',
+            score: 0,
+            speed: 5,
+            lives: 3,
+            diamondsCollected: 0,
+            collisions: 0,
+            gameTime: 0
+        };
+        const player2 = {
+            x: 150,
+            y: 50,
+            width: 40,
+            height: 40,
+            color: '#e74c3c',
+            score: 0,
+            speed: 5,
+            lives: 3,
+            diamondsCollected: 0,
+            collisions: 0,
+            gameTime: 0
+        };
+
+        const safeZone = {
+            x: 20,
+            y: 20,
+            width: 200,
+            height: 100
+        };
+
+        const diamonds = [];
+        const obstacles = [];
+        const bonuses = [];
+        let wins1 = 0;
+        let wins2 = 0;
+        let isPaused = false;
+        let difficulty = 'easy';
+        let keys = {};
+        let lastTime = performance.now();
+
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function createDiamonds(count) {
+            for (let i = 0; i < count; i++) {
+                let diamond;
+                do {
+                    diamond = {
+                        x: Math.random() * (canvas.width - 30),
+                        y: Math.random() * (canvas.height - 30),
+                        width: 30,
+                        height: 30,
+                        type: 'diamond',
+                        speed: difficulty === 'hard' ? 2 : difficulty === 'medium' ? 1 : 0
+                    };
+                } while (isOverlapping(diamond, obstacles) || isOverlapping(diamond, diamonds) || isInSafeZone(diamond));
+                diamonds.push(diamond);
+            }
+        }
+
+        function createObstacles(count) {
+            for (let i = 0; i < count; i++) {
+                let obstacle;
+                do {
+                    obstacle = {
+                        x: Math.random() * (canvas.width - 60),
+                        y: Math.random() * (canvas.height - 60),
+                        width: 60,
+                        height: 60,
+                        type: 'obstacle',
+                        speedX: (difficulty === 'hard' ? (Math.random() - 0.5) * 2 : 0),
+                        speedY: (difficulty === 'hard' ? (Math.random() - 0.5) * 2 : 0)
+                    };
+                } while (isOverlapping(obstacle, obstacles) || isInSafeZone(obstacle));
+                obstacles.push(obstacle);
+            }
+        }
+
+        function createBonuses(count) {
+            for (let i = 0; i < count; i++) {
+                let bonus;
+                do {
+                    bonus = {
+                        x: Math.random() * (canvas.width - 40),
+                        y: Math.random() * (canvas.height - 40),
+                        width: 40,
+                        height: 40,
+                        type: 'bonus',
+                        effect: Math.random() > 0.5 ? 'speed' : 'life'
+                    };
+                } while (isOverlapping(bonus, obstacles) || isOverlapping(bonus, diamonds) || isOverlapping(bonus, bonuses) || isInSafeZone(bonus));
+                bonuses.push(bonus);
+            }
+        }
+
+        function isOverlapping(rect1, rect2) {
+            return checkCollision(rect1, rect2);
+        }
+
+        function isInSafeZone(rect) {
+            return checkCollision(rect, safeZone);
+        }
+
+        function drawSafeZone() {
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
+            ctx.fillRect(safeZone.x, safeZone.y, safeZone.width, safeZone.height);
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(safeZone.x, safeZone.y, safeZone.width, safeZone.height);
+            ctx.setLineDash([]);
+        }
+
+        function drawPlayer(player) {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.fillText(player.lives, player.x + player.width / 2 - 3, player.y + player.height / 2 + 4);
+        }
+
+        function drawDiamonds() {
+            diamonds.forEach(diamond => {
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.moveTo(diamond.x + diamond.width / 2, diamond.y);
+                ctx.lineTo(diamond.x + diamond.width, diamond.y + diamond.height / 2);
+                ctx.lineTo(diamond.x + diamond.width / 2, diamond.y + diamond.height);
+                ctx.lineTo(diamond.x, diamond.y + diamond.height / 2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#d35400';
+                ctx.stroke();
+            });
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                ctx.strokeStyle = '#2c3e50';
+                ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function drawBonuses() {
+            bonuses.forEach(bonus => {
+                ctx.fillStyle = bonus.effect === 'speed' ? '#9b59b6' : '#2ecc71';
+                ctx.beginPath();
+                ctx.arc(bonus.x + bonus.width / 2, bonus.y + bonus.height / 2, bonus.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#2c3e50';
+                ctx.stroke();
+            });
+        }
+
+        function moveDiamonds() {
+            diamonds.forEach(diamond => {
+                if (diamond.speed > 0) {
+                    diamond.x += (Math.random() - 0.5) * diamond.speed;
+                    diamond.y += (Math.random() - 0.5) * diamond.speed;
+                    if (diamond.x < 0) diamond.x = 0;
+                    if (diamond.x > canvas.width - diamond.width) diamond.x = canvas.width - diamond.width;
+                    if (diamond.y < 0) diamond.y = 0;
+                    if (diamond.y > canvas.height - diamond.height) diamond.y = canvas.height - diamond.height;
+                }
+            });
+        }
+
+        function moveObstacles() {
+            obstacles.forEach(obstacle => {
+                if (obstacle.speedX || obstacle.speedY) {
+                    obstacle.x += obstacle.speedX;
+                    obstacle.y += obstacle.speedY;
+                    if (obstacle.x < 0 || obstacle.x > canvas.width - obstacle.width) obstacle.speedX *= -1;
+                    if (obstacle.y < 0 || obstacle.y > canvas.height - obstacle.height) obstacle.speedY *= -1;
+                    if (isInSafeZone(obstacle)) {
+                        obstacle.x = Math.max(safeZone.x + safeZone.width, Math.min(obstacle.x, canvas.width - obstacle.width));
+                        obstacle.y = Math.max(safeZone.y + safeZone.height, Math.min(obstacle.y, canvas.height - obstacle.height));
+                    }
+                }
+            });
+        }
+
+        function movePlayer(player) {
+            if (player === player1) {
+                if (keys['w'] && player.y > 0) player.y -= player.speed;
+                if (keys['s'] && player.y < canvas.height - player.height) player.y += player.speed;
+                if (keys['a'] && player.x > 0) player.x -= player.speed;
+                if (keys['d'] && player.x < canvas.width - player.width) player.x += player.speed;
+            } else if (player === player2) {
+                if (keys['ArrowUp'] && player.y > 0) player.y -= player.speed;
+                if (keys['ArrowDown'] && player.y < canvas.height - player.height) player.y += player.speed;
+                if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+                if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
+            }
+
+            obstacles.forEach(obstacle => {
+                if (checkCollision(player, obstacle) && !isInSafeZone(player)) {
+                    if (!player.lastCollision || performance.now() - player.lastCollision > 1000) {
+                        player.lives--;
+                        player.collisions++;
+                        player.lastCollision = performance.now();
+                        updateLives();
+                    }
+                    if (player.x < obstacle.x) player.x = obstacle.x - player.width;
+                    else if (player.x > obstacle.x) player.x = obstacle.x + obstacle.width;
+                    if (player.y < obstacle.y) player.y = obstacle.y - player.height;
+                    else if (player.y > obstacle.y) player.y = obstacle.y + obstacle.height;
+                }
+            });
+        }
+
+        function collectDiamonds(player) {
+            diamonds.forEach((diamond, index) => {
+                if (checkCollision(player, diamond)) {
+                    diamonds.splice(index, 1);
+                    player.score += difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
+                    player.diamondsCollected++;
+                    updateScore();
+                    checkGameEnd(player);
+                }
+            });
+        }
+
+        function collectBonuses(player) {
+            bonuses.forEach((bonus, index) => {
+                if (checkCollision(player, bonus)) {
+                    bonuses.splice(index, 1);
+                    if (bonus.effect === 'speed') {
+                        player.speed = 7;
+                        setTimeout(() => player.speed = 5, 5000);
+                    } else if (bonus.effect === 'life' && player.lives < 5) {
+                        player.lives++;
+                        updateLives();
+                    }
+                }
+            });
+        }
+
+        function updateScore() {
+            scoreDisplay.textContent = `Punkty: ${player1.score + player2.score}`;
+        }
+
+        function updateLives() {
+            livesDisplay.textContent = `Życia: ${player1.lives} : ${player2.lives}`;
+            if (player1.lives <= 0 || player2.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateStats() {
+            player1StatsDisplay.textContent = `Gracz 1: Czas gry: ${Math.floor(player1.gameTime)}s | Diamenty: ${player1.diamondsCollected} | Kolizje: ${player1.collisions}`;
+            player2StatsDisplay.textContent = `Gracz 2: Czas gry: ${Math.floor(player2.gameTime)}s | Diamenty: ${player2.diamondsCollected} | Kolizje: ${player2.collisions}`;
+        }
+
+        function checkGameEnd(player) {
+            if (diamonds.length === 0) {
+                if (player === player1) wins1++;
+                else wins2++;
+                winDisplay.textContent = `Wygrane: ${wins1} : ${wins2}`;
+                resetRound();
+            }
+        }
+
+        function resetRound() {
+            player1.x = 50;
+            player1.y = 50;
+            player2.x = 150;
+            player2.y = 50;
+            diamonds.length = 0;
+            obstacles.length = 0;
+            bonuses.length = 0;
+            initializeLevel();
+        }
+
+        function resetGame() {
+            player1.score = 0;
+            player1.lives = 3;
+            player1.diamondsCollected = 0;
+            player1.collisions = 0;
+            player1.gameTime = 0;
+            player2.score = 0;
+            player2.lives = 3;
+            player2.diamondsCollected = 0;
+            player2.collisions = 0;
+            player2.gameTime = 0;
+            wins1 = 0;
+            wins2 = 0;
+            updateScore();
+            updateLives();
+            updateStats();
+            winDisplay.textContent = `Wygrane: 0 : 0`;
+            resetRound();
+        }
+
+        function endGame() {
+            isPaused = true;
+            pauseText.textContent = player1.lives <= 0 ? 'Gracz 2 wygrał!' : 'Gracz 1 wygrał!';
+            pauseText.style.display = 'block';
+            setTimeout(() => {
+                resetGame();
+                isPaused = false;
+                pauseText.style.display = 'none';
+            }, 3000);
+        }
+
+        function initializeLevel() {
+            const diamondCount = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 8 : 12;
+            const obstacleCount = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 8 : 12;
+            const bonusCount = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
+            createObstacles(obstacleCount);
+            createDiamonds(diamondCount);
+            createBonuses(bonusCount);
+        }
+
+        function update() {
+            if (isPaused) return;
+            const currentTime = performance.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            player1.gameTime += deltaTime;
+            player2.gameTime += deltaTime;
+            lastTime = currentTime;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSafeZone();
+            movePlayer(player1);
+            movePlayer(player2);
+            moveObstacles();
+            moveDiamonds();
+            drawObstacles();
+            drawDiamonds();
+            drawBonuses();
+            drawPlayer(player1);
+            drawPlayer(player2);
+            collectDiamonds(player1);
+            collectDiamonds(player2);
+            collectBonuses(player1);
+            collectBonuses(player2);
+            updateStats();
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === 'p') togglePause();
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        document.getElementById('reset').addEventListener('click', resetGame);
+
+        document.getElementById('pause').addEventListener('click', togglePause);
+
+        document.getElementById('difficulty').addEventListener('click', () => {
+            if (difficulty === 'easy') {
+                difficulty = 'medium';
+                document.getElementById('difficulty').textContent = 'Zmień poziom: Średni';
+            } else if (difficulty === 'medium') {
+                difficulty = 'hard';
+                document.getElementById('difficulty').textContent = 'Zmień poziom: Trudny';
+            } else {
+                difficulty = 'easy';
+                document.getElementById('difficulty').textContent = 'Zmień poziom: Łatwy';
+            }
+            resetRound();
+        });
+
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseText.style.display = isPaused ? 'block' : 'none';
+            if (!isPaused) {
+                lastTime = performance.now();
+                update();
+            }
+        }
+
+        initializeLevel();
+        update();
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird | Perun Studios</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body { text-align: center; background-color: lightblue; }
+        canvas { background-color: white; border: 2px solid black; }
+        .button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Flappy Bird</h1>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <h2 id="highScore">Najlepszy wynik: 0</h2>
+    <div class="button" onclick="restartGame()">Restart</div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const highScoreDisplay = document.getElementById("highScore");
+
+        let bird, pipes, frame, gameOver, score, highScore;
+
+        function resetGame() {
+            bird = { x: 50, y: 150, width: 20, height: 20, gravity: 0.5, lift: -9, velocity: 0 };
+            pipes = [];
+            frame = 0;
+            gameOver = false;
+            score = 0;
+            highScore = localStorage.getItem("flappyHighScore") || 0;
+            highScoreDisplay.innerText = "Najlepszy wynik: " + highScore;
+        }
+
+        function drawBird() {
+            ctx.fillStyle = "yellow";
+            ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottomY, pipe.width, pipe.bottom);
+            });
+        }
+
+        function updateBird() {
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+            if (bird.y + bird.height > canvas.height) {
+                bird.y = canvas.height - bird.height;
+                bird.velocity = 0;
+            }
+            if (bird.y < 0) {
+                bird.y = 0;
+                bird.velocity = 0;
+            }
+        }
+
+        function updatePipes() {
+            if (frame % 90 === 0) { // Częstsze rury, ale łatwiejsze do pokonania
+                let gap = 140; // Jeszcze większa luka
+                let topHeight = Math.random() * (canvas.height / 2);
+                pipes.push({ x: canvas.width, width: 50, top: topHeight, bottom: canvas.height - topHeight - gap, bottomY: topHeight + gap });
+            }
+            pipes.forEach(pipe => { pipe.x -= 2; });
+            pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+        }
+
+        function checkCollision() {
+            pipes.forEach(pipe => {
+                if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x) {
+                    if (bird.y < pipe.top || bird.y + bird.height > pipe.bottomY) {
+                        gameOver = true;
+                        saveHighScore();
+                    }
+                }
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 20);
+        }
+
+        function saveHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("flappyHighScore", highScore);
+                highScoreDisplay.innerText = "Najlepszy wynik: " + highScore;
+            }
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                ctx.fillStyle = "red";
+                ctx.font = "30px Arial";
+                ctx.fillText("Game Over", 120, 250);
+                return;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+            updateBird();
+            updatePipes();
+            checkCollision();
+            score = Math.floor(frame / 15); // Punkty zdobywane wolniej
+            drawScore();
+            frame++;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            resetGame();
+            gameLoop();
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                bird.velocity = bird.lift;
+            }
+        });
+
+        resetGame();
+        gameLoop();
+    </script>
+</body>
+</html>

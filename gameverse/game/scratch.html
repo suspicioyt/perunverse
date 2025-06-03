@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Scratch | Perun Gameverse</title>
+ <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+ <link rel="stylesheet" href="../style/public.css">
+ <style>
+        body {
+            background: linear-gradient(145deg, #0F0F0F, #2A2A2A);
+            color: #F0F0F0;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(90deg, #2A2A2A, #4A4A4A);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.8);
+            border-bottom: 4px solid #FFD700;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            color: #FFD700;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+        #container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: #1F1F1F;
+            position: relative;
+        }
+        #blocklyDiv {
+            height: 100%;
+            min-width: 200px;
+            background: #2A2A2A;
+            box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.2);
+            flex: 2; /* Domyślna proporcja */
+            overflow: hidden;
+            position: relative;
+        }
+        #stageArea {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 25px;
+            min-width: 300px;
+            background: linear-gradient(145deg, #1F1F1F, #3A3A3A);
+            flex: 1; /* Domyślna proporcja */
+        }
+        #gameCanvas {
+            border: 4px solid #FFD700;
+            border-radius: 12px;
+            background: #000;
+            width: 480px;
+            height: 360px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        button {
+            background: linear-gradient(135deg, #FFD700, #FF9800);
+            color: #1F1F1F;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+        }
+        button:hover {
+            background: linear-gradient(135deg, #FF9800, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.8);
+        }
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+        #spritePreview {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #FFD700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+        }
+        #spriteInput, #bgInput {
+            margin-top: 15px;
+            padding: 10px;
+            width: 85%;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            background: #2A2A2A;
+            color: #F0F0F0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        #spriteInput:focus, #bgInput:focus {
+            border-color: #FF9800;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+            outline: none;
+        }
+        #spriteInput::placeholder, #bgInput::placeholder {
+            color: #FFD700;
+            opacity: 0.6;
+        }
+        #resizeHandle {
+            width: 8px;
+            background: #FFD700;
+            cursor: ew-resize;
+            height: 100%;
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+        #resizeHandle:hover {
+            background: #FF9800;
+        }
+ </style>
+</head>
+<body>
+ <header>
+    <h1>Scratch</h1>
+ </header>
+ <div id="container">
+    <button buttonId="20" class="add-button">🐰</button>
+    <div id="blocklyDiv"></div>
+    <div id="resizeHandle"></div>
+    <div id="stageArea">
+        <canvas id="gameCanvas" width="480" height="360"></canvas>
+        <div id="controls">
+            <button onclick="runCode()">▶️ Start</button>
+            <button onclick="stopCode()">⏹️ Stop</button>
+        </div>
+        <div id="spritePreview">Aktualny sprite: Kot</div>
+        <input id="spriteInput" type="text" placeholder="Wklej URL obrazka sprite’a" onkeydown="if(event.key === 'Enter') addSprite(this.value)">
+        <input id="bgInput" type="text" placeholder="Wklej URL tła" onkeydown="if(event.key === 'Enter') setCustomBackground(this.value)">
+    </div>
+</div>
+<script src="../script/event2.js"></script>
+ <!-- Blockly -->
+ <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+<script>
+    // Inicjalizacja Blockly
+    const workspace = Blockly.inject('blocklyDiv', {
+        toolbox: `
+            <xml>
+                <category name="Ruch" colour="#FFD700">
+                    <block type="move_steps">
+                        <value name="STEPS">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="turn_right">
+                        <value name="DEGREES">
+                            <shadow type="math_number">
+                                <field name="NUM">15</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="turn_left">
+                        <value name="DEGREES">
+                            <shadow type="math_number">
+                                <field name="NUM">15</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="goto_xy">
+                        <value name="X">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                        <value name="Y">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="goto_random"></block>
+                    <block type="bounce_if_edge"></block>
+                    <block type="glide_to">
+                        <value name="SECONDS">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                        <value name="X">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                        <value name="Y">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="point_towards">
+                        <value name="DEGREES">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="move_to_clone"></block>
+                </category>
+                <category name="Wygląd" colour="#FFA500">
+                    <block type="say">
+                        <value name="MESSAGE">
+                            <shadow type="text">
+                                <field name="TEXT">Cześć!</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="say_for_seconds">
+                        <value name="MESSAGE">
+                            <shadow type="text">
+                                <field name="TEXT">Cześć!</field>
+                            </shadow>
+                        </value>
+                        <value name="SECONDS">
+                            <shadow type="math_number">
+                                <field name="NUM">2</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="change_costume"></block>
+                    <block type="set_costume">
+                        <value name="COSTUME">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="set_size">
+                        <value name="SIZE">
+                            <shadow type="math_number">
+                                <field name="NUM">100</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="change_size_by">
+                        <value name="SIZE">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="show"></block>
+                    <block type="hide"></block>
+                    <block type="set_background">
+                        <value name="BG">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="set_custom_background">
+                        <value name="URL">
+                            <shadow type="text">
+                                <field name="TEXT">https://example.com/image.jpg</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="set_opacity">
+                        <value name="OPACITY">
+                            <shadow type="math_number">
+                                <field name="NUM">100</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="set_color">
+                        <value name="COLOR">
+                            <shadow type="text">
+                                <field name="TEXT">#FFD700</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="change_effect">
+                        <value name="EFFECT">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="clear_effects"></block>
+                </category>
+                <category name="Dźwięk" colour="#FF4500">
+                    <block type="play_sound"></block>
+                    <block type="stop_sound"></block>
+                    <block type="set_volume">
+                        <value name="VOLUME">
+                            <shadow type="math_number">
+                                <field name="NUM">100</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="play_note">
+                        <value name="NOTE">
+                            <shadow type="math_number">
+                                <field name="NUM">60</field>
+                            </shadow>
+                        </value>
+                        <value name="DURATION">
+                            <shadow type="math_number">
+                                <field name="NUM">0.5</field>
+                            </shadow>
+                        </value>
+                    </block>
+                </category>
+                <category name="Kontrola" colour="#9400D3">
+                    <block type="controls_repeat_ext">
+                        <value name="TIMES">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="controls_forever"></block>
+                    <block type="controls_if"></block>
+                    <block type="controls_if_else"></block>
+                    <block type="wait_seconds">
+                        <value name="SECONDS">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="wait_until">
+                        <value name="CONDITION">
+                            <shadow type="logic_boolean">
+                                <field name="BOOL">TRUE</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="create_clone"></block>
+                    <block type="delete_clone"></block>
+                    <block type="stop_all"></block>
+                    <block type="switch_costume_to_clone"></block>
+                </category>
+                <category name="Czujniki" colour="#00CED1">
+                    <block type="touching_edge"></block>
+                    <block type="touching_clone"></block>
+                    <block type="x_position"></block>
+                    <block type="y_position"></block>
+                    <block type="direction"></block>
+                    <block type="distance_to_edge"></block>
+                    <block type="distance_to_clone"></block>
+                    <block type="timer"></block>
+                    <block type="reset_timer"></block>
+                </category>
+                <category name="Operatory" colour="#32CD32">
+                    <block type="math_random_int">
+                        <value name="FROM">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                        <value name="TO">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="math_arithmetic">
+                        <field name="OP">ADD</field>
+                        <value name="A">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                        <value name="B">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="logic_compare">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                        <value name="B">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="logic_and">
+                        <value name="A">
+                            <shadow type="logic_boolean">
+                                <field name="BOOL">TRUE</field>
+                            </shadow>
+                        </value>
+                        <value name="B">
+                            <shadow type="logic_boolean">
+                                <field name="BOOL">TRUE</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="math_modulo">
+                        <value name="DIVIDEND">
+                            <shadow type="math_number">
+                                <field name="NUM">10</field>
+                            </shadow>
+                        </value>
+                        <value name="DIVISOR">
+                            <shadow type="math_number">
+                                <field name="NUM">2</field>
+                            </shadow>
+                        </value>
+                    </block>
+                </category>
+                <category name="Zmienne" colour="#FF69B4">
+                    <block type="variables_set">
+                        <field name="VAR">x</field>
+                        <value name="VALUE">
+                            <shadow type="math_number">
+                                <field name="NUM">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="variables_get">
+                        <field name="VAR">x</field>
+                    </block>
+                    <block type="change_variable_by">
+                        <field name="VAR">x</field>
+                        <value name="VALUE">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                    </block>
+                </category>
+                <category name="Wydarzenia" colour="#ADFF2F">
+                    <block type="when_start"></block>
+                </category>
+            </xml>
+        `,
+        scrollbars: true,
+        trashcan: true,
+        grid: { spacing: 20, length: 3, colour: '#444', snap: true }
+    });
+
+    // Definicje bloków
+    Blockly.defineBlocksWithJsonArray([
+        // Ruch
+        { "type": "move_steps", "message0": "Idź %1 kroków", "args0": [{"type": "input_value", "name": "STEPS", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "turn_right", "message0": "Obróć w prawo o %1 stopni", "args0": [{"type": "input_value", "name": "DEGREES", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "turn_left", "message0": "Obróć w lewo o %1 stopni", "args0": [{"type": "input_value", "name": "DEGREES", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "goto_xy", "message0": "Idź do x: %1 y: %2", "args0": [{"type": "input_value", "name": "X", "check": "Number"}, {"type": "input_value", "name": "Y", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "goto_random", "message0": "Idź do losowej pozycji", "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "bounce_if_edge", "message0": "Odbij się, jeśli na krawędzi", "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "glide_to", "message0": "Płyń przez %1 sekund do x: %2 y: %3", "args0": [{"type": "input_value", "name": "SECONDS", "check": "Number"}, {"type": "input_value", "name": "X", "check": "Number"}, {"type": "input_value", "name": "Y", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "point_towards", "message0": "Skieruj się w %1 stopni", "args0": [{"type": "input_value", "name": "DEGREES", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230 },
+        { "type": "move_to_clone", "message0": "Idź do ostatniego klona", "previousStatement": null, "nextStatement": null, "colour": 230 },
+        // Wygląd
+        { "type": "say", "message0": "Powiedz %1", "args0": [{"type": "input_value", "name": "MESSAGE", "check": "String"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "say_for_seconds", "message0": "Powiedz %1 przez %2 sekund", "args0": [{"type": "input_value", "name": "MESSAGE", "check": "String"}, {"type": "input_value", "name": "SECONDS", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "change_costume", "message0": "Zmień kostium", "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_costume", "message0": "Ustaw kostium na %1", "args0": [{"type": "input_value", "name": "COSTUME", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_size", "message0": "Ustaw rozmiar na %1 %", "args0": [{"type": "input_value", "name": "SIZE", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "change_size_by", "message0": "Zmień rozmiar o %1", "args0": [{"type": "input_value", "name": "SIZE", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "show", "message0": "Pokaż", "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "hide", "message0": "Ukryj", "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_background", "message0": "Ustaw tło na %1", "args0": [{"type": "input_value", "name": "BG", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_custom_background", "message0": "Ustaw tło z URL %1", "args0": [{"type": "input_value", "name": "URL", "check": "String"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_opacity", "message0": "Ustaw przezroczystość na %1 %", "args0": [{"type": "input_value", "name": "OPACITY", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "set_color", "message0": "Ustaw kolor na %1", "args0": [{"type": "input_value", "name": "COLOR", "check": "String"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "change_effect", "message0": "Zmień efekt jasności o %1", "args0": [{"type": "input_value", "name": "EFFECT", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 20 },
+        { "type": "clear_effects", "message0": "Wyczyść efekty", "previousStatement": null, "nextStatement": null, "colour": 20 },
+        // Dźwięk
+        { "type": "play_sound", "message0": "Odtwórz dźwięk", "previousStatement": null, "nextStatement": null, "colour": 0 },
+        { "type": "stop_sound", "message0": "Zatrzymaj dźwięk", "previousStatement": null, "nextStatement": null, "colour": 0 },
+        { "type": "set_volume", "message0": "Ustaw głośność na %1 %", "args0": [{"type": "input_value", "name": "VOLUME", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 0 },
+        { "type": "play_note", "message0": "Zagraj nutę %1 przez %2 sekund", "args0": [{"type": "input_value", "name": "NOTE", "check": "Number"}, {"type": "input_value", "name": "DURATION", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 0 },
+        // Kontrola
+        { "type": "controls_repeat_ext", "message0": "Powtórz %1 razy", "args0": [{"type": "input_value", "name": "TIMES", "check": "Number"}], "message1": "rób %1", "args1": [{"type": "input_statement", "name": "DO"}], "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "controls_forever", "message0": "Na zawsze", "message1": "rób %1", "args1": [{"type": "input_statement", "name": "DO"}], "previousStatement": null, "colour": 270 },
+        { "type": "controls_if", "message0": "Jeśli %1 to", "args0": [{"type": "input_value", "name": "IF", "check": "Boolean"}], "message1": "rób %1", "args1": [{"type": "input_statement", "name": "DO"}], "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "controls_if_else", "message0": "Jeśli %1 to", "args0": [{"type": "input_value", "name": "IF", "check": "Boolean"}], "message1": "rób %1", "args1": [{"type": "input_statement", "name": "DO"}], "message2": "w przeciwnym razie %1", "args2": [{"type": "input_statement", "name": "ELSE"}], "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "wait_seconds", "message0": "Czekaj %1 sekund", "args0": [{"type": "input_value", "name": "SECONDS", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "wait_until", "message0": "Czekaj, aż %1", "args0": [{"type": "input_value", "name": "CONDITION", "check": "Boolean"}], "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "create_clone", "message0": "Stwórz klona", "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "delete_clone", "message0": "Usuń tego klona", "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "stop_all", "message0": "Zatrzymaj wszystko", "previousStatement": null, "nextStatement": null, "colour": 270 },
+        { "type": "switch_costume_to_clone", "message0": "Przełącz kostium na ostatni klon", "previousStatement": null, "nextStatement": null, "colour": 270 },
+        // Czujniki
+        { "type": "touching_edge", "message0": "Dotyka krawędzi?", "output": "Boolean", "colour": 180 },
+        { "type": "touching_clone", "message0": "Dotyka klona?", "output": "Boolean", "colour": 180 },
+        { "type": "x_position", "message0": "Pozycja X", "output": "Number", "colour": 180 },
+        { "type": "y_position", "message0": "Pozycja Y", "output": "Number", "colour": 180 },
+        { "type": "direction", "message0": "Kierunek", "output": "Number", "colour": 180 },
+        { "type": "distance_to_edge", "message0": "Odległość do krawędzi", "output": "Number", "colour": 180 },
+        { "type": "distance_to_clone", "message0": "Odległość do ostatniego klona", "output": "Number", "colour": 180 },
+        { "type": "timer", "message0": "Czas", "output": "Number", "colour": 180 },
+        { "type": "reset_timer", "message0": "Resetuj czas", "previousStatement": null, "nextStatement": null, "colour": 180 },
+        // Operatory
+        { "type": "math_random_int", "message0": "Losowa liczba od %1 do %2", "args0": [{"type": "input_value", "name": "FROM", "check": "Number"}, {"type": "input_value", "name": "TO", "check": "Number"}], "output": "Number", "colour": 160 },
+        { "type": "math_arithmetic", "message0": "%1 %2 %3", "args0": [{"type": "input_value", "name": "A", "check": "Number"}, {"type": "field_dropdown", "name": "OP", "options": [["+", "ADD"], ["-", "MINUS"], ["×", "MULTIPLY"], ["÷", "DIVIDE"]]}, {"type": "input_value", "name": "B", "check": "Number"}], "output": "Number", "colour": 160 },
+        { "type": "logic_compare", "message0": "%1 %2 %3", "args0": [{"type": "input_value", "name": "A", "check": "Number"}, {"type": "field_dropdown", "name": "OP", "options": [["=", "EQ"], ["≠", "NEQ"], ["<", "LT"], ["≤", "LTE"], [">", "GT"], ["≥", "GTE"]]}, {"type": "input_value", "name": "B", "check": "Number"}], "output": "Boolean", "colour": 160 },
+        { "type": "logic_and", "message0": "%1 i %2", "args0": [{"type": "input_value", "name": "A", "check": "Boolean"}, {"type": "input_value", "name": "B", "check": "Boolean"}], "output": "Boolean", "colour": 160 },
+        { "type": "math_modulo", "message0": "Reszta z %1 ÷ %2", "args0": [{"type": "input_value", "name": "DIVIDEND", "check": "Number"}, {"type": "input_value", "name": "DIVISOR", "check": "Number"}], "output": "Number", "colour": 160 },
+        // Wydarzenia
+        { "type": "when_start", "message0": "Kiedy kliknięto Start", "nextStatement": null, "colour": 120, "tooltip": "Rozpoczyna program" },
+        // Zmienne
+        { "type": "variables_set", "message0": "Ustaw %1 na %2", "args0": [{"type": "field_variable", "name": "VAR", "variable": "x"}, {"type": "input_value", "name": "VALUE", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 330 },
+        { "type": "variables_get", "message0": "%1", "args0": [{"type": "field_variable", "name": "VAR", "variable": "x"}], "output": "Number", "colour": 330 },
+        { "type": "change_variable_by", "message0": "Zmień %1 o %2", "args0": [{"type": "field_variable", "name": "VAR", "variable": "x"}, {"type": "input_value", "name": "VALUE", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 330 }
+    ]);
+
+    // Canvas i kontekst
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let sprite = { x: 240, y: 180, angle: 0, costume: 0, size: 100, opacity: 1, brightness: 0, color: '#FFD700', message: '', visible: true };
+    let clones = [];
+    let costumes = ['🐱', '🐶', '🚀', '⭐', '👽'];
+    const backgrounds = ['#000', '#1F1F1F', '#4A4A4A', '#FFD700', '#FF9800'];
+    let currentBackground = { type: 'color', value: 0 };
+    let running = false;
+    let animationFrame;
+    let startTime = Date.now();
+
+    // Dźwięk
+    const sound = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+    sound.volume = 1;
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Zmienne
+    let variables = {};
+
+    // Funkcje Scratchowe
+    function moveSteps(steps) {
+        const rad = sprite.angle * Math.PI / 180;
+        sprite.x += steps * Math.cos(rad);
+        sprite.y -= steps * Math.sin(rad);
+        draw();
+    }
+
+    function turnRight(degrees) {
+        sprite.angle += degrees;
+        draw();
+    }
+
+    function turnLeft(degrees) {
+        sprite.angle -= degrees;
+        draw();
+    }
+
+    function gotoXY(x, y) {
+        sprite.x = x + 240;
+        sprite.y = 180 - y;
+        draw();
+    }
+
+    function gotoRandom() {
+        sprite.x = randomInt(20, canvas.width - 20);
+        sprite.y = randomInt(20, canvas.height - 20);
+        draw();
+    }
+
+    function bounceIfEdge() {
+        if (sprite.x < 20 || sprite.x > canvas.width - 20 || sprite.y < 20 || sprite.y > canvas.height - 20) {
+            sprite.angle += 180;
+        }
+        draw();
+    }
+
+    async function glideTo(seconds, x, y) {
+        const targetX = x + 240;
+        const targetY = 180 - y;
+        const steps = seconds * 60;
+        const dx = (targetX - sprite.x) / steps;
+        const dy = (targetY - sprite.y) / steps;
+        for (let i = 0; i < steps && running; i++) {
+            sprite.x += dx;
+            sprite.y += dy;
+            draw();
+            await new Promise(resolve => setTimeout(resolve, 1000 / 60));
+        }
+    }
+
+    function pointTowards(degrees) {
+        sprite.angle = degrees;
+        draw();
+    }
+
+    function moveToClone() {
+        if (clones.length > 0) {
+            const lastClone = clones[clones.length - 1];
+            sprite.x = lastClone.x;
+            sprite.y = lastClone.y;
+            draw();
+        }
+    }
+
+    function say(message) {
+        sprite.message = message;
+        setTimeout(() => { sprite.message = ''; draw(); }, 2000);
+        draw();
+    }
+
+    function sayForSeconds(message, seconds) {
+        sprite.message = message;
+        setTimeout(() => { sprite.message = ''; draw(); }, seconds * 1000);
+        draw();
+    }
+
+    function changeCostume() {
+        sprite.costume = (sprite.costume + 1) % costumes.length;
+        updateSpritePreview();
+        draw();
+    }
+
+    function setCostume(costume) {
+        sprite.costume = Math.min(Math.max(0, costume), costumes.length - 1);
+        updateSpritePreview();
+        draw();
+    }
+
+    function setSize(size) {
+        sprite.size = Math.max(10, Math.min(200, size));
+        draw();
+    }
+
+    function changeSizeBy(size) {
+        sprite.size = Math.max(10, Math.min(200, sprite.size + size));
+        draw();
+    }
+
+    function show() {
+        sprite.visible = true;
+        draw();
+    }
+
+    function hide() {
+        sprite.visible = false;
+        draw();
+    }
+
+    function setBackground(bg) {
+        currentBackground = { type: 'color', value: Math.min(Math.max(0, bg), backgrounds.length - 1) };
+        draw();
+    }
+
+    function setCustomBackground(url) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                currentBackground = { type: 'image', value: img };
+                draw();
+            };
+            img.onerror = () => alert('Nie udało się załadować tła z podanego URL!');
+            img.src = url;
+        }
+
+        function setOpacity(opacity) {
+            sprite.opacity = Math.max(0, Math.min(1, opacity / 100));
+            draw();
+        }
+
+        function setColor(color) {
+            sprite.color = color;
+            draw();
+        }
+
+        function changeEffect(value) {
+            sprite.brightness = Math.max(-100, Math.min(100, sprite.brightness + value));
+            draw();
+        }
+
+        function clearEffects() {
+            sprite.brightness = 0;
+            draw();
+        }
+
+        function playSound() {
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        function stopSound() {
+            sound.pause();
+            sound.currentTime = 0;
+        }
+
+        function setVolume(volume) {
+            sound.volume = Math.max(0, Math.min(1, volume / 100));
+        }
+
+        function playNote(note, duration) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440 * Math.pow(2, (note - 69) / 12), audioContext.currentTime); // MIDI to Hz
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), duration * 1000);
+        }
+
+        function waitSeconds(seconds) {
+            return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+        }
+
+        function waitUntil(condition) {
+            return new Promise(resolve => {
+                const check = () => {
+                    if (condition() || !running) resolve();
+                    else animationFrame = requestAnimationFrame(check);
+                };
+                check();
+            });
+        }
+
+        function createClone() {
+            clones.push({ ...sprite });
+            draw();
+        }
+
+        function deleteClone() {
+            clones.pop();
+            draw();
+        }
+
+        function stopAll() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            stopSound();
+        }
+
+        function switchCostumeToClone() {
+            if (clones.length > 0) {
+                sprite.costume = clones[clones.length - 1].costume;
+                updateSpritePreview();
+                draw();
+            }
+        }
+
+        function touchingEdge() {
+            return sprite.x < 20 || sprite.x > canvas.width - 20 || sprite.y < 20 || sprite.y > canvas.height - 20;
+        }
+
+        function touchingClone() {
+            const spriteSize = sprite.size / 100 * 40;
+            return clones.some(clone => {
+                const cloneSize = clone.size / 100 * 40;
+                const dx = sprite.x - clone.x;
+                const dy = sprite.y - clone.y;
+                return Math.sqrt(dx * dx + dy * dy) < (spriteSize + cloneSize) / 2;
+            });
+        }
+
+        function xPosition() {
+            return sprite.x - 240;
+        }
+
+        function yPosition() {
+            return 180 - sprite.y;
+        }
+
+        function direction() {
+            return sprite.angle;
+        }
+
+        function distanceToEdge() {
+            return Math.min(sprite.x - 20, canvas.width - 20 - sprite.x, sprite.y - 20, canvas.height - 20 - sprite.y);
+        }
+
+        function distanceToClone() {
+            if (clones.length === 0) return Infinity;
+            const lastClone = clones[clones.length - 1];
+            const dx = sprite.x - lastClone.x;
+            const dy = sprite.y - lastClone.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function timer() {
+            return (Date.now() - startTime) / 1000;
+        }
+
+        function resetTimer() {
+            startTime = Date.now();
+        }
+
+        function randomInt(from, to) {
+            return Math.floor(Math.random() * (to - from + 1)) + from;
+        }
+
+        function addSprite(url) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                costumes.push(img);
+                alert('Dodano nowego sprite’a!');
+                updateSpritePreview();
+            };
+            img.onerror = () => alert('Nie udało się załadować sprite’a z podanego URL!');
+            img.src = url;
+            document.getElementById('spriteInput').value = '';
+        }
+
+        function updateSpritePreview() {
+            document.getElementById('spritePreview').textContent = `Aktualny sprite: ${sprite.costume < 5 ? ['Kot', 'Pies', 'Rakieta', 'Gwiazda', 'Obcy'][sprite.costume] : `Niestandardowy ${sprite.costume - 4}`}`;
+        }
+
+        // Rysowanie
+        function draw() {
+            if (currentBackground.type === 'color') {
+                ctx.fillStyle = backgrounds[currentBackground.value];
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.drawImage(currentBackground.value, 0, 0, canvas.width, canvas.height);
+            }
+            if (sprite.visible) drawSprite(sprite);
+            clones.forEach(clone => { if (clone.visible) drawSprite(clone); });
+        }
+
+        function drawSprite(s) {
+            ctx.save();
+            ctx.translate(s.x, s.y);
+            ctx.rotate(s.angle * Math.PI / 180);
+            ctx.globalAlpha = s.opacity;
+            const size = (s.size / 100) * 40;
+            if (typeof s.costume === 'number' && s.costume < 5) {
+                ctx.font = `${size}px Arial`;
+                ctx.fillStyle = s.color;
+                ctx.fillText(costumes[s.costume], -size / 2, size / 4);
+            } else {
+                ctx.filter = `brightness(${100 + s.brightness}%)`;
+                ctx.drawImage(costumes[s.costume], -size / 2, -size / 2, size, size);
+                ctx.filter = 'none';
+            }
+            if (s.message) {
+                ctx.font = '20px Arial';
+                ctx.fillStyle = '#FFF';
+                ctx.fillText(s.message, -50, -30);
+            }
+            ctx.restore();
+        }
+
+        // Interpreter kodu
+        async function runCode() {
+            if (running) return;
+            running = true;
+            variables = {};
+
+            const topBlocks = workspace.getTopBlocks(true).filter(block => block.type === 'when_start');
+            if (!topBlocks.length) {
+                alert('Dodaj blok "Kiedy kliknięto Start"!');
+                running = false;
+                return;
+            }
+
+            async function executeBlock(block) {
+                if (!running || !block) return;
+
+                switch (block.type) {
+                    case 'move_steps': {
+                        const steps = Number(Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_ATOMIC) || 10);
+                        moveSteps(steps);
+                        break;
+                    }
+                    case 'turn_right': {
+                        const degrees = Number(Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || 15);
+                        turnRight(degrees);
+                        break;
+                    }
+                    case 'turn_left': {
+                        const degrees = Number(Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || 15);
+                        turnLeft(degrees);
+                        break;
+                    }
+                    case 'goto_xy': {
+                        const x = Number(Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        const y = Number(Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        gotoXY(x, y);
+                        break;
+                    }
+                    case 'goto_random':
+                        gotoRandom();
+                        break;
+                    case 'bounce_if_edge':
+                        bounceIfEdge();
+                        break;
+                    case 'glide_to': {
+                        const seconds = Number(Blockly.JavaScript.valueToCode(block, 'SECONDS', Blockly.JavaScript.ORDER_ATOMIC) || 1);
+                        const x = Number(Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        const y = Number(Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        await glideTo(seconds, x, y);
+                        break;
+                    }
+                    case 'point_towards': {
+                        const degrees = Number(Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        sprite.angle = degrees;
+                        draw();
+                        break;
+                    }
+                    case 'move_to_clone':
+                        if (clones.length > 0) {
+                            sprite.x = clones[clones.length - 1].x;
+                            sprite.y = clones[clones.length - 1].y;
+                            draw();
+                        }
+                        break;
+                    case 'say': {
+                        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"Cześć!"';
+                        say(message.replace(/'/g, '').replace(/"/g, ''));
+                        break;
+                    }
+                    case 'say_for_seconds': {
+                        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"Cześć!"';
+                        const seconds = Number(Blockly.JavaScript.valueToCode(block, 'SECONDS', Blockly.JavaScript.ORDER_ATOMIC) || 2);
+                        sayForSeconds(message.replace(/'/g, '').replace(/"/g, ''), seconds);
+                        break;
+                    }
+                    case 'change_costume':
+                        changeCostume();
+                        break;
+                    case 'set_costume': {
+                        const costume = Number(Blockly.JavaScript.valueToCode(block, 'COSTUME', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        setCostume(costume);
+                        break;
+                    }
+                    case 'set_size': {
+                        const size = Number(Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || 100);
+                        setSize(size);
+                        break;
+                    }
+                    case 'change_size_by': {
+                        const size = Number(Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || 10);
+                        changeSizeBy(size);
+                        break;
+                    }
+                    case 'show':
+                        show();
+                        break;
+                    case 'hide':
+                        hide();
+                        break;
+                    case 'set_background': {
+                        const bg = Number(Blockly.JavaScript.valueToCode(block, 'BG', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        setBackground(bg);
+                        break;
+                    }
+                    case 'set_custom_background': {
+                        const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || '"https://example.com/image.jpg"';
+                        setCustomBackground(url.replace(/'/g, '').replace(/"/g, ''));
+                        break;
+                    }
+                    case 'set_opacity': {
+                        const opacity = Number(Blockly.JavaScript.valueToCode(block, 'OPACITY', Blockly.JavaScript.ORDER_ATOMIC) || 100);
+                        setOpacity(opacity);
+                        break;
+                    }
+                    case 'set_color': {
+                        const color = Blockly.JavaScript.valueToCode(block, 'COLOR', Blockly.JavaScript.ORDER_ATOMIC) || '"#FFD700"';
+                        setColor(color.replace(/'/g, '').replace(/"/g, ''));
+                        break;
+                    }
+                    case 'change_effect': {
+                        const value = Number(Blockly.JavaScript.valueToCode(block, 'EFFECT', Blockly.JavaScript.ORDER_ATOMIC) || 10);
+                        changeEffect(value);
+                        break;
+                    }
+                    case 'clear_effects':
+                        clearEffects();
+                        break;
+                    case 'play_sound':
+                        playSound();
+                        break;
+                    case 'stop_sound':
+                        stopSound();
+                        break;
+                    case 'set_volume': {
+                        const volume = Number(Blockly.JavaScript.valueToCode(block, 'VOLUME', Blockly.JavaScript.ORDER_ATOMIC) || 100);
+                        setVolume(volume);
+                        break;
+                    }
+                    case 'play_note': {
+                        const note = Number(Blockly.JavaScript.valueToCode(block, 'NOTE', Blockly.JavaScript.ORDER_ATOMIC) || 60);
+                        const duration = Number(Blockly.JavaScript.valueToCode(block, 'DURATION', Blockly.JavaScript.ORDER_ATOMIC) || 0.5);
+                        playNote(note, duration);
+                        await waitSeconds(duration);
+                        break;
+                    }
+                    case 'controls_repeat_ext': {
+                        const times = Number(Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || 10);
+                        const subBlock = block.getInputTargetBlock('DO');
+                        for (let i = 0; i < times && running; i++) {
+                            await executeBlock(subBlock);
+                        }
+                        break;
+                    }
+                    case 'controls_forever': {
+                        const subBlock = block.getInputTargetBlock('DO');
+                        while (running) {
+                            await executeBlock(subBlock);
+                            await new Promise(resolve => animationFrame = requestAnimationFrame(resolve));
+                        }
+                        break;
+                    }
+                    case 'controls_if': {
+                        const condition = evaluateCondition(block.getInputTargetBlock('IF'));
+                        if (condition) await executeBlock(block.getInputTargetBlock('DO'));
+                        break;
+                    }
+                    case 'controls_if_else': {
+                        const condition = evaluateCondition(block.getInputTargetBlock('IF'));
+                        if (condition) await executeBlock(block.getInputTargetBlock('DO'));
+                        else await executeBlock(block.getInputTargetBlock('ELSE'));
+                        break;
+                    }
+                    case 'wait_seconds': {
+                        const seconds = Number(Blockly.JavaScript.valueToCode(block, 'SECONDS', Blockly.JavaScript.ORDER_ATOMIC) || 1);
+                        await waitSeconds(seconds);
+                        break;
+                    }
+                    case 'wait_until': {
+                        const conditionBlock = block.getInputTargetBlock('CONDITION');
+                        await waitUntil(() => evaluateCondition(conditionBlock));
+                        break;
+                    }
+                    case 'create_clone':
+                        createClone();
+                        break;
+                    case 'delete_clone':
+                        deleteClone();
+                        break;
+                    case 'stop_all':
+                        stopAll();
+                        break;
+                    case 'switch_costume_to_clone':
+                        switchCostumeToClone();
+                        break;
+                    case 'variables_set': {
+                        const varName = block.getFieldValue('VAR');
+                        const value = Number(Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        variables[varName] = value;
+                        break;
+                    }
+                    case 'variables_get': {
+                        const varName = block.getFieldValue('VAR');
+                        return variables[varName] || 0;
+                    }
+                    case 'change_variable_by': {
+                        const varName = block.getFieldValue('VAR');
+                        const value = Number(Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || 1);
+                        variables[varName] = (variables[varName] || 0) + value;
+                        break;
+                    }
+                }
+
+                if (running) {
+                    await executeBlock(block.getNextBlock());
+                }
+            }
+
+            function evaluateCondition(block) {
+                if (!block) return false;
+                switch (block.type) {
+                    case 'touching_edge': return touchingEdge();
+                    case 'touching_clone': return touchingClone();
+                    case 'logic_compare': {
+                        const a = Number(Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        const b = Number(Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_ATOMIC) || 0);
+                        const op = block.getFieldValue('OP');
+                        return op === 'EQ' ? a === b : op === 'NEQ' ? a !== b : op === 'LT' ? a < b : op === 'LTE' ? a <= b : op === 'GT' ? a > b : a >= b;
+                    }
+                    case 'logic_boolean': return block.getFieldValue('BOOL') === 'TRUE';
+                    case 'logic_and': {
+                        const a = evaluateCondition(block.getInputTargetBlock('A'));
+                        const b = evaluateCondition(block.getInputTargetBlock('B'));
+                        return a && b;
+                    }
+                    default: return false;
+                }
+            }
+
+            for (const block of topBlocks) {
+                executeBlock(block.getNextBlock());
+            }
+        }
+
+        // Zatrzymywanie kodu
+        function stopCode() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            sprite = { x: 240, y: 180, angle: 0, costume: 0, size: 100, opacity: 1, brightness: 0, color: '#FFD700', message: '', visible: true };
+            clones = [];
+            sound.pause();
+            sound.currentTime = 0;
+            currentBackground = { type: 'color', value: 0 };
+            document.getElementById('spritePreview').textContent = 'Aktualny sprite: Kot';
+            draw();
+        }
+
+        // Inicjalizacja
+        draw();
+                // Skrypt do obsługi zmiany rozmiaru
+                const container = document.getElementById('container');
+        const blocklyDiv = document.getElementById('blocklyDiv');
+        const stageArea = document.getElementById('stageArea');
+        const resizeHandle = document.getElementById('resizeHandle');
+        let isResizing = false;
+
+        // Ustawienie początkowej pozycji uchwytu
+        const initialBlocklyFlex = 2;
+        const initialStageFlex = 1;
+        const totalFlex = initialBlocklyFlex + initialStageFlex;
+        resizeHandle.style.left = `${(initialBlocklyFlex / totalFlex) * 100}%`;
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const containerWidth = container.offsetWidth;
+            const newBlocklyWidth = e.clientX - container.offsetLeft;
+            const minBlocklyWidth = 200;
+            const minStageWidth = 300;
+
+            if (newBlocklyWidth >= minBlocklyWidth && (containerWidth - newBlocklyWidth) >= minStageWidth) {
+                const blocklyFlex = newBlocklyWidth / containerWidth * totalFlex;
+                const stageFlex = (containerWidth - newBlocklyWidth) / containerWidth * totalFlex;
+                
+                blocklyDiv.style.flex = `${blocklyFlex} 0 0`;
+                stageArea.style.flex = `${stageFlex} 0 0`;
+                resizeHandle.style.left = `${newBlocklyWidth}px`;
+
+                // Odświeżenie Blockly po zmianie rozmiaru
+                Blockly.svgResize(workspace);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+        });
+
+        // Początkowe odświeżenie Blockly
+        window.addEventListener('load', () => Blockly.svgResize(workspace));
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Game | Perun Studios</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .game-container {
+            position: relative;
+            width: 900px;
+            height: 300px;
+            overflow: hidden;
+            border: 2px solid #333;
+            background-size: cover;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 40px;
+            background: url('https://cdn.sanity.io/images/55mm68d3/production/9ee5f0b9d98ea39b8e5032a278f8e8971a4277a6-600x142.gif') repeat-x;
+            animation: moveGround 2s linear infinite;
+        }
+
+        .dino {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            width: 60px;
+            height: 60px;
+            background: url('https://i.pinimg.com/736x/07/62/1f/07621f8b5d3ee28f4ae269ca95f20c0e.jpg') no-repeat center;
+            background-size: contain;
+            transition: bottom 0.1s ease;
+        }
+
+        .cactus {
+            position: absolute;
+            bottom: 40px;
+            right: -60px;
+            width: 40px;
+            height: 60px;
+            background: url('https://img.itch.zone/aW1nLzcwNzQxNzMucG5n/347x500/xMf9sx.png') no-repeat center;
+            background-size: contain;
+            animation: moveCactus 2s linear infinite; /* Stała prędkość */
+        }
+
+        @keyframes moveCactus {
+            0% { right: -60px; }
+            100% { right: 900px; }
+        }
+
+        @keyframes moveGround {
+            0% { left: 0; }
+            100% { left: -100%; }
+        }
+
+        .score, .best-score {
+            position: absolute;
+            top: 10px;
+            font-size: 18px;
+            color: #333;
+            text-shadow: 1px 1px #fff;
+        }
+
+        .score { left: 10px; }
+        .best-score { right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="ground"></div>
+        <div class="dino" id="dino"></div>
+        <div class="cactus" id="cactus"></div>
+        <div class="score" id="score">Wynik: 0</div>
+        <div class="best-score" id="bestScore">Najlepszy wynik: 0</div>
+    </div>
+
+    <script>
+        let isJumping = false;
+        let score = 0;
+        let bestScore = localStorage.getItem("dinoBestScore") || 0;
+        const dino = document.getElementById("dino");
+        const cactus = document.getElementById("cactus");
+        const scoreDisplay = document.getElementById("score");
+        const bestScoreDisplay = document.getElementById("bestScore");
+        bestScoreDisplay.innerText = "Najlepszy wynik: " + bestScore;
+        let lastCactusTime = 0;
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space" && !isJumping) jump();
+        });
+
+        function jump() {
+            isJumping = true;
+            let jumpHeight = 150;
+            let currentHeight = 0;
+
+            const jumpUp = setInterval(() => {
+                if (currentHeight < jumpHeight) {
+                    currentHeight += 15;
+                    dino.style.bottom = `${40 + currentHeight}px`;
+                } else {
+                    clearInterval(jumpUp);
+                    const fallDown = setInterval(() => {
+                        if (currentHeight > 0) {
+                            currentHeight -= 15;
+                            dino.style.bottom = `${40 + currentHeight}px`;
+                        } else {
+                            clearInterval(fallDown);
+                            isJumping = false;
+                        }
+                    }, 20);
+                }
+            }, 20);
+        }
+
+        function checkCollision() {
+            const dinoRect = dino.getBoundingClientRect();
+            const cactusRect = cactus.getBoundingClientRect();
+
+            if (
+                dinoRect.x < cactusRect.x + cactusRect.width - 10 &&
+                dinoRect.x + dinoRect.width - 10 > cactusRect.x &&
+                dinoRect.y < cactusRect.y + cactusRect.height &&
+                dinoRect.y + dinoRect.height > cactusRect.y
+            ) {
+                alert(`Koniec gry! Twój wynik: ${score}`);
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem("dinoBestScore", bestScore);
+                bestScoreDisplay.innerText = "Najlepszy wynik: " + bestScore;
+            }
+            score = 0;
+            scoreDisplay.innerText = "Wynik: " + score;
+            cactus.style.animation = "none";
+            cactus.offsetHeight;
+            cactus.style.animation = "moveCactus 2s linear infinite";
+            document.querySelectorAll(".cactus").forEach(c => c !== cactus && c.remove());
+            lastCactusTime = Date.now();
+        }
+
+        function spawnCactus() {
+            const now = Date.now();
+            const minDistance = 450; // Połowa ekranu (900px / 2)
+            const maxDistance = 900; // Cały ekran
+            const timeSinceLast = (now - lastCactusTime) / 1000; // Czas w sekundach
+            const minTimeGap = minDistance / 450; // Prędkość: 450px/s (900px / 2s)
+            const maxTimeGap = maxDistance / 450; // Maksymalny odstęp
+
+            if (timeSinceLast >= minTimeGap) {
+                const newCactus = document.createElement("div");
+                newCactus.classList.add("cactus");
+                newCactus.style.right = "-60px";
+                newCactus.style.animationDuration = "2s"; // Stała prędkość
+                document.querySelector(".game-container").appendChild(newCactus);
+
+                setTimeout(() => newCactus.remove(), 2200); // Usunięcie po animacji + margines
+                lastCactusTime = now;
+
+                // Losowy odstęp dla następnego kaktusa (między min a max)
+                setTimeout(spawnCactus, Math.random() * (maxTimeGap - minTimeGap) * 1000 + minTimeGap * 1000);
+            } else {
+                setTimeout(spawnCactus, (minTimeGap - timeSinceLast) * 1000);
+            }
+        }
+
+        setInterval(() => {
+            score++;
+            scoreDisplay.innerText = "Wynik: " + score;
+            checkCollision();
+        }, 100);
+
+        // Start generowania kaktusów
+        spawnCactus();
+
+        // Czcionka retro
+        const fontLink = document.createElement("link");
+        fontLink.href = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
+        fontLink.rel = "stylesheet";
+        document.head.appendChild(fontLink);
+    </script>
+</body>
+</html>

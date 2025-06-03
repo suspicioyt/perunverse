@@ -1,0 +1,30 @@
+[
+    {
+        "id": "01",
+        "name": "Prezenty 2024",
+        "opis": "Zbierz wszystkie prezenty w evencie bożonarodzeniowym 2024",
+        "classes": ["beta"],
+        "status": ["clickedButtons", 15]
+    },
+    {
+        "id": "02",
+        "name": "100 gier",
+        "opis": "Zagraj we wszystkie dostępne gry w HUBIE",
+        "classes": ["beta"],
+        "status": ["playedGames", "gamesNumber"]
+    },
+    {
+        "id": "03",
+        "name": "Mistrz odbijania",
+        "opis": "Zbierz 250 punktów w Ping Pongu",
+        "classes": ["beta"],
+        "status": ["pingPong", 20]
+    },
+    {
+        "id": "04",
+        "name": "Wieże czy wierze?",
+        "opis": "Zbierz 60 punktów w Flappy Bird",
+        "classes": ["beta"],
+        "status": ["flappyHighScore", 60]
+    }
+]
