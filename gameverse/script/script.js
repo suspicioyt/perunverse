@@ -30,17 +30,17 @@ const API_FIELD_MAP = {
   [STORAGE_KEYS.COMPLETED_ACHIEVEMENTS]: 'doneAchievements'
 };
 
-window.API_URL = 'https://script.google.com/macros/s/AKfycbx_ZvjRFGa0xmOU2T6zspoVAHRXcQMwxpIqHPNznzQ_hsG-wibVUVvSH40ogbLxt27Xgg/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbw2jIu8h4oRyElxeiE9w9jGhXilxaWxaSSuEUR_TM_JiBSazrN6yJoHAgBUypqRmU4lKQ/exec';
   
 window.settingSwitches = [
-  { switchId: '01', value: false },
-  { switchId: '02', value: false },
-  { switchId: '03', value: true },
-  { switchId: '04', value: true },
-  { switchId: '05', value: false },
-  { switchId: '06', value: true },
-  { switchId: '07', value: true },
-  { switchId: '08', value: false },
+  { switchId: '01', value: false },//tryb dev
+  { switchId: '02', value: false },//zapis modali
+  { switchId: '03', value: true },//obrazy na chacie
+  { switchId: '04', value: true },//zbanowane słowa
+  { switchId: '05', value: false },//???
+  { switchId: '06', value: true },//ostatnio grana gra
+  { switchId: '07', value: true },//powiadomienia
+  { switchId: '08', value: true },//grane gry
   { switchId: '09', value: false },
   { switchId: '10', value: false }
 ];
@@ -294,7 +294,13 @@ function attachFavoriteEvents() {
 
 document.getElementById('searchInput')?.addEventListener('keyup', async () => {
   const filter = document.getElementById('searchInput').value.toUpperCase();
-  const filteredGames = games.filter(game => game.name.toUpperCase().includes(filter));
+  let filteredGames = games.filter(game => game.name.toUpperCase().includes(filter));
+  
+  // Filter out premium games for non-premium users
+  if (!perunPremium) {
+    filteredGames = filteredGames.filter(game => !game.premium);
+  }
+  
   await updateGameContainers(filteredGames);
 });
   
@@ -426,6 +432,7 @@ async function initializeUser() {
       localStorage.setItem(STORAGE_KEYS.UUID, generateUUID());
       location.reload();
     }
+    document.getElementById('welcomeModal').style.display="block";
     Modal.open('welcomeModal');
     loadFireworksStyles();
   }
@@ -531,18 +538,44 @@ const timer = setInterval(() => {
   });
   
   // Loader
-  async function initializeLoader() {
-    const loader = document.getElementById('loader');
-    const hasLoaded = await getData(['sessionStorage'], STORAGE_KEYS.HAS_LOADED);
-    if (hasLoaded) {
-      loader.classList.add('hidden');
-    } else {
-      setTimeout(() => {
-        loader.classList.add('hidden');
-        sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
-      }, 5000);
-    }
-  }
+ async function initializeLoader() {
+            const loader = document.getElementById('loader');
+            const tipElement = document.getElementById('loading-tip'); // Updated ID
+
+            // Fetch tips from JSON file
+            async function fetchTips() {
+                try {
+                    const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/tips.json'); // Updated file name
+                    const data = await response.json();
+                    return data.tips || []; // Updated key
+                } catch (error) {
+                    console.error('Error fetching tips:', error);
+                    return ['Loading...']; // Fallback tip
+                }
+            }
+
+            // Select a random tip
+            function getRandomTip(tips) {
+                if (!tips.length) return 'Loading...';
+                const randomIndex = Math.floor(Math.random() * tips.length);
+                return tips[randomIndex];
+            }
+
+            const hasLoaded = await getData(['sessionStorage'], STORAGE_KEYS.HAS_LOADED);
+            if (hasLoaded) {
+                loader.classList.add('hidden');
+            } else {
+                // Fetch and display random tip
+                const tips = await fetchTips();
+                const randomTip = getRandomTip(tips);
+                tipElement.textContent = randomTip;
+
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                    sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
+                }, 5000);
+            }
+        }
   
   // Player Data Updates
   async function updatePlayerName() {
@@ -561,7 +594,7 @@ const timer = setInterval(() => {
         }
 
         // Initialize the display text with the username or fallback
-        let displayText = username || '?';
+        let displayText = username || '???';
 
         // Check verification status (convert string to boolean if necessary)
         const isVerified = perunVerified === true || perunVerified === 'true';
@@ -1227,97 +1260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await pageBuilder.init();
 });
-function displayLocalStorageTable(columns, elementId = 'localStorageData') {
-  try {
-      // Validate inputs
-      if (!Array.isArray(columns) || columns.length === 0 || !columns.every(col => col.key && col.label)) {
-          throw new Error('Columns must be a non-empty array of objects with "key" and "label" properties');
-      }
-
-      // Get the target DOM element
-      const targetElement = document.getElementById(elementId);
-      if (!targetElement) {
-          console.warn(`Element with ID "${elementId}" not found`);
-          return;
-      }
-
-      // Check if no relevant data exists
-      const hasData = columns.some(({ key }) => localStorage.getItem(key) !== null);
-      if (!hasData) {
-          targetElement.innerHTML = '<p>No relevant data found in localStorage.</p>';
-          return;
-      }
-
-      // Collect data from localStorage
-      const data = columns.map(({ key, label }) => {
-          let value = localStorage.getItem(key) || '0';
-          
-          // Attempt to parse value as JSON for better formatting
-          try {
-              const parsedValue = JSON.parse(value);
-              value = JSON.stringify(parsedValue, null, 2); // Pretty-print JSON
-          } catch (e) {
-              // Use raw value if parsing fails
-          }
-
-          return { key, label, value };
-      });
-
-      // Generate HTML table
-      let html = `
-          <table class="local-storage-table">
-              <thead>
-                  <tr>
-                      <th>Label</th>
-                      <th>Value</th>
-                  </tr>
-              </thead>
-              <tbody>
-      `;
-      
-      // Add a row for each key-value pair
-      data.forEach(({ label, value }) => {
-          const escapedLabel = label.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          const escapedValue = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          html += `
-              <tr>
-                  <td>${escapedLabel}</td>
-                  <td><pre>${escapedValue}</pre></td>
-              </tr>
-          `;
-      });
-
-      html += `
-              </tbody>
-          </table>
-      `;
-
-      // Insert HTML into the target element
-      targetElement.innerHTML = html;
-  } catch (error) {
-      console.error('Error displaying localStorage table:', error);
-      const targetElement = document.getElementById(elementId);
-      if (targetElement) {
-          targetElement.innerHTML = `<p>Error: ${error.message}</p>`;
-      }
-  }
-}
-// Define columns
-const columns = [
-    { key: 'perunUsername', label: 'Username' },
-    { key: 'perunPLN', label: 'Settings' },
-    { key: '2048highScore', label: 'User ID' },
-    { key: 'dinoBestScore', label: 'Favorite Games' },
-    { key: 'flappyHighScore', label: 'Settings' },
-    { key: 'settings', label: 'Settings' },
-    { key: 'settings', label: 'Settings' },
-    { key: 'settings', label: 'Settings' },
-    { key: 'settings', label: 'Settings' }
-];
-// Call the function when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    displayLocalStorageTable(columns);
-});
 let isScrolling = false;
 let lastScrollY = 0;
 const threshold = 1;
@@ -1368,7 +1310,7 @@ window.addEventListener('scroll', function () {
 document.addEventListener('DOMContentLoaded', function () {
   const parallax = document.getElementById("parallax");
   if (parallax) {
-      parallax.style.height = `${window.innerWidth * 0.34 + 25}px`;
+      parallax.style.height = `${window.innerWidth * 0.34 + 75}px`;
   }
 });
 document.addEventListener('DOMContentLoaded', () => {

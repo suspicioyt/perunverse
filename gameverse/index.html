@@ -28,7 +28,6 @@
             <h3>Najlepsze gry na wyciągnięcie ręki</h3>
         </div>
         <div id="user-info-container" onclick="Modal.open('playerInfoModal')" class="user-info" style="cursor: pointer;">
-            <button buttonId="7" class="add-button">🐇</button>
             <div id="playerName">?</div>
             <div id="playerPLN">?</div>
             <div id="playerRank">?</div>
@@ -50,7 +49,6 @@
             <a onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></a>
             <a onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></a>
             <a onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></a>
-            <a buttonId="1" class="add-button sidenavButton"><i class="fa-solid fa-egg"></i></a>
           </div>
         <div id="mainwindow">
             <div id="usernameDemoContainer" style="display: none;">
@@ -65,7 +63,7 @@
                         <button onclick="filterSelection('hot'); changeClass(this)">HOT</button>
                         <button onclick="filterSelection('event'); changeClass(this)">EVENT</button>
                         <button onclick="filterSelection('nowosc'); changeClass(this)">Nowości</button>
-                        <button onclick="filterSelection('ukonczona'); changeClass(this)">Ukończone<button buttonId="13" class="add-button">🥚</button></button>
+                        <button onclick="filterSelection('ukonczona'); changeClass(this)">Ukończone</button>
                         <button onclick="filterSelection('konserwacje'); changeClass(this)">Konserwacje</button>
                         <button onclick="filterSelection('beta'); changeClass(this)">Beta</button>
                         <button onclick="filterSelection('testy'); changeClass(this)">Testy</button>
@@ -82,20 +80,12 @@
                     <div class="slide" id="updateSlideshow"></div>
                 </div>
                 <div class="slides">
-                    <h1>Gry HOT!<button buttonId="12" class="add-button">🐇</button></h1>
+                    <h1>Gry HOT!</h1>
                     <div class="slide" id="hotSlideshow"></div>
                 </div>
                 <div class="slides">
                     <h1>Gry EVENTOWE!</h1>
                     <div class="slide" id="eventSlideshow"></div>
-                </div>
-                <div class="slides">
-                    <h1>Blog Developerów!</h1>
-                    <div class="slide" id="blogSlideshow">
-                        <h3 class="blog">Zobacz jak wygląda HUB bez żadnych podpiętych skryptów - <a href="pusty/skrypt.html" class="game-short-link" target="_blank">👀</a></h3>
-                        <h3 class="blog"><button buttonId="11" class="add-button">🥚</button>Zobacz jak wygląda HUB bez CSS odpowiedzialnego za kolory - <a href="pusty/kolory.html" class="game-short-link" target="_blank">👀</a></h3>
-                        <h3 class="blog">Zobacz jak wygląda HUB bez CSS odpowiedzialnego za budowę - <a href="pusty/budowa.html" class="game-short-link" target="_blank">👀</a></h3>
-                    </div>
                 </div>
                 <button class="prev">&#10094;</button>
                 <button class="next">&#10095;</button>
@@ -109,27 +99,15 @@
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
-            <div class="event-container">
+            <!-- <div class="event-container">
                 <div class="events" id="easterEvent">
                     <h1>Event wielkanocny!</h1>
                     <div class="event-block">
-                        <h3>Ukończ wszystkie zadania by zdobyć odznakę Wielkanoc 2025</h3>
-                        <button buttonId="17" class="add-button">🐰</button>Zbierz wszystkie zające i jajka, które zostały rozrzucone po całej stronie: 
-                        <!-- Pasek dla tablicy w localStorage -->
-                        <div class="event-progress-container" 
-                             data-storage-key="easter2025Buttons" 
-                             data-total-buttons="20">
-                            <div class="event-progress-bar"></div>
-                        </div>
-                        Zdobądź 25 pkt. w Wielkanocne Jajka:
-                        <!-- Pasek dla pojedynczej wartości w localStorage -->
-                        <div class="event-progress-container" 
-                             data-storage-key="eventGameHighScore" 
-                             data-total-buttons="25">
-                            <div class="event-progress-bar"></div>
-                        </div>
                     </div>
                 </div>
+            </div> -->
+            <div class="game-container borderColorChange" max="12">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
@@ -153,7 +131,7 @@
                         <thead><tr><th class="tg-0pky">Poniedziałek</th><th class="tg-0pky">Wtorek</th><th class="tg-0pky">Środa</th><th class="tg-0pky">Czwartek</th><th class="tg-0pky">Piątek</th><th class="tg-0pky">Sobota</th><th class="tg-0pky">Niedziela</th></tr></thead>
                         <tbody>
                             <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">20:00</td></tr>
-                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">Major Update<button buttonId="6" class="add-button">🐇</button></td></tr>
+                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">Major Update</td></tr>
                         </tbody>
                     </table>
                     <b style="color: black;" id="demo"></b>
@@ -176,10 +154,7 @@
         </div>
     </div>
     <div id="achievementModal" class="modal">
-        <h1>
-            Osiągnięcia
-            <button buttonId="5" class="add-button">🐇</button>
-        </h1>
+        <h1>Osiągnięcia</h1>
         <div class="modal-content" id="achievementModalContent" style="overflow-y: auto;">
             <!-- Treść będzie generowana dynamicznie w JS -->
         </div>
@@ -187,8 +162,6 @@
     <div id="playerInfoModal" class="modal">
         <h1>Profil Użytkownika</h1>
         <div class="modal-content">
-            <button onclick="displayLocalStorageTable(profileColumns)">Pokaż Dane</button>
-            <div id="localStorageData"></div>
         </div>
     </div>
     <div id="navigationModal" class="modal">
@@ -210,10 +183,6 @@
                 <div class="thumbnail-item" onclick="scrollToSection('game-container','1')">
                     <div class="thumbnail-header">Gry 2</div>
                     <p>Lista dostępnych gier</p>
-                </div>
-                <div class="thumbnail-item" onclick="scrollToSection('easterEvent')">
-                    <div class="thumbnail-header">Event wielkanocny</div>
-                    <p>Sprawdź zadania z Eventu wielkanocnego<button buttonId="10" class="add-button">🐇</button></p>
                 </div>
                 <div class="thumbnail-item" onclick="scrollToSection('game-container','2')">
                     <div class="thumbnail-header">Gry 3</div>
@@ -281,7 +250,6 @@
             <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
             <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Powiadomienia</label><br>
             <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>???</label><br>
-            <button buttonId="3" class="add-button">🥚</button>
             <button onclick="resetSwitches();initializeSwitches()">Reset</button>
         </div>
     </div>
@@ -319,7 +287,6 @@
                     <span onclick="addEmoji('👍')">👍</span>
                     <span onclick="addEmoji('😢')">😢</span>
                     <span onclick="addEmoji('🔥')">🔥</span>
-                    <span onclick="addEmoji('🐇')"><button buttonId="2" class="add-button">🐇</button></span>
                 </div>
             </div>
         </div>
@@ -436,6 +403,8 @@
             <span class="word1">Perun </span>
             <span class="word2">Gameverse</span>
         </div>
+        <!-- Updated id for tip -->
+        <div class="loading-tip" id="loading-tip"></div>
         <div class="siteLoadingSpinner"></div>
     </div>
     <script src="script/script.js"></script>

@@ -229,29 +229,38 @@ const games = [
     },
     {
         id: "26",
-        name: "Jajka Wielkanocne",
-        link: "game/jajka.html",
-        status: "Event",
-        tooltip: "Łącz kafelki",
-        classes: ["event"],
+        name: "Wordle",
+        link: "game/wordle.html",
+        status: "Konserwacje",
+        tooltip: "Zgaduj słowa",
+        classes: ["konserwacje"],
         ulubione: false
     },
     {
         id: "27",
-        name: "Wordle",
-        link: "game/wordle.html",
+        name: "Wieża Hanoi",
+        link: "game/hanoitower.html",
+        status: "Konserwacje",
+        tooltip: "Przełóż dyski wieży",
+        classes: ["konserwacje"],
+        ulubione: false
+    },
+        {
+        id: "28",
+        name: "NBA 3K",
+        link: "game/nba3k.html",
         status: "Nowość",
-        tooltip: "Zgaduj słowa",
-        classes: ["nowosc", "konserwacje"],
+        tooltip: "Symulator koszykówki",
+        classes: ["nowosc", "beta"],
         ulubione: false
     },
     {
-        id: "28",
-        name: "Wieża Hanoi",
-        link: "game/hanoitower.html",
+        id: "29",
+        name: "Basketball Game",
+        link: "game/basketballgame.html",
         status: "Nowość",
-        tooltip: "Przełóż dyski wieży",
-        classes: ["nowosc", "konserwacje"],
+        tooltip: "Rzucaj osobiste do kosza",
+        classes: ["nowosc", "beta"],
         ulubione: false
     },
     {
@@ -264,16 +273,7 @@ const games = [
         ulubione: false,
         premium: true
     },
-    {
-        id: "999",
-        name: "Basketball Game",
-        link: "game/basketballgame.html",
-        status: "",
-        tooltip: "Rzucaj osobiste do kosza",
-        classes: ["nowosc", "beta"],
-        ulubione: false,
-        premium: true
-    },
+
     {
         id: "999",
         name: "Whack A Mole",
@@ -287,12 +287,42 @@ const games = [
     },
     {
         id: "999",
-        name: "Agar.io Clone",
+        name: "Agar.io",
         link: "game/agario.html",
+        status: "",
+        tooltip: "Zjadaj innych",
+        classes: ["nowosc", "konserwacje"],
+        ulubione: false,
+        premium: true
+    },
+    {
+        id: "999",
+        name: "Paper.io",
+        link: "game/paperio.html",
+        status: "",
+        tooltip: "Powiększaj swój teren",
+        classes: ["nowosc", "konserwacje"],
+        ulubione: false,
+        premium: true
+    },
+    {
+        id: "999",
+        name: "Italian Brainrot Guesser",
+        link: "game/brainrotguesser.html",
+        status: "",
+        tooltip: "Zgaduj Italian Brainroty",
+        classes: ["nowosc", "ukonczona"],
+        ulubione: false,
+        premium: true
+    },
+        {
+        id: "999",
+        name: "Minecraft",
+        link: "game/minecraft.html",
         status: "",
         tooltip: "Uderzaj w krety",
         internet: "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
-        classes: ["nowosc", "konserwacje","internet"],
+        classes: ["nowosc", "testy","internet"],
         ulubione: false,
         premium: true
     },
@@ -300,7 +330,7 @@ const games = [
         id: "999",
         name: "GeoGuesser",
         link: "game/geoguesser.html",
-        status: "",
+        status: "Nie działa",
         tooltip: "Uderzaj w krety",
         internet: "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
         classes: ["nowosc", "konserwacje","internet"],
@@ -309,9 +339,9 @@ const games = [
     },
     {
         id: "999",
-        name: "Pizza Legends (w trakcie tworzenia)",
+        name: "Pizza Legends",
         link: "game/PizzaLegends/pizzalegends.html",
-        status: "",
+        status: "W tworzeniu",
         tooltip: "Uderzaj w krety",
         internet: "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
         classes: ["nowosc", "konserwacje","internet"],
@@ -404,13 +434,21 @@ function toggleFavorite(gameId) {
     loadGames();
 }
 
-// Load games into containers
 function loadGames() {
     const containers = document.querySelectorAll(".game-container");
     const lastPlayedGameId = localStorage.getItem('lastPlayedGame');
+    const switches = JSON.parse(localStorage.getItem("settingSwitches")) || settingSwitches;
     const lastPlayedSwitch = switches.find(s => s.switchId === "06");
+    const seenSwitch = switches.find(s => s.switchId === "08");
+    const playedGames = JSON.parse(localStorage.getItem('playedGames')) || [];
 
-    const sortedGames = games.sort((a, b) => {
+    // Filter out premium games for non-premium users
+    let filteredGames = games;
+    if (!perunPremium) {
+        filteredGames = games.filter(game => !game.premium);
+    }
+
+    const sortedGames = filteredGames.sort((a, b) => {
         if (lastPlayedSwitch?.value) {
             if (a.id === lastPlayedGameId) return -1;
             if (b.id === lastPlayedGameId) return 1;
@@ -428,8 +466,6 @@ function loadGames() {
 
         for (let i = 0; i < maxGames && gameIndex < sortedGames.length; i++) {
             const game = sortedGames[gameIndex++];
-            if (game.premium && !perunPremium) continue;
-
             if (!game.id || !game.name || !game.link) {
                 console.warn(`Nieprawidłowe dane gry: ${JSON.stringify(game)}`);
                 continue;
@@ -461,30 +497,64 @@ function loadGames() {
             if (game.premium) {
                 const status = document.createElement("span");
                 status.innerHTML = '<i class="fas fa-crown"></i>';
-                status.classList.add("game-label");
+                status.classList.add("premium-label");
                 gameBox.appendChild(status);
             }
             if (game.classes.includes("ukonczona")) {
-                const statusEnd = document.createElement("span");
-                statusEnd.textContent = "Ukończona";
-                statusEnd.classList.add("game-status");
-                gameBox.appendChild(statusEnd);
+                const status = document.createElement("span");
+                status.innerHTML='<i class="fas fa-check-circle"></i>';
+                status.classList.add("game-status");
+                gameBox.appendChild(status);
             }
+
+            // Create icon container for top-right corner
+            const iconContainer = document.createElement('div');
+            iconContainer.classList.add('game-icon-container');
+            iconContainer.style.position = 'absolute';
+            iconContainer.style.top = '10px';
+            iconContainer.style.right = '10px';
+            iconContainer.style.display = 'flex';
+            iconContainer.style.gap = '5px';
+            iconContainer.style.zIndex = '10'; // Ensure icons don't block link
+
+            // Array of icons
+            const icons = [];
+
             if (game.classes.includes("money")) {
-                const statusEnd = document.createElement("span");
-                statusEnd.innerHTML = '<i class="fas fa-sack-dollar"></i>';
-                statusEnd.classList.add("game-status-money");
-                gameBox.appendChild(statusEnd);
+                icons.push({
+                    html: '<i class="fas fa-sack-dollar"></i>',
+                    class: 'game-status-money'
+                });
             }
             if (game.classes.includes("internet")) {
-                const statusEnd = document.createElement("span");
-                statusEnd.innerHTML = '<i class="fas fa-globe-americas"></i>';
-                statusEnd.classList.add("game-status-internet");
-                statusEnd.addEventListener('click', function () {
+                const internetIcon = document.createElement('span');
+                internetIcon.innerHTML = '<i class="fas fa-globe-americas"></i>';
+                internetIcon.classList.add('game-status-internet');
+                internetIcon.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent click from bubbling to link
                     copyToClipboard(game.internet);
                 });
-                gameBox.appendChild(statusEnd);
+                icons.push({
+                    element: internetIcon,
+                    class: 'game-status-internet'
+                });
             }
+            if (seenSwitch?.value && playedGames.includes(game.id)) {
+                icons.push({
+                    html: '<i class="fas fa-eye"></i>',
+                    class: 'game-status-seen'
+                });
+            }
+
+            // Append icons to container
+            icons.forEach(icon => {
+                const iconElement = icon.element || document.createElement('span');
+                if (icon.html) iconElement.innerHTML = icon.html;
+                iconElement.classList.add(icon.class);
+                iconContainer.appendChild(iconElement);
+            });
+
+            gameBox.appendChild(iconContainer);
 
             if (switches.find(s => s.switchId === "01")?.value) {
                 const DEVcontent = document.createElement("div");
@@ -497,21 +567,25 @@ function loadGames() {
             title.innerHTML = game.name;
             gameBox.appendChild(title);
 
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             link.href = game.link;
-            link.textContent = "Zagraj";
-            link.classList.add("game-link");
-            link.addEventListener('click', () => {
+            link.textContent = 'Zagraj';
+            link.classList.add('game-link');
+            link.style.position = 'relative'; // Ensure link is positioned for z-index
+            link.style.zIndex = '20'; // Ensure link is above other elements
+            link.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default to test if event fires
                 addPlayedGamesToStorage(game.id);
                 localStorage.setItem('lastPlayedGame', game.id);
+                window.open(game.link, '_blank'); // Open link in new tab
             });
-            link.target = "_blank";
 
             if (game.tooltip) {
                 const tooltip = document.createElement("span");
                 tooltip.innerHTML = game.tooltip;
                 tooltip.classList.add("tooltiptext");
                 tooltip.id = `tooltip-${game.id}`;
+                tooltip.style.zIndex = '15'; // Ensure tooltip is below link but above other elements
                 link.setAttribute('aria-describedby', `tooltip-${game.id}`);
                 link.appendChild(tooltip);
             }
@@ -519,6 +593,7 @@ function loadGames() {
 
             const favoriteButton = document.createElement("div");
             favoriteButton.classList.add("favorite-button");
+            favoriteButton.style.zIndex = '10'; // Ensure favorite button doesn't block link
             favoriteButton.innerHTML = createFavoriteButton(game.id, game.ulubione);
             gameBox.appendChild(favoriteButton);
 
@@ -536,6 +611,8 @@ function loadGames() {
             const link = document.createElement("a");
             link.textContent = "Stwórz";
             link.classList.add("game-link");
+            link.style.position = 'relative';
+            link.style.zIndex = '20';
             link.addEventListener('click', () => {
                 Modal.open("ownGameModal");
             });

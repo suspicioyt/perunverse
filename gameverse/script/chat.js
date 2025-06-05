@@ -22,11 +22,10 @@ let bannedWords = [];
 
 async function fetchBannedWords() {
     try {
-        const response = await fetch("https://suspicioyt.github.io/perungameverse/data/bannedWords.json");
+        const response = await fetch("https://suspicioyt.github.io/perunverse/gameverse/data/bannedWords.json");
         bannedWords = await response.json();
     } catch (error) {
         console.error("Błąd podczas pobierania zbanowanych słów:", error);
-        bannedWords = ["kurwa", "chuj", "pierdol"];
     }
 }
 
@@ -95,13 +94,12 @@ function sendHeartbeat() {
     }).catch(error => console.error("Heartbeat error:", error));
 }
 
-function displayActiveUsers(activeUsers) {
+async function displayActiveUsers(activeUsers) {
     const activeUsersList = document.getElementById("activeUsers");
-
     activeUsersList.innerHTML = "";
 
     if (activeUsers && Array.isArray(activeUsers) && activeUsers.length > 0) {
-        activeUsers.forEach(username => {
+        for (const username of activeUsers) {
             if (username) {
                 const li = document.createElement("li");
                 li.classList.add("active-user");
@@ -109,17 +107,33 @@ function displayActiveUsers(activeUsers) {
                 const usernameLabel = document.createElement("span");
                 usernameLabel.textContent = username || "Nieznany";
 
-                if (username === "SUSpicio") {
-                    const verificationIcon = document.createElement("i");
-                    verificationIcon.classList.add("fas", "fa-check-circle", "verified-icon");
-                    verificationIcon.style.color = "#ffd700";
-                    usernameLabel.appendChild(verificationIcon);
+                // Pobieranie danych użytkownika z API
+                try {
+                    const uuid = localStorage.getItem("perunUUID");
+                    const response = await fetch(`${API_URL}?action=getRankingData`);
+                    const rankingData = await response.json();
+                    const userData = rankingData.find(user => user.username === username);
+
+                    let badges = '';
+                    if (userData && userData.verified) {
+                        badges += '<i class="fas fa-check-circle verified-icon" title="Verified User" style="color: #1DA1F2;"></i>';
+                    }
+                    if (userData && userData.premium) {
+                        badges += '<i class="fas fa-crown premium-icon" title="Premium User" style="color: #ffd700;"></i>';
+                    }
+                    if (badges !== '') {
+                        const icons = document.createElement("i");
+                        icons.innerHTML = badges;
+                        usernameLabel.appendChild(icons);
+                    }
+                } catch (error) {
+                    console.error(`Błąd podczas pobierania danych użytkownika ${username}:`, error);
                 }
 
                 li.appendChild(usernameLabel);
                 activeUsersList.appendChild(li);
             }
-        });
+        }
     } else {
         console.log("Brak aktywnych użytkowników. activeUsers:", activeUsers);
         const li = document.createElement("li");
@@ -445,15 +459,20 @@ function displayChatMessage(msg, isSelf) {
     }
 
     const usernameContainer = document.createElement("div");
+    let badges = '';
     if (msg.verified) {
-        const verificationIcon = document.createElement("i");
-        verificationIcon.classList.add("fas", "fa-check-circle", "verified-icon");
-        usernameContainer.appendChild(usernameLabel);
-        usernameLabel.appendChild(verificationIcon);
-        usernameLabel.style.color = "#ffd700";
-    } else {
-        usernameContainer.appendChild(usernameLabel);
+        badges += '<i class="fas fa-check-circle verified-icon" title="Verified User" style="color: #1DA1F2;"></i>';
     }
+    if (msg.premium) {
+        badges += '<i class="fas fa-crown premium-icon" title="Premium User" style="color: #ffd700;"></i>';
+        usernameLabel.style.color = "#ffd700";
+    }
+    if (badges !== '') {
+        const icons = document.createElement("i");
+        icons.innerHTML = badges;
+        usernameLabel.appendChild(icons);
+    }
+    usernameContainer.appendChild(usernameLabel);
 
     const time = document.createElement("div");
     time.classList.add("timestamp");
