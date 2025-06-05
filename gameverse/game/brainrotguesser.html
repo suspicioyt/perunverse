@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Italian Brainrot Guesser | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #007537 0%, #f5f5f5 50%, #b02424 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+        #game-container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.97);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+            max-width: 700px;
+            width: 90%;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #ce2b2b;
+            font-size: 2.8em;
+            font-weight: 900;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #meme-image {
+            height: 250px;
+            border: 4px solid #009246;
+            border-radius: 12px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            animation: imageFade 0.5s ease-in;
+        }
+        #meme-image:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes imageFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #options-container {
+            margin: 25px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            justify-items: center;
+        }
+        .option-btn {
+            padding: 14px 20px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            background-color: #009246;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 220px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #007537;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            transform: none;
+        }
+        .option-btn.correct {
+            background-color: #009246;
+        }
+        .option-btn.incorrect {
+            background-color: #b02424;
+        }
+        .option-btn.grey {
+            background-color: #cccccc;
+        }
+        #next-btn {
+            padding: 14px 35px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            background-color: #ce2b2b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #next-btn:hover:not(:disabled) {
+            background-color: #b02424;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        #next-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #feedback {
+            margin-top: 25px;
+            font-size: 2em;
+            font-weight: 700;
+            min-height: 1.5em;
+        }
+        #feedback.correct {
+            color: #009246;
+        }
+        #feedback.incorrect {
+            color: #b02424;
+        }
+        #streak-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        #streak, #best-streak {
+            font-size: 1.4em;
+            font-weight: 900;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        #streak {
+            color: #009246;
+        }
+        #best-streak {
+            color: #d4a017;
+        }
+        #best-streak::before {
+            content: '🏆 ';
+        }
+        #streak.streak-up, #best-streak.streak-up {
+            animation: streakPulse 0.5s ease;
+        }
+        @keyframes streakPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        @media (max-width: 600px) {
+            #game-container {
+                padding: 25px;
+            }
+            h1 {
+                font-size: 2.2em;
+            }
+            #meme-image {
+                max-width: 85%;
+            }
+            .option-btn {
+                font-size: 0.95em;
+                padding: 12px;
+                max-width: 180px;
+            }
+            #next-btn {
+                font-size: 1.1em;
+                padding: 12px 25px;
+            }
+            #streak, #best-streak {
+                font-size: 1.2em;
+            }
+            #feedback {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Odgadnij Italian Brainrot!</h1>
+        <img id="meme-image" src="" alt="Italian Brainrot">
+        <div id="options-container"></div>
+        <button id="next-btn" onclick="loadNextImage()" disabled>Następny</button>
+        <div id="feedback"></div>
+        <div id="streak-container">
+            <div id="streak">Seria: 0</div>
+            <div id="best-streak">Najlepsza seria: 0</div>
+        </div>
+    </div>
+
+    <script>
+        const memes = [
+            { url: "https://i.namu.wiki/i/NpKpUUwBw0NaiFAhWGctlNo1cS6_nSKZm5nihROFK6-iWRo4947t_TOJz8NfcaSem3SZP_nkcWmXrJc4UwplmXfG311-5XH0wzKBUF-W-rFpMgrfy90pQPvXvkPYuf7lXaBtk1zeVRbJINsJoBiLNw.webp", answer: "Tralalero Tralala" },
+            { url: "https://i.namu.wiki/i/gsKlDk_Ldojyc76oXL8FjIYYCsr6sh5E4qdX_D_DjVlk-6ueWVHBH55lTJO0dD6u-n8spnfzxLJVha33Vu4OYOzluPCSkt142K1UEsUeCJuoFSxF5oJEhUNajGJi9aqmrgwxKK9XX19hlFX-kWzgNQ.webp", answer: "Bombardiro Crocodilo" },
+            { url: "https://i.namu.wiki/i/kU0hPpZyhx8rPnKOE6RDjcurXU4w1mVEYk38pnfpzCuz2I6Zx1wzpRx7wk8GtxbYw_6TaklCygW3ZtkoaX71evZ11QL6I1py8jIVOJENZL8un81OmNa8sWoVS-LxYLCxiazjpnDM0k4eKHeuwzlu9g.webp", answer: "Tung Tung Tung Tung Tung Tung Tung Tung Tung Sahur" },
+            { url: "https://i.namu.wiki/i/EqDMPkAOWXWbb3ZoAg1F4OHBcCZ2LW2dk9LmiJ_6K4rB0rI8PQrBgD15ypdNUQvACgBon2ukuRnEvHZlowomQUfY5zhlqdmK4fSrOd3oAMdnvomjg5WmAWRp9azaN7SutU0NWskMe7LljWl7-3bHwg.webp", answer: "Lirilì Larilà" },
+            { url: "https://i.namu.wiki/i/Fga2PtzWrmrE3suNy_IQWVjMNQda_nrKtX7XO6GcH46nHmDXFbkMgbCnkZdaPsTH-HyPYEGWvfY_sKua-5TToVS4UvuvK1zQkpnhmJ19YcviNY-aDUyynklVl93tzLhKhxNVXjwSuuj9YlLFh0hXHQ.webp", answer: "Boneca Ambalabu" },
+            { url: "https://i.namu.wiki/i/wIoFwI6Qf7V7HMkVj1oT3fuoNjh9RCkQ9EU3M2gq9DKa1h8XRYp0zsyoHMahbZxCQxQAOxLqVTg6dvOpglVbaF2oTTeX36LUDlsPg4C9gSSRsBZhCT_DCh_egInWHV8cfhgFsjG_1DSHQCs5BYUjZQ.webp", answer: "Brr Brr Patapim" },
+            { url: "https://i.namu.wiki/i/U4KEepHP43av67D9fsQk54HPnKjPf2DywC_R663LxPcd8qrKY9SBif21jMYEHvhd3Hd-WgK3W_JpoLb9SDOv0dDCrFVl6LJj-1QEK09yUlEEmIn5q8zBZFAur6xTUsGxLtS0L8X29hvmCRm5VLFQzg.webp", answer: "Chimpanzini Bananini" },
+            { url: "https://i.namu.wiki/i/JdIeexhNPoM-toxDL3rdZYsXdpa_ljcHGtU8li7EyXp9i6JgGJQ89L5514InuHrosXkONmFAKJCKi-m_CFuoK-B24nKBZgHFV3_qQVs3bC3gx92DZw9lKMFW1gkUsfVn8WceDLgTYtAJdwIKOTVHWQ.webp", answer: "Bombombini Gusini" },
+            { url: "https://i.namu.wiki/i/HKnf9_z0W3FEOjDf6A-yJMIEUdcBavPomKukiHOpVopEbX3PQC5Fsq4PUOVQG8yqiGN9D7-ex5vvDq3bRijbNd1rkiz39E0U_wfo2lIFN7cIJhopbKvnjoefOgytFqMX4CXub5uCt-C_K8Lr7_8ETg.webp", answer: "Cappuccino Assassino" },
+            { url: "https://i.namu.wiki/i/vm21lKkV9ML7ct5Vw5WEC0yUIZxt_j8XmNEKBycff5cHQSWJgVJw8Vl54puEOlNQjvtI7cMdxFtVxgNK-2ppFXNmaY0FByL78RrBoXujnlCLbOckHIMloibRgLRJ8kXhQk5XhLxEIz7651Sj44Y0Rw.webp", answer: "Trippi Troppi (Prawn)" },
+            { url: "https://i.namu.wiki/i/sPVnVnxT4DAwfACYIvxTL4tuCIpoESdnL33jOAtQgvbeNsVnl5K-vRQvbLqdN19AGSOGmjJymSGazRwS8fqwzEbmTwphpvemxILxJDGz9K_lwRGNuiYoQ-lKdiAJm8cJWWnf8bQOgYOF4qCO6XCJMQ.webp", answer: "Trippi Troppi (Fish)" },
+            { url: "https://i.namu.wiki/i/tTsjHKuVK6U6nqYQ5tQZoquOJklZt75PKTRH_qePUjpjMOnQTfxNpkvjebwNNqIozitQOMQlXg7kKAy27bz5v2V_qnApOYXZaCg9tegDour6tdM7imNkhXs1j9pXEo6xPzIzoTrXUZnjBa94w-UyGQ.webp", answer: "Frigo Camelo" },
+            { url: "https://i.namu.wiki/i/RKYjuwRZ9UqZbxPyovJLNmxmC1JrqocjUm91wikHse_0tQ2x77AV1O87Qad9glssyfzFjD963F8Ax61mfb8e-CtFuHgTLUTGQCobSvXuq4Hx6-zoAreD0AAdPQmiIAqETe98WL4d8qYf6ZweQ7jzFA.webp", answer: "La Vaca Saturno Saturnita" },
+            { url: "https://i.namu.wiki/i/ustzQhabgAK99bP8ZfIFyz40HmEXZyQZ1rJuaZW88nAZugabKlF9Ue_lix_YreKNsVloJGfP_qejp1NvOZV8XG4HGh7BfPF51iLUQ5XbDxzMw4GbPf9nRaLMMvd4gilahZC2NN6EdBZcvCE0cNVPhA.webp", answer: "Ballerina Cappuccina" },
+            { url: "https://i.namu.wiki/i/mVVsOCEsfO2ZHa3JFP6qUx3sMpNA206xr8hDl2nuc5DB3H7npE-l0mOEI0_dECViDspjHkCwmOUz_Aep82HPHxKVmXJqM16b5H7cEJ6gGyU2-gJ2E4G3QwWL0XqMgWtFrC0EZ-KHMhclCTRi0kKdQw.webp", answer: "U Din Din Din Din Dun Ma Din Din Din Dun" },
+            { url: "https://i.namu.wiki/i/lU5PNe9pxqYZN1WNNivCfm8JPdj8Smtgr1fClDK4-uFEd9_TeOnPh_uC88b7Pk0r6J1JwyGXQvUYb5vScIOnNp_kI89BEVpK4URQCrJE1lDFaziVmCCtypOnFSuNO_2ocnWJ28xgetJsgESKR3yYYg.webp", answer: "Trulimero Trulicina" },
+            { url: "https://i.namu.wiki/i/9TZzpYNpqdG3ykQljpcX-LzpOw8r-e9p7GXjC7RSLaLhLepsyv7hXrkZghwUgtcJQx6N11WLsa45sVX_lQgQnx2vGLJZ4kIWxNk2OL5-BkMrEOMSw1WaAyu1Z0mOAlCq_XyjFP544OB6-BfjkzPkvQ.webp", answer: "Girafa Celeste" },
+            { url: "https://i.namu.wiki/i/_T_WeKOIWkTkmxy5kT3NbcHnBNL3Qb63Sapv8zy0MmOKGedbe6ZqsZ9olGaxtK7_aIXoNcfMGMRnN64U7ccKRLHQw0gCt65v_AnSc9W5j-mU_cfeCKQMSc6P5LP-cOrBCeNATTYGVILn2-NgDGFPZA.webp", answer: "Bobrito Bandito" },
+            { url: "https://i.namu.wiki/i/n1A6u7MB36aTCjajg3T4Q5hQQOyWsU9rg0sovVoHfKoFmV32jYWpLXjUz6WfSrD9QnistPHg1yfBS3Ui0mPb8o-7e4C5x_BTPgPDzRyILsAlmLJ02BNQhR1OPDZyckbjrwSjILxDZoB2xVqtYViwug.webp", answer: "Ta Ta Ta Ta Ta Ta Ta Ta Ta Ta Ta Sahur" },
+            { url: "https://i.namu.wiki/i/Z6xcRXtLAiZQr6DcM0bnIOfjM_zZqhwYkVFzQRgPi8rwO54bkyt9qpsHuvaqaYsYhlGtFnjGQuOgZza2QwGlfrXW03jlWr_QNcuSgqh2GjbwkF91PNV0jUgPuMqSqMurBTi6PobWsNHSyNvUDQNEDA.webp", answer: "Pot hotspot" },
+            { url: "https://i.namu.wiki/i/Xh2WszofUh3JoON56vMPPlclYf0EaETU_gcFfC1B8Jo7loWHPLdmiiQyBJR3ZZdP25dElQvaETr3NnWclchMTb53KiWRapbPkDjMEuoGKzNZz5zja7JE0jZGOG2sHzshc8S-sekv1HhFK_0aGIn59A.webp", answer: "Frulli Frulla" },
+            { url: "https://i.namu.wiki/i/faE_pX2FRdZ0oPQZ8DMlFEED5jTqcNNdSmnxbzOF-zuhNxVaVm23uiCmagqMgf6PnIFty6Kr2eUgxY5kTp-aTgEDJRmp08uUZjyZa1skP6vCk5mVtbNWLAFLTmvsO6i90rHE_XMJw__nnDrf36scfw.webp", answer: "Brri Brri Bicus Dicus Bombicus" },
+            { url: "https://i.namu.wiki/i/UnrqSbJLCcq3Rr93U6JC3hduOCYOSGhCV-B8KZJlPykAd0EXOVvtY7PVgGH8q4N2rEkuQBMQih34sHQMFD1-xPhlzfqo1FIC1bV7azsinzJbcDSsgv_hHQe0Q9XGsmI9ica0teaCSzGJOYR486-_7w.webp", answer: "Tric Trac baraboom" },
+            { url: "https://i.namu.wiki/i/AhVyFcU-rYi9VKQ84e5jV0rmZoPWSMU-fz3g3wxpcwq9Xc4ioHpI1_ldyO_5C2IuvG0m4C_cd0uOX_tOG8-DZS9t5vJI_2RpUEzJqmTp6uL1XVup65pPBFBwWE1Ac44GNNMteU3q4O04BmMnQU8nSg.webp", answer: "Cocofanto Elefanto" },
+            { url: "https://i.namu.wiki/i/GZENkWLEBT1ELN1WD9jWm_NDHcDYyDZuUgJjDRziMrcbXkUJVrd5ZZrP4odEtzB_s1f-AmVfaq9TYgOTXmOTq1P11nmkmRP3gDk1YVSY2xqSMWCJm_U6lge3Fc0Mk8Ai1nqxPHQvj-jBh_7hYKIE9A.webp", answer: "Burbaloni Lulilolli" },
+            { url: "https://i.namu.wiki/i/r0pkr6Fv318hAFWRMFcL6yRKgyVEC6uyDq4g2DlM3-fqIkK2RTWQLQ6ka1ExZh84jDGwwFGrkOzuDp2ZejcJQnDwGLp1Ecodp9UyjFe468Aq6b3-qzJlJZGiE70IO1I9iFyRT9THQoZ9tRpfm1i14w.webp", answer: "Orangutini Ananasini" },
+            { url: "https://i.namu.wiki/i/P00QkolIf-8hVKOYwwSNx5TrvqJy2-C90zj7uey4ROKSaVa2TKR8DLfRUYtfVB7kGmGLMVjII39eCpNIRbMDi68AX0z72RQBJmohtBqG9IjA4b-7hPSfWBZyaIznesJOd-EWxHT0pIO-2-5oCFmfnA.webp", answer: "Garamararamararaman dan Madudungdung tak tuntung perkuntung" },
+            { url: "https://i.namu.wiki/i/F-UVDUXsqtpfUCvZztR98lnf8BGp15t8690DFTucNPjMQE88OKz5R705dHg1QF06LtSP8NW2FQxo6x2DsAqT7p6jv2T9G3MbXQSIXSgm9lMkX2UKGF-9xlsYpP5C4F5LRz_xPXJ8qy38S_e3Bya13Q.webp", answer: "Il Cacto Hipopotamo" },
+            { url: "https://i.namu.wiki/i/L3em_kNhYOKPMIZQoOllI66gjRKHNsltvR8rGs4GFQRuxQhemI4nFxYEbuqOlsKKYA5TzWAkgBsWC3nhSyzmNqEZY43pfdGMvFHHpJyPjeKGwrlpkgcMEzfGzSSr7-lonq8Rm6pc9yULEXRpZSwbOg.webp", answer: "Blueberrinni Octopussini" },
+            { url: "https://i.namu.wiki/i/Hjkt6LGNos5NqgOT1xGCiyvjnHm18oppYT73HK4M_mkc_MjSm6EOazBBd0Ier9Dpl6taco1O-UIbmwiVHjdbdJrqXEhRkPAGuP8FM6oNnNFJR9K__NJ6Q4hZaQZaoYkr1loTqU06bNns3N-zaazR8A.webp", answer: "Glorbo Fruttodrillo" },
+            { url: "https://i.namu.wiki/i/n4jdbHD7X6siRrBU_RGenrdSBBiqM09vDC6SCkIOIldNf0P7ymvSDjIv8IzlQAZaU-cknITRM3lUSK9qqY38QhnWNnewrhP-7_-GNcF6JSLMXrJoFbgN4N4nDTwtT730guRoUiIXTstjwq9amoxSmw.webp", answer: "Rhino Toasterino" },
+            { url: "https://i.namu.wiki/i/3meQwOYS8RXE0KLC8c34CuPbj9MmzngqNvw5qyQBCV6EzmyViTC7xtOQP5vOIz4KE4bwhnOapf6nfT8a4eRqsED_lgeBDBNGiMgi9cJqFTe2zYtZ53nbqU50yQKBwIeihtmZGRk76vQaaE86pBdPjw.webp", answer: "Zibra Zubra Zibralini" },
+            { url: "https://i.namu.wiki/i/mgDdq5zpWz9os3Q05ZIsbuFD9CX9_42Zp7CPQEfFzanAb4-3G83P7l_DVccY7y-M5SQE5MvNUkU6E6FaKjt7uI65YmHeo8tdQ8cyMfBj84nZdpNnwbSFHoxM4LmgKEfYlZF92RsGpVojfNcsG2dfJw.webp", answer: "Graipussi Medussi" },
+            { url: "https://i.namu.wiki/i/0RF1fN6Gn0SM5IQ0zG5phYbQJ9CRnyKAn7q2ueBVznSQvMg5GwI9CSGku2sqwMd2f21Pr2VoQD8i8e5HAo-sThvpFkoyJI5FE_WRz3nB4Ah3UyMZZhuGH5uabDKLNgwCiLZOzkFl500-MuCgxAbIWQ.webp", answer: "Tigrrullini Watermellini" },
+            { url: "https://i.namu.wiki/i/Sd5xS4_P724-LeqVHuDj_vEbKCJW_5xsD4TRfvu0lj6qlFOCd7e2gHvRUXWYa5jxw_P2-9qh1Fk_kYui-NkLj3e41C1Z1Qk_ji1geEVtc1ott4jfqOvF0Mx7WxN5lcZPmdFqBkpV2yt4V04ZA-SG1A.webp", answer: "Tracotucotulu Delapeladustuz" },
+            { url: "https://i.namu.wiki/i/3xLbla0-Bd6eqrAyNsKe3GvncAXrrgeUoUjNSxUQ2u7VvyScIcR1nxIcEuM5EG7clvgZIOhlOD5BL7VZMqvusMJsT1-ViwGr9bUSKkx0EW6gO12CDxIevmWz4M1f0R-AeMmPySkETdYZpuy8cssCUw.webp", answer: "Gorillo Watermellondrillo" },
+            { url: "https://i.namu.wiki/i/PkhipgieXOdjjDhLtLmE4AOGbQ3q7fkrKUy2xrAqSX6H9SEgFe3SU93ktTnIjMlpLqYHbsj6v-esuXGrWDqo86Glk3M0e4vd3MVMgGnrlqz7_yOwS3r9Bc56OwRdKRtcScBRc6fEpwBmmAtFph7IaQ.webp", answer: "Bananita Dolfinita" },
+            { url: "https://i.namu.wiki/i/i24AP240GXhc1v-1DjdCzo-fQ3goRM1iiPfafpi6CUVWET4cMXOd4SKGYyt3px4RRTzaENdzFwpdqhVTY83Gs0YhsU1XxF9PoDV3kZMKlPdMZxenXR3WQLsHXcvL1ZEQI0xiW50OJc-tQEjZt8ThUA.webp", answer: "Tigroligre Frutonni" },
+            { url: "https://i.namu.wiki/i/2TixLap6Ik6Op9IdGlJRs7UdoEmBYjhj3h5mojKKuR7lHDWkKBvCR7W96Vi0_Ozs5fc5odRKWrJ_JeXgZZaC5OXHJpaGYyLPRZz0ND9fkoZkA3luKcjtbmLMj8vEegTtQKli_9946ylTenr774yE9A.webp", answer: "Ballerino Lololo" },
+            { url: "https://i.namu.wiki/i/jhpnvfsfo_o5zaiblAGsBtnQqTI1R--Du90-uY2kPClSp-3vvc948RbbQCvIc1cTEet9q-GwnAZB74iTcWXgEg83y82d1lhO4hCMuHNtV7hBRlCUY3dNIZijLMof3gSVFlMJGiqJGgb464SWp6BWzA.webp", answer: "Crocodildo Penisini" },//?
+            { url: "https://i.namu.wiki/i/7Lh1UCQP4x1hpp8xIrENmhY6zKt6nwYax3-Eatf7mw2lzvivsBt_GQcSeBoVTorpDItG-PlzBmXDsU32UJUrkzhZuSwJn00kRn7rn1fy1OBTQRZ8ArNvqw-5AKxk3fBPVOTDUzMoskQsHSI6xvd1jA.webp", answer: "Makakini Bananini" },
+            { url: "https://i.namu.wiki/i/jH0KQ9r7-odpoQEynOelzO1hjODZ33_zJNpw1TFiLTVqwNTlr_l2Vj-QaAFwwb0JNNW_BplS8TUKQLB59ELZId1OIlXKcHF36K2pcBt1a_DTqIxXTtFu1S0rHi17rcecHD-frRLG7do2MPx6pylmSg.webp", answer: "Matteooooooooooooo" },
+            { url: "https://i.namu.wiki/i/7FseQw-HJv1vJj2YjU3pmusUTsy9gw--cHZTlMrj7igfKcO_xSExgBz1nfbVow8T16SeRP8adhFAM2Yj4Y4XjCGuG7z9TQvue3bwYfDRIL8UaUh3Ohhas2EXYQ3KtX65y5KxoVBlcw-QKnUbeHjz4g.webp", answer: "Špijuniro Golubiro" },
+            { url: "https://i.namu.wiki/i/LC8bYvhtOjbP84Bu-3Ob7hClm5WTQsYvdH7Af_lr6tCzlGDseGBvgNrgctvoxujPWrXQPL9eFszTivsAYQ-c4Aq8H3ygKF6Cl-kOEeqRrToYt85EfB1KNdswIuwW8VHm37atfsyd2dMZp3e7C7RlOQ.webp", answer: "Elephantuchi Bananuchi" },
+            { url: "https://i.namu.wiki/i/g3tniaPemlVKrTgpz690xU_chmFuS0LgoIaVZcALOm6Vx90FGtUDcFwpZm5dNX1fKP73HMXxqW2US1XOeHNIjcQAZWMSg0NuyxYueIhdfBUS3JFrCadlKD5ai-MKxX3emVcgdNwE6BFNRsR7iM7DHw.webp", answer: "Crocodillo Ananasinno" },
+            { url: "https://i.namu.wiki/i/o27hHhSIMORP-_YhK0VwKV3LyflWpTn8SttLnk_KjfoXnZ64vhNVUc_6wElczKdamyn3fGw14sM0G2M8ID0ib32GqbehSzY58LQTPTES4kp5pJF5Ir8DXhoKMHlfLSSwNvHoFlZDRSSDw-8gjfLT_g.webp", answer: "Penguino Cocosino" },
+            { url: "https://i.namu.wiki/i/75QNN2T3KIIrtwAs8TiKIwDg-5YbHDXm7NHxzGAla6278YYb9NBer9NvGk6DAQ-e0ntR8kPisVZx096uMD_JqFjNaVrd1hBTpEidcUJV3jf3X26AGOiuVAzWtZW4tVMXTVEd2Q_sq1APJg23R8_CUw.webp", answer: "Bobrelli Bananelli" },
+            { url: "https://i.namu.wiki/i/Y30vwdIRvxv4I_YNVmyCZbGfWSpjtNRK6OS0HodOCWN51ktkgenoW2oJNPzdY0YPg4Duo2-AlHoOxCXRQDxnZdczxOoIr3RIV9mYds3tjWCqNBonl21DudpM_bXqx-URtRnkFLwjF-Zv7ccs4LNbBw.webp", answer: "Bulliccinni Bananini" },
+            { url: "https://i.namu.wiki/i/c96LMkYu7-VNHwqs9kbCzZMKXbWZQ8M__47u58mLGS71bY9cwQis3SwL3JKubUEjDTaGoEoI5GohAiS6a6J7oyttf5-5oL9rkQC3Lm9l4IoC4yIFia749_3NrSFD3N7xWoqvQ_irI3fq2_NlGy9ZFg.webp", answer: "Pandaccini Bananini" },
+            { url: "https://i.namu.wiki/i/AsSwcxJ8ApGOKejxdSb8vtoUFoymGAqKvipabrqIxudgD4VpXB9Hu4qzX0wYNak6YI6JMt3aobDM-EViLhztzCbCMu7sEVXRf2H77r2SyHzqSm0eDY_Iig-WSKzhUrs-JzK-uPPl2gGrmHq3Ei2v7w.webp", answer: "Torrtuginni Dragonfrutinni" },
+            { url: "https://i.namu.wiki/i/y84HXWBWdutG44Wb0u00L7HW6cYhoIcCX-qo3-n7uBB2WDZvw2UNOHl8c5Rz2jJSNKFuXvqZjSn9Es1S8YmGlJIEUDTLmwJP07bbEAZD0TBHRYcs9_A_aZzhifMUDi1tlECLLX9PxsmaR7IRWTuOzA.webp", answer: "Gorillini Bananini" },
+            { url: "https://i.namu.wiki/i/Lzu9i-w5qJLwXzbx6v4HIeAfFQ9E926uWLQCZPgNzSEeWd1Smin6ja10kTvm3vW_mg1psFp8YXuwcTCxt__3hSiS-kHXBdSFwOh0VN-OnlXiy6fdXQQD6yAYNwClHNxl6OcbgxoY2Zt96-MA7dJ7RA.webp", answer: "Ecco Cavallo Virtuoso" },
+            { url: "https://i.namu.wiki/i/A--PoI0uj_WgViiJucbaBNrytpbtFll5_r-2N5paWIC-tpgNIW_ITITfSJvaczW41e_5Stb1dDiqaKQq1-pevWRbIpSaZ24HoSIryUvDxpiEMUOwOR6rJlKkcYcd51Nc6jHnuniAUzKck7XvoMnMGQ.webp", answer: "Flamingulli-gulli-gulli" },
+            { url: "https://i.namu.wiki/i/nNz9LpszE-ZyK3cG1_44qiVwCnB6ggjU6G2DgkftCBbxJSEOAOKGHabn41KlpH1TY0eVW35E7-0KNiNnId0uCxVBj5wDY0UqAgIBDpa5ChMg5KRNRxR2tJCnxJ1XPtZfkS5M4fE6bzjjjQEdlEPJWg.webp", answer: "Capybarelli Bananalelli" },
+            { url: "https://i.namu.wiki/i/QZe1lfKVp5QSAb8_u_S7sb3mnETj0mT14QFjnWZtP077umchv82djiRkvffLQqLZLXQvRSgqplUaJ3LxRgz4G_5Aadd_kd9SiJpjKVOBn5vt7b2nymj6GDRTU-CN0lIAY0NDOxp7fKcXdeXssxF1dw.webp", answer: "Tob Tobi Tob Tob Tobi Tob" },
+            { url: "https://i.namu.wiki/i/3-Pn_bgBchHgjrSvsHYVJwFe95Y3qb4gKK95BAofE_yNWDdrebGW0ShROjJpWxIX8ko-BfDOT9J5vaMbVkBLAVPut75jvCgWBY59rqBG9xB6IzCcPOmKMBxv1FUCNHWLF9QSvlfiBpjePeRa4Yfg1Q.webp", answer: "Sigma Boy" },
+            { url: "https://i.namu.wiki/i/hk9P9QoJJAInTyd1c9Lxl-vl9jURpHtBZgenK0tnzGaGhoYXwi54BZQmB9WG08crH7aKH8vIJj60gVewcNsvNO4tt732POh1L7vZJbWV6eXT8y-0UR7D6wkzaQrSJ3kn6BgkYfEU7eNSrVNakC8yrA.webp", answer: "La Esok Sikola" },
+            { url: "https://i.namu.wiki/i/CY6K6RJpHU678RV7IDuDnT71RUt7cOxqtF_Vkzc7bIbxZdHBLU11n2h-qmFhBUDZJjQWoZwsD6ylz7ie64vAqTaxn6UIKTY-M-HXEb8g0sq6i9uOYv9ygFa-rrC3ptrLEbfZ34dQiHywQTBVQSX7BA.webp", answer: "Chai Maestro" },
+            { url: "https://i.namu.wiki/i/2yscvbwR3EW0HHrPRR2uOEwDITN-1ozrzg6h6K-tdx0UlPUs_y_MnbdQ_SmafeiLFQUlsd9vJyeHHs7vqAP4omGe-alycfl0UIYyED7FN_VWgoMgtrMn_JgL4pHgfFYbLWVhnxzp0XLhNlCn4EK2-A.webp", answer: "Trippa Troppa Tralala Lirilì Rilà Tung Tung Sahur Boneca Tung Tung Tralalelo Trippi Troppa Crocodina" },
+            { url: "https://i.namu.wiki/i/xAVagazTY2UQaKvBGy3NOhJCStjrL7Zey6iq8H7G5te8cr2zAyn2wVOCJ6-S0pWrbQnJ5dzEqI7fI3Se4vHbTvuGesBo_P6SS5k4K6EGEUA1_0pwB4YsGs1EUFAwSebIhn__jKKSsY6-fqo1jtrgFA.webp", answer: "Tung Tung Tung Tung Tung Tung Tung Tung Tung Assassino Boneca" },
+            { url: "https://i.namu.wiki/i/wfBVGkTZJd5r2aW735tDQBTDhWM_BOgcD42Kly3H1VZT9RKiQ_PU5W-U3So0R5JEoNOofA-LCtoISTZY0gloFsfwVJGdqCshM2FiEgGG0x2NS5ZmNJTEHXvlN6p0inO5n3SKPSMjY-NVmGHi6wC3PQ.webp", answer: "Svinino Bombondino" },
+            { url: "https://i.namu.wiki/i/yM2QX81V1a5TI2V5az2VSjOm5GfX0DLpAmdN-6ZJwJXw9BXXn9X67B8wermvKMrcnSbSaVkiceavz09R8q5JNQsrz33xyDDo3aP0qD-AibkJ6bOyES-br47E9qyfqEuHLAH7stJ-awCLJjQb3sGg1Q.webp", answer: "Bulbito Bandito Traktorito" },
+            { url: "https://i.namu.wiki/i/irbcpjWdmtOoIFa6mg6yF9ZIMSx3aJBOcCwELN3j7TbQ_XiH_D_igwzeAFmNvaAhoRg1yjPxmk2okH5HOD89_zoMtnpaXeyJqxkdfAqJA3VwWSzzkScrBHFhfLAvRclOnwbqJLRIAURJ9-v5Z5HBpQ.webp", answer: "Raccooni Watermelunni" },
+            { url: "https://i.namu.wiki/i/NLCuRumWKc-Jee4y4TCbYR5GCK8QOraoVfGdr0bm-rBPeDleIVPu5Pgc2BjMQoN-mANEX0w9pgXc3lkI8ZK5KxL0-3GRcOG2vlSJ5iYynrTDOAIohM-6WU4hoA33bIGBVNLdnWLEZDMH4RhPBznqQQ.webp", answer: "Ganganzelli Trulala" },
+            { url: "https://i.namu.wiki/i/-JqOmaxnOhutKLbaTxtwT-SNRpFAMWpPOF8sWpWeCvrDj_roFiPG7xIM94wGKGIMLS2W9vEJke9yMXR0SEOzoP2UvtiLCgbtw_gDSmIo21k1ws3iJ0P5hkvDWZGW9Tpq3v2SvG_-2Xi2meDLdN7voA.webp", answer: "Espressona Signora" },
+            { url: "https://i.namu.wiki/i/k3Ykyjn0UiqaEBz9udBRzJP8m9_GtjiltsNKWnZKSO4JuMaj1SmrmUcWe6zvSEEWHcwQY_kyHELPz3FsbDC05UJG-iSPTYZeaVSi8iUOSMYxr4Px0VGPpFGETO-fdI_LwIYMhWoVgmlp5XnAS9534Q.webp", answer: "Spaghetti Tualetti" },
+            { url: "https://i.namu.wiki/i/EmpsNAXdugU7WHarBhclObQrUbz36lKMB87rdtxIvCdB5Q7a_X8QU9SolKJWCsrGILDXRK1hZKtbTuigxL0R2tCormEeu_oQZPcQeepOhwd8f_ky6tVI_YhDtmS02i2s5itqj1u36Kw66haGJNinoA.webp", answer: "Cocossini Mama" },
+            { url: "https://i.namu.wiki/i/5sQNZzYj2DX796cvVUHFUR6X7V1mrWcYAClj3rLSgYgtd19sn3H-HmhygTeXNj825KWHvxRBC-VHB7rlkxhAOSHs8h1Ewf6FLtDyq3MwCcYM6VaJkoGB8GneCoSpaA53kgxl7DOa2qnpGUfOB7nWcg.webp", answer: "Snooffi Zeffirulli" },
+            { url: "https://i.namu.wiki/i/MR5bUBCGVAd9Lz4lDOXl9VAOeWvNyIcNh9Hm-QJdSE86uU0vF-SiY_8o-500gFPEPar__2O3iK0cd_Qt0G3M_H8Q58_VoUfd9neyDP8NgMpywr6NSFzRGryY3JESDaDzgWnl6UVb_jhnpOyHZSnnCQ.webp", answer: "Perochello Lemonchello" },
+            { url: "https://i.namu.wiki/i/BngwlVrwtlB4qG2Q2A_pO5plQ_paX1KDjyR8FdMW8KhSPL6pwVHgFyRIdtPnQ0q-XFKUm-CXrik9i9NeyemrXrZ8DE3t8vHDkUe6eEeVHEBKv6o-H7VebTC-JFIx83E6r8lyA3daXs8Iu_xvdx2G9Q.webp", answer: "Tukanno Bananno" },
+            { url: "https://i.namu.wiki/i/PAdSpzeljq5EWALrmytk154zTDaIqkhngu8vvQfXya6kwyb8lOew9Nnxk6UfBjgbIWM-soaY48H_yK8v1rUsivgdi1VPPaDPktXlH02w4oDwib4pNrQs3cd2DlKB1bIABTu9NWrRKVcQdZwg8QJ70Q.webp", answer: "Ananitto Giraffini" },
+            { url: "https://i.namu.wiki/i/taC4pRXscNW-soKqvxBwnsRP1_XAOT1qHHQMrwV0bdIstLpBYziWmcLnRiNpdKCpUJQCLMP0PAUEPFnYTZDl9dcPwRHpdlvS2qzovv1sDkfomJwm41TdjVoilOJVuy5z1tTOcukDd4B02vH7WmnzLA.webp", answer: "Cocosino Rhino" },
+            { url: "https://i.namu.wiki/i/ddv_4q5HIqrQJ8u2zEYumEdqVcz6gzcOP5YdQKHwd9aBBbEnQ8pXvzoGO4qC69djL-kPC49g3uu6NQemUCsdiMGgRFcJqhyVqPVJJnojbnldpllXq7r9Eg5UDj2ox4Pt6_QiD3S9q6Xr-ctEWE2jPQ.webp", answer: "Tralaleritos" },
+            { url: "https://i.namu.wiki/i/TXrcXeeykuv4pP0YS8ll6YFy7usDpYWVwdGHHHmZAVMw9h_gVM87QTjAmMEkb8A6eQ6i6Ra8AlLbRXqGfBxYiJvLVVA99Qkl0lQqx9bU5a8tHM7QLHCQrdJH1tqtQLdSZteF1628IVMk0_PqGFFLzQ.webp", answer: "Cacasito Satelito" },
+            //{ url: "", answer: "" },
+        ];
+
+        let currentMemeIndex = 0;
+        let streak = 0;
+        let bestStreak = parseInt(localStorage.getItem('brainrotGuesserBestStreak')) || 0;
+
+        // Initialize streak displays
+        document.getElementById("streak").textContent = `Seria: ${streak}`;
+        document.getElementById("best-streak").textContent = `Najlepsza seria: ${bestStreak}`;
+
+        function loadNextImage() {
+            currentMemeIndex = Math.floor(Math.random() * memes.length);
+            document.getElementById("meme-image").src = memes[currentMemeIndex].url;
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("feedback").className = "";
+            document.getElementById("next-btn").disabled = true;
+            generateOptions();
+        }
+
+        function generateOptions() {
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+
+            // Get all possible answers
+            const allAnswers = memes.map(meme => meme.answer);
+            // Get the correct answer
+            const correctAnswer = memes[currentMemeIndex].answer;
+            // Create options array with the correct answer
+            let options = [correctAnswer];
+            // Add 5 random incorrect answers
+            const incorrectAnswers = allAnswers.filter(answer => answer !== correctAnswer);
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * incorrectAnswers.length);
+                options.push(incorrectAnswers.splice(randomIndex, 1)[0]);
+            }
+            // Shuffle options
+            options = options.sort(() => Math.random() - 0.5);
+
+            // Create buttons for each option
+            options.forEach(option => {
+                const button = document.createElement("button");
+                button.className = "option-btn";
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedAnswer, clickedButton) {
+            const correctAnswer = memes[currentMemeIndex].answer;
+            const feedback = document.getElementById("feedback");
+            const streakDisplay = document.getElementById("streak");
+            const bestStreakDisplay = document.getElementById("best-streak");
+            const buttons = document.getElementsByClassName("option-btn");
+
+            if (selectedAnswer === correctAnswer) {
+                streak++;
+                feedback.textContent = "✔";
+                feedback.className = "correct";
+                clickedButton.classList.add("correct");
+                streakDisplay.classList.add("streak-up");
+                setTimeout(() => streakDisplay.classList.remove("streak-up"), 500);
+            } else {
+                streak = 0;
+                feedback.textContent = "✘";
+                feedback.className = "incorrect";
+                clickedButton.classList.add("incorrect");
+                // Highlight the correct button
+                for (let button of buttons) {
+                    if (button.textContent === correctAnswer) {
+                        button.classList.add("correct");
+                    }
+                }
+            }
+
+            // Set all other buttons to grey
+            for (let button of buttons) {
+                if (!button.classList.contains("correct") && !button.classList.contains("incorrect")) {
+                    button.classList.add("grey");
+                }
+            }
+
+            // Update best streak if current streak is higher
+            if (streak > bestStreak) {
+                bestStreak = streak;
+                bestStreakDisplay.classList.add("streak-up");
+                setTimeout(() => bestStreakDisplay.classList.remove("streak-up"), 500);
+                localStorage.setItem('brainrotGuesserBestStreak', bestStreak);
+            }
+
+            // Update streak displays
+            streakDisplay.textContent = `Seria: ${streak}`;
+            bestStreakDisplay.textContent = `Najlepsza seria: ${bestStreak}`;
+
+            // Disable all option buttons
+            for (let button of buttons) {
+                button.disabled = true;
+            }
+            document.getElementById("next-btn").disabled = false;
+        }
+
+        // Load the first image when the page loads
+        loadNextImage();
+    </script>
+</body>
+</html>

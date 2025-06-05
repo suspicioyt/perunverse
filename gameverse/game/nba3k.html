@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NBA 3K | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #222;
+    }
+    #container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    #info, #controls, #HzInfo {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-family: Arial, sans-serif;
+      pointer-events: none; /* Allow interaction with elements behind */
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px 40px;
+      box-sizing: border-box;
+      font-size: 300%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 35px;
+      white-space: nowrap;
+      width: auto;
+    }
+    #controls {
+      bottom: 20px;
+      color: black;
+    }
+    #speedControl {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 150px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 5px;
+      box-sizing: border-box;
+      pointer-events: all;
+      border-radius: 15px;
+    }
+	#HzInfo {
+	  position: absolute;
+      width: 100%;
+      text-align: left;
+      color: black;
+      font-family: Arial, sans-serif;
+	  margin-top: 65px;
+	  margin-left: 10px;
+      pointer-events: none;
+	}
+
+    /* Power Bar Styles */
+    #powerBarContainer {
+      position: fixed;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 112px;
+      height: 18px;
+      background-color: white;
+      border: 1px solid black;
+      display: none;
+      box-sizing: border-box;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    #powerBarFill {
+      height: 100%;
+      width: 0%;
+      background-color: red;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Style for the green zone */
+    #powerBarGreenZone {
+      position: absolute;
+      top: 0;
+      left: 80%;
+      width: 15%;
+      height: 100%;
+      background-color: green;
+      z-index: 1;
+    }
+
+    /* Mobile Controls Styles */
+    #mobile-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        display: none; /* Default: hidden on desktop */
+        flex-direction: column; /* Arrange children vertically */
+        /* justify-content: flex-end; /* No longer needed with flex-direction column and buttons in a row */
+        align-items: center; /* Center items horizontally within the column */
+        padding: 10px;
+        box-sizing: border-box;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    /* New style for mobile instructions */
+    #mobile-instructions {
+         /* Position relative to parent #mobile-controls (now part of column layout) */
+         position: relative; 
+         width: auto; /* Allow width to fit content */
+         margin-top: 10px; /* Space between instructions and buttons */
+         font-size: 0.9em; /* Slightly smaller font */
+         color: white; /* White text */
+         background-color: rgba(0, 0, 0, 0.5); /* Same background as other elements */
+         padding: 5px 10px; /* Add some padding */
+         border-radius: 10px; /* Rounded corners */
+         white-space: nowrap; /* Keep text on one line */
+         pointer-events: none; /* Keep it non-interactive */
+         display: none; /* Initially hidden on desktop */
+         text-align: center; /* Center the text */
+    }
+
+
+    /* Only show mobile controls on screens up to 768px wide (typical tablet portrait breakpoint) */
+    @media (max-width: 768px) {
+        #mobile-controls {
+            display: flex; /* Show on mobile */
+            /* flex-direction is now column in the main rule */
+             padding-bottom: 30px; /* Original padding */
+        }
+        #controls {
+            display: none; /* Hide desktop controls on mobile */
+        }
+        #speedControl {
+             top: 10px;
+             left: 10px;
+             transform: translateX(0);
+             width: 150px;
+             text-align: center;
+        }
+        #HzInfo {
+            display: none; /* Hide FPS info on mobile */
+        }
+         /* Show mobile instructions only on mobile */
+        #mobile-instructions {
+             display: block; /* Show on mobile */
+             /* Position is now controlled by flex column layout */
+             margin-top: 15px; /* Increase top margin for space */
+             margin-bottom: 0; /* Ensure no bottom margin pushes #mobile-controls down */
+        }
+        /* Style for the row containing D-pad and Action buttons */
+        #button-row {
+            display: flex;
+            flex-direction: row;
+            width: 100%; /* Use full width */
+            justify-content: space-between; /* Space out D-pad and Action buttons */
+            align-items: flex-end; /* Align buttons to the bottom of the row */
+        }
+
+        #dpad {
+            margin-left: 10%;
+            /* margin-bottom: 45px; /* No longer needed with button-row alignment */
+             align-self: flex-end; /* Align dpad to the bottom within the button-row */
+        }
+        #action-buttons {
+            margin-right: 10%;
+            align-self: flex-end; /* Align action buttons to the bottom within the button-row */
+             /* padding-bottom: 15px; /* No longer needed with button-row alignment */
+        }
+
+        /* Center the dribble buttons row */
+        #action-buttons #dribble-buttons {
+             align-self: center; /* Center this item (the row) within its parent (action-buttons column) */
+        }
+    }
+    #mobile-controls > div {
+        pointer-events: all; /* Make the button containers interactable */
+    }
+
+    #dpad {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* align-self: flex-end; /* Now controlled by button-row */
+    }
+
+    #dpad div {
+        display: flex;
+    }
+
+    #action-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    #mobile-controls button {
+        width: 60px;
+        height: 60px;
+        margin: 5px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 1.2em;
+        font-family: Arial, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+
+    #mobile-controls button:active {
+        background-color: rgba(255, 255, 255, 0.5);
+        color: black;
+    }
+
+    /* Specific styling for D-pad buttons */
+    #dpad button {
+        width: 70px;
+        height: 70px;
+        font-size: 1em;
+    }
+
+    #dpad > button {
+         margin-bottom: 0;
+    }
+
+    #dpad div button:first-child {
+         margin-right: 0;
+    }
+
+    #dpad div button:nth-child(2) {
+         margin-left: 0;
+         margin-right: 0;
+    }
+
+     #dpad div button:last-child {
+         margin-left: 0;
+    }
+
+    /* Specific styling for Action buttons */
+    #action-buttons button {
+         width: 70px;
+         height: 70px;
+         font-size: 1em;
+    }
+
+     #action-buttons button#btn-e {
+          width: 80px;
+          height: 80px;
+          font-size: 1.2em;
+          margin-bottom: 10px;
+     }
+
+    /* Style for the container holding Z, X, C buttons */
+    #dribble-buttons {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        /* Added align-self to center the row horizontally within the column */
+         align-self: center;
+    }
+
+    /* Style for Z, X, C buttons */
+    #dribble-buttons button {
+        width: 60px;
+        height: 60px;
+        margin: 0 3px;
+        font-size: 1em;
+    }
+
+
+    /* Specific styling for the D-pad container on mobile */
+    @media (max-width: 768px) {
+        #dpad {
+            margin-left: 10%;
+        }
+        /* Add right margin to action buttons for symmetry */
+        #action-buttons {
+            margin-right: 10%;
+        }
+         /* Center the dribble buttons row on mobile */
+        #action-buttons #dribble-buttons {
+             align-self: center;
+        }
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="info">0 - 0</div>
+  <div id="controls">Move: WASD | Jump: Space | Shoot: Hold E | Dribble: Z(Left) X(Back) C(Right)</div>
+  <div id="speedControl">
+    Speed: <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+  </div>
+  <div id="HzInfo">More FPS = Faster Game</div>
+
+  <div id="powerBarContainer">
+    <div id="powerBarFill"></div>
+    <div id="powerBarGreenZone"></div>
+  </div>
+
+  <!-- Mobile Control Buttons -->
+  <div id="mobile-controls">
+    <!-- New div to contain the dpad and action buttons in a row -->
+    <div id="button-row">
+        <div id="dpad">
+          <button id="btn-w">W</button>
+          <div>
+            <button id="btn-a">A</button>
+            <button id="btn-s">S</button>
+            <button id="btn-d">D</button>
+          </div>
+        </div>
+        <div id="action-buttons">
+          <button id="btn-space">Jump</button>
+          <button id="btn-e">Shoot</button>
+          <div id="dribble-buttons">
+            <button id="btn-z">Z</button>
+            <button id="btn-x">X</button>
+            <button id="btn-c">C</button>
+          </div>
+        </div>
+    </div>
+    <!-- Mobile instructions now placed after the button-row div -->
+    <div id="mobile-instructions">Move: WASD | Jump: Space | Shoot: Hold E | Dribble: Z(Left) X(Back) C(Right)</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script type="module">
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 17, 35);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('container').appendChild(renderer.domElement);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(0, 20, 20);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+    const courtWidth = 14;
+    const courtLength = 23;
+
+    // Court
+    const court = new THREE.Mesh(
+      new THREE.BoxGeometry(courtWidth * 2.5, 1, courtLength),
+      new THREE.MeshPhongMaterial({ color: 0xff7645 })
+    );
+    court.position.set(0, -0.499, 0);
+    scene.add(court);
+
+    // Map
+    const mapWidth = courtWidth * 4;
+    const mapLength = courtLength * 3;
+    const map = new THREE.Mesh(
+      new THREE.PlaneGeometry(mapWidth, mapLength),
+      new THREE.MeshPhongMaterial({ color: 0x02c902, side: THREE.DoubleSide })
+    );
+    map.rotation.x = -Math.PI / 2;
+    map.position.z = -courtLength / 2 - 1;
+    scene.add(map);
+
+    // Hoop
+    const hoopGroup = new THREE.Group();
+    // Adjusted Backboard size and position
+    const backboard = new THREE.Mesh(new THREE.BoxGeometry(5.5, 3.5, 0.04), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    backboard.position.set(0, 6.75, -courtLength / 2.3);
+    hoopGroup.add(backboard);
+
+    // Add black square on the backboard - Now modified to be a white square with a black border
+    const borderSize = 2;
+    // Updated dimensions based on user request
+    const originalWhiteSquareWidth = 2.2;
+    const originalWhiteSquareHeight = 1.8;
+    // New dimensions: 33% smaller from above (reduce height), 10% smaller from sides (reduce width)
+    const whiteSquareWidth = originalWhiteSquareWidth * (1 - 0.10);
+    const whiteSquareHeight = originalWhiteSquareHeight * (1 - 0.33);
+
+    const squareZOffset = 0.025;
+
+    // Create the white fill plane (with adjusted size)
+    // Use the newly calculated whiteSquareWidth and whiteSquareHeight
+    const fillGeometry = new THREE.PlaneGeometry(whiteSquareWidth, whiteSquareHeight);
+    const fillMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const whiteSquare = new THREE.Mesh(fillGeometry, fillMaterial);
+    // Position the white fill slightly in front of the border
+    const fillZPosition = backboard.position.z + squareZOffset + 0.005;
+
+    // Adjusted the Y position again to make it lower
+    const squareYPosition = 6.3;
+
+    whiteSquare.position.set(0, squareYPosition, fillZPosition);
+    hoopGroup.add(whiteSquare);
+
+    // --- Add explicit black border pieces (top, bottom, left, right) ---
+    const borderWidth = 0.15;
+    const borderZ = fillZPosition - 0.0025;
+    const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+    // Top Border
+    // Width is whiteSquareWidth + 2 * borderWidth
+    const topBorder = new THREE.Mesh(new THREE.PlaneGeometry(whiteSquareWidth + borderWidth * 2, borderWidth), borderMaterial);
+    // Position Y is squareYPosition + whiteSquareHeight / 2 + borderWidth / 2
+    topBorder.position.set(0, squareYPosition + whiteSquareHeight / 2 + borderWidth / 2, borderZ);
+    hoopGroup.add(topBorder);
+
+    // Bottom Border
+    // Width is whiteSquareWidth + 2 * borderWidth
+    const bottomBorder = new THREE.Mesh(new THREE.PlaneGeometry(whiteSquareWidth + borderWidth * 2, borderWidth), borderMaterial);
+    // Position Y is squareYPosition - whiteSquareHeight / 2 - borderWidth / 2
+    bottomBorder.position.set(0, squareYPosition - whiteSquareHeight / 2 - borderWidth / 2, borderZ);
+    hoopGroup.add(bottomBorder);
+
+    // Left Border
+    // Width is borderWidth
+    // Height is whiteSquareHeight + 2 * borderWidth
+    const leftBorder = new THREE.Mesh(new THREE.PlaneGeometry(borderWidth, whiteSquareHeight + borderWidth * 2), borderMaterial);
+    // Position X is center (0) - whiteSquareWidth / 2 - borderWidth / 2
+    leftBorder.position.set(0 - whiteSquareWidth / 2 - borderWidth / 2, squareYPosition, borderZ);
+    hoopGroup.add(leftBorder);
+
+    // Right Border
+    // Width is borderWidth
+    // Height is whiteSquareHeight + 2 * borderWidth
+    const rightBorder = new THREE.Mesh(new THREE.PlaneGeometry(borderWidth, whiteSquareHeight + borderWidth * 2), borderMaterial);
+    // Position X is center (0) + whiteSquareWidth / 2 + borderWidth / 2
+    rightBorder.position.set(0 + whiteSquareWidth / 2 + borderWidth / 2, squareYPosition, borderZ);
+    hoopGroup.add(rightBorder);
+    // --- End explicit border pieces ---
+
+    // Adjusted Rim thickness
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.1, 16, 32), new THREE.MeshStandardMaterial({ color: 0xfc5858 }));
+    rim.position.set(0, 5.5, -courtLength / 2.5);
+    rim.rotation.x = Math.PI / 2;
+    hoopGroup.add(rim);
+
+    // Add the pillar
+    const pillarHeight = 6;
+    const pillar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, pillarHeight, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0x808080 })
+    );
+    // Position the pillar below the backboard and move it back by 2 units
+    pillar.position.set(backboard.position.x, pillarHeight / 2, backboard.position.z - 2);
+    hoopGroup.add(pillar);
+
+    scene.add(hoopGroup);
+
+    // Add White Net to the Hoop
+    // Define net geometry (truncated cone shape)
+    const netRadiusTop = 0.8;
+    const netRadiusBottom = 0.4;
+    const newNetHeight = 1.2;
+    const netRadialSegments = 32;
+
+    const netGeometry = new THREE.CylinderGeometry(netRadiusTop, netRadiusBottom, newNetHeight, netRadialSegments, 1, true);
+
+    // Define net material (white)
+    const netMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8,
+    });
+
+    // Create net mesh
+    const net = new THREE.Mesh(netGeometry, netMaterial);
+
+    // Position the net below the rim
+    const rimY = rim.position.y;
+    const rimZ = rim.position.z;
+    const netYPosition = rimY - newNetHeight / 2;
+    net.position.set(0, netYPosition, rimZ);
+
+    // Add net to the hoop group
+    hoopGroup.add(net);
+
+    // 3PT Line (now a thicker mesh)
+    const threePointRadiusVal = 6.75 * 2.5 * 0.85;
+    const threePointSegments = 64;
+    const arcPoints = [];
+
+    const centerX = 0;
+    const centerZ = -courtLength / 2.2 - 1;
+
+    for (let i = 0; i <= threePointSegments; i++) {
+      const angle = (i / threePointSegments) * Math.PI;
+      const x = centerX + threePointRadiusVal * Math.cos(angle);
+      const z = centerZ + threePointRadiusVal * Math.sin(angle);
+      arcPoints.push(new THREE.Vector3(x, 0.02, z));
+    }
+
+    // Create a Catmull-Rom curve from the points
+    const curve = new THREE.CatmullRomCurve3(arcPoints);
+
+    // Create TubeGeometry along the curve
+    const radialSegments = 8;
+    const closed = false;
+
+    // Radius to make it visually thicker (e.g., 0.1)
+    const tubeRadius = 0.1;
+
+    const tubeGeometry = new THREE.TubeGeometry(curve, threePointSegments, tubeRadius, radialSegments, closed);
+
+    // Use a MeshBasicMaterial for simplicity and consistent color
+    const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+    // Create the mesh
+    const threePointLineMesh = new THREE.Mesh(tubeGeometry, tubeMaterial);
+    scene.add(threePointLineMesh);
+
+    // Ball
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshStandardMaterial({ color: 0xff8000 }));
+    ball.position.set(0, 0.6, 10);
+    scene.add(ball);
+
+    const ballShadow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    ballShadow.rotation.x = -Math.PI / 2;
+    ballShadow.position.set(ball.position.x, 0.01, ball.position.z);
+    scene.add(ballShadow);
+
+    // Player
+    const player = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial({ color: 0x00a2ff }));
+    player.position.set(0, 1, 10);
+    scene.add(player);
+
+    const keys = {};
+    document.addEventListener('keydown', (e) => {
+      // List of keys that should activate opponent movement
+      const activationKeys = ['w', 'a', 's', 'd', 'z', 'x', 'c', ' ', 'e'];
+
+      // If one of the activation keys is pressed and player hasn't moved yet, start opponent movement
+      if (activationKeys.includes(e.key.toLowerCase()) && !hasPlayerMoved) {
+          hasPlayerMoved = true;
+          console.log("Opponent movement activated by key press.");
+      }
+
+      keys[e.key.toLowerCase()] = true;
+      // Handle 'e' key down for charging, only if canShoot is true
+      if (e.key.toLowerCase() === 'e' && !isCharging && canShoot && !isShooting && !isPlayerMovementDisabled && !isTeleporting) {
+          startCharging();
+          // Calculate player's current horizontal direction based on keys pressed
+          const moveX = (keys['a'] ? -1 : 0) + (keys['d'] ? 1 : 0);
+          const moveZ = (keys['w'] ? -1 : 0) + (keys['s'] ? 1 : 0);
+          let playerCurrentDirection = new THREE.Vector3(moveX, 0, moveZ);
+
+          // Normalize if there's movement, otherwise set to zero vector
+          if (playerCurrentDirection.length() > 0) {
+              playerCurrentDirection.normalize();
+          } else {
+              // If no movement keys are pressed, the direction is effectively zero
+              playerCurrentDirection.set(0, 0, 0);
+          }
+          // Trigger opponent jump with this direction
+          // triggerOpponentJump(playerCurrentDirection);
+
+          // NEW: Calculate direction from opponent to ball for the jump
+          const opponentToBallDirection = new THREE.Vector3().subVectors(ball.position, opponent.position);
+          opponentToBallDirection.y = 0;
+          if (opponentToBallDirection.length() > 0) {
+             opponentToBallDirection.normalize();
+          }
+          triggerOpponentJump(opponentToBallDirection);
+      }
+
+       // Handle dribble teleport keys Z, X, C
+        const currentTime = performance.now();
+        const teleportCooldown = 800;
+
+        if (!isTeleporting && !isPlayerMovementDisabled && !isCharging && !isShooting && onGround && (currentTime - lastTeleportEndTime) >= teleportCooldown) {
+            const teleportDistance = 3.5;
+            let targetX = player.position.x;
+            let targetZ = player.position.z;
+            let triggerTeleport = false;
+
+            // Calculate direction from player towards the rim (ignoring Y)
+            const playerToRimDirection = new THREE.Vector3().subVectors(rim.position, player.position);
+            playerToRimDirection.y = 0;
+            if (playerToRimDirection.length() > 0) {
+                playerToRimDirection.normalize();
+            } else {
+                // If player is exactly at the rim's XZ, use a default forward (e.g., -Z)
+                 playerToRimDirection.set(0, 0, -1);
+            }
+
+            // Calculate the 'right' direction relative to playerToRimDirection
+            // Rotate playerToRimDirection by -PI/2 (clockwise) to get the 'right' vector
+            const rightToRimDirection = new THREE.Vector3(-playerToRimDirection.z, 0, playerToRimDirection.x);
+
+            let desiredOffset = new THREE.Vector3();
+
+            // Calculate target position based on key relative to the player's direction towards the rim
+            switch (e.key.toLowerCase()) {
+                case 'z':
+                    // Left is the negative of the 'right' vector
+                    desiredOffset.copy(rightToRimDirection).multiplyScalar(-teleportDistance);
+                    triggerTeleport = true;
+                    break;
+                case 'x':
+                    // Back is the negative of the 'forwardToRim' vector
+                    desiredOffset.copy(playerToRimDirection).multiplyScalar(-teleportDistance);
+                    triggerTeleport = true;
+                    break;
+                case 'c':
+                    // Right is the positive of the 'right' vector
+                    desiredOffset.copy(rightToRimDirection).multiplyScalar(teleportDistance);
+                    triggerTeleport = true;
+                    break;
+            }
+
+            if (triggerTeleport) {
+                const teleportTargetPosition = player.position.clone().add(desiredOffset);
+
+                // Clamp target position within court bounds
+                teleportTargetPosition.x = Math.max(-courtWidth * 1.25, Math.min(courtWidth * 1.25, teleportTargetPosition.x));
+                teleportTargetPosition.z = Math.max(-courtLength / 2, Math.min(courtLength / 2, teleportTargetPosition.z));
+                teleportTargetPosition.y = groundLevel;
+
+                startTeleport(teleportTargetPosition, currentTime);
+            }
+        }
+    });
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+      // Handle 'e' key up for shooting/releasing charge, only if not already shooting
+      if (e.key.toLowerCase() === 'e' && isCharging && !isShooting) {
+          releaseCharge();
+      }
+    });
+
+    // Player Physics
+    let isJumping = false;
+    let jumpVelocityY = 0;
+    const baseGravity = 0.001;
+    let gravity = baseGravity;
+    const baseJumpHeight = 4;
+    let playerSpeed = 0.05;
+    let jumpDirection = new THREE.Vector3();
+    let isPlayerMoving = false;
+
+    // New variables for landing restriction
+    let isLimitedMovement = false;
+    const landingRadius = 0.5;
+    let landingPosition = new THREE.Vector3();
+
+    // Flag to track if player has jumped once per round
+    let hasJumpedOnce = false;
+
+    let hasPlayerMoved = false;
+
+    document.addEventListener('keydown', (e) => {
+      // Add check for canShoot here to prevent jumping after 'e' is released
+      // Also check if not currently shooting
+      // Modified jump logic to allow only one jump per round
+      // Add check for teleporting
+      if (e.key === ' ' && onGround && !hasJumpedOnce && canShoot && !isShooting && !isPlayerMovementDisabled && !isTeleporting) {
+        isJumping = true;
+        onGround = false;
+        isLimitedMovement = false;
+        jumpVelocityY = Math.sqrt(2 * gravity * baseJumpHeight);
+        const moveX = (keys['a'] ? -1 : 0) + (keys['d'] ? 1 : 0);
+        const moveZ = (keys['w'] ? -1 : 0) + (keys['s'] ? 1 : 0);
+        if (moveX !== 0 || moveZ !== 0) {
+             jumpDirection.set(moveX, 0, moveZ).normalize();
+        } else {
+             jumpDirection.set(0, 0, 0);
+        }
+        hasJumpedOnce = true;
+
+        // Disable opponent scoring for 2 seconds (scaled by gameSpeed) upon jumping
+        isOpponentScoreDisabled = true;
+        console.log("Opponent scoring disabled for 2 seconds due to jump.");
+        setTimeout(() => {
+            isOpponentScoreDisabled = false;
+            console.log("Opponent scoring re-enabled after jump.");
+        }, 2000 / gameSpeed); 
+      }
+    });
+
+    let ballSmoothFactor = 0.15;
+    let ballTargetFollowY = ball.position.y;
+    const ballSmoothFactorValue = 0.15;
+
+    function handlePlayerMovement() {
+      // Disable movement if the flag is set or currently teleporting
+      if (isPlayerMovementDisabled || isTeleporting) {
+          return;
+      }
+
+      const currentSpeedFactor = isCharging ? 0.5 : 1.0;
+      const effectivePlayerSpeed = playerSpeed * currentSpeedFactor;
+
+      const moveX = (keys['a'] ? -1 : 0) + (keys['d'] ? 1 : 0);
+      const moveZ = (keys['w'] ? -1 : 0) + (keys['s'] ? 1 : 0);
+      const currentSpeed = onGround ? effectivePlayerSpeed : effectivePlayerSpeed * 0.5;
+
+      isPlayerMoving = moveX !== 0 || moveZ !== 0;
+
+      if (isPlayerMoving && !hasPlayerMoved) {
+          hasPlayerMoved = true;
+      }
+
+      if (onGround) {
+        if (moveX !== 0 || moveZ !== 0) {
+          const moveDirection = new THREE.Vector3(moveX, 0, moveZ).normalize();
+          const desiredPosition = player.position.clone().add(moveDirection.clone().multiplyScalar(currentSpeed));
+
+          if (isLimitedMovement) {
+            const distFromLanding = desiredPosition.distanceTo(landingPosition);
+            if (distFromLanding > landingRadius) {
+                const offset = desiredPosition.clone().sub(landingPosition).normalize().multiplyScalar(landingRadius);
+                player.position.copy(landingPosition).add(offset);
+            } else {
+                player.position.copy(desiredPosition);
+            }
+          } else {
+            player.position.copy(desiredPosition);
+          }
+        }
+      } else {
+         if (jumpDirection.length() > 0) {
+            player.position.x += jumpDirection.x * currentSpeed;
+            player.position.z += jumpDirection.z * currentSpeed;
+         }
+      }
+
+      if (isJumping) {
+        player.position.y += jumpVelocityY;
+        jumpVelocityY -= gravity;
+
+        if (player.position.y <= groundLevel) {
+          player.position.y = groundLevel;
+          isJumping = false;
+          onGround = true;
+          jumpVelocityY = 0;
+          jumpDirection.set(0, 0, 0);
+
+          landingPosition.copy(player.position);
+          isLimitedMovement = true;
+
+          // isBallNoDribbleAfterLanding is now only set on shooting,
+          // vertical ball stop after jump landing is handled in handleBallPhysics
+        }
+      }
+
+      player.position.x = Math.max(-courtWidth * 1.25, Math.min(courtWidth * 1.25, player.position.x));
+      player.position.z = Math.max(-courtLength / 2, Math.min(courtLength / 2, player.position.z));
+
+      // Camera follows player position unless teleporting
+      if (!isTeleporting) {
+          camera.position.x = player.position.x;
+          camera.position.y = player.position.y + 11;
+          camera.position.z = player.position.z + 13;
+          camera.lookAt(player.position.x, player.position.y, player.position.z);
+      }
+    }
+
+    // Shooting Animation Variables
+    let isShooting = false;
+    const baseShotDuration = 1000;
+    let shotStartTime = 0;
+    const shotStartPosition = new THREE.Vector3();
+    const shotTargetPosition = new THREE.Vector3();
+    const shotPeakHeight = 5;
+
+    function handleBallPhysics(currentTime) {
+      // If shooting animation or teleporting is active, bypass normal physics and following
+      if (isShooting || isTeleporting) {
+        // If shooting, handle the animation
+        if (isShooting) {
+            const elapsed = currentTime - shotStartTime;
+            const effectiveShotDuration = baseShotDuration / gameSpeed;
+            const progress = Math.min(elapsed / effectiveShotDuration, 1);
+
+            // Calculate the position along the arc instead of linear interpolation
+            const start = shotStartPosition;
+            const end = shotTargetPosition;
+
+            // Horizontal interpolation (linear)
+            const x = start.x + (end.x - start.x) * progress;
+            const z = start.z + (end.z - start.z) * progress;
+
+            // Vertical interpolation (parabolic arc)
+            const baseY = start.y + (end.y - start.y) * progress;
+            const arcOffset = -4 * shotPeakHeight * progress * (progress - 1);
+            const y = baseY + arcOffset;
+
+            ball.position.set(x, y, z);
+
+            // Update shadow (optional during shot, but good practice)
+            ballShadow.position.set(ball.position.x, 0.01, ball.position.z);
+
+            if (progress >= 1) {
+              isShooting = false;
+              // Ensure ball is exactly at the target position at the end
+              ball.position.copy(shotTargetPosition);
+              // Keep isBallNoDribbleAfterLanding true until reset
+            }
+        }
+        // If teleporting, handleBallPhysics is skipped entirely (handled by return)
+        return; 
+      }
+
+      // Normal ball following and dribbling logic if not shooting OR teleporting
+      const horizontalOffset = new THREE.Vector3();
+
+      const inputMoveX = (keys['a'] ? -1 : 0) + (keys['d'] ? 1 : 0);
+      const inputMoveZ = (keys['w'] ? -1 : 0) + (keys['s'] ? 1 : 0);
+
+      // Determine the target horizontal position based on input keys
+      let targetX, targetZ;
+      // If using WASD
+      if (inputMoveX !== 0 || inputMoveZ !== 0) {
+           // If using WASD keys, target a position around the player offset by movement direction
+           horizontalOffset.set(inputMoveX, 0, inputMoveZ).normalize().multiplyScalar(1.0);
+           targetX = player.position.x + horizontalOffset.x;
+           targetZ = player.position.z + horizontalOffset.z;
+      } else {
+          // If no movement keys are pressed, target the player's horizontal position
+          horizontalOffset.set(0, 0, 0);
+          targetX = player.position.x;
+          targetZ = player.position.z;
+      }
+
+      // Only update horizontal position if the ball is following the player (i.e., not after a shot)
+      // isBallNoDribbleAfterLanding is set after a shot, preventing horizontal follow.
+      if (!isBallNoDribbleAfterLanding) {
+        ball.position.x += (targetX - ball.position.x) * ballSmoothFactor;
+        ball.position.z += (targetZ - ball.position.z) * ballSmoothFactor;
+      }
+
+      ballShadow.position.set(ball.position.x, 0.01, ball.position.z);
+
+      // --- Vertical Ball Movement Logic ---
+      let applyDribblePhysics = true;
+      let finalTargetY = ball.position.y;
+
+      if (isJumping || isCharging) {
+          // Ball follows player upwards when jumping or charging
+          applyDribblePhysics = false;
+          finalTargetY = player.position.y + 1.0;
+      } else if (isBallNoDribbleAfterLanding) {
+          // Ball stops dribbling and stays near ground after a shot
+          applyDribblePhysics = false;
+          finalTargetY = ballGroundLevel + 0.2;
+      } else if (onGround && hasJumpedOnce && !isShooting) {
+          // NEW: Ball stops dribbling after landing from the first jump, if no shot taken
+          applyDribblePhysics = false;
+          finalTargetY = ballGroundLevel + 0.2;
+      }
+
+      if (applyDribblePhysics) {
+          // Apply bounce physics
+          ballVelocityY -= ballGravity;
+          ball.position.y += ballVelocityY;
+
+          if (ball.position.y <= ballGroundLevel) {
+              ball.position.y = ballGroundLevel;
+
+              const isAnyMovingInput = (inputMoveX !== 0 || inputMoveZ !== 0);
+
+              if (onGround && isAnyMovingInput) {
+                 const requiredUpwardVelocity = Math.sqrt(2 * ballGravity * baseBounceLimitHeight);
+                 ballVelocityY = requiredUpwardVelocity;
+              } else {
+                ballVelocityY = -ballVelocityY * bounceDamping;
+
+                if (Math.abs(ballVelocityY) < bounceStopThreshold) {
+                   ballVelocityY = 0;
+                   ball.position.y = ballGroundLevel;
+                }
+              }
+          }
+      } else {
+        // Smoothly move ball towards finalTargetY if not applying dribble physics
+        ball.position.y += (finalTargetY - ball.position.y) * ballSmoothFactorValue;
+        // If target reached or very close, snap and stop vertical movement logic
+        if (Math.abs(ball.position.y - finalTargetY) < 0.01) {
+             ball.position.y = finalTargetY;
+        }
+        ballVelocityY = 0;
+      }
+    }
+
+    // Opponent
+    const opponent = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 3, 1.2),
+      new THREE.MeshStandardMaterial({ color: 0xfc5858 })
+    );
+    opponent.position.set(0, 1.5, 4);
+    scene.add(opponent);
+
+    // Opponent Jump Physics
+    let isOpponentJumping = false;
+    let opponentJumpVelocityY = 0;
+    const opponentGroundLevel = 1.5;
+    const baseOpponentJumpHeight = 4;
+    // New variable to store the horizontal direction for the opponent's jump
+    let opponentJumpDirection = new THREE.Vector3();
+    // Variable to store the speed of the opponent's jump movement
+    const opponentJumpSpeed = 0.03;
+
+    // Modify triggerOpponentJump to accept a direction
+    function triggerOpponentJump(direction) {
+        if (!isOpponentJumping && !isPlayerMovementDisabled && hasPlayerMoved) {
+            isOpponentJumping = true;
+            opponentJumpVelocityY = Math.sqrt(2 * gravity * baseOpponentJumpHeight);
+            // Store the provided direction
+            opponentJumpDirection.copy(direction);
+            console.log("Opponent jumps towards player's direction!");
+        }
+    }
+
+    // Opponent Movement and AI
+    const opponentDistanceFromBall = 3.0;
+    const baseOpponentSpeed = 0.03;
+    let opponentState = 'normal';
+    let opponentRandomTarget = new THREE.Vector3();
+    let opponentActionStartTime = 0;
+    const opponentPauseDuration = 700;
+    const opponentTargetBallDuration = 2000;
+    const opponentRandomMoveDistance = 2.5;
+    let lastRandomActionTime = 0;
+    const randomActionInterval = 3000;
+
+    function handleOpponentMovement(currentTime) {
+        if (!hasPlayerMoved) {
+            return;
+        }
+
+        // Disable opponent movement if the flag is set or during shooting animation
+        if (isPlayerMovementDisabled || isShooting) {
+             // If movement is disabled but opponent is mid-jump, still apply gravity and horizontal movement
+             if (isOpponentJumping) {
+                 opponent.position.y += opponentJumpVelocityY;
+                 // Apply horizontal movement during jump
+                 if (opponentJumpDirection.length() > 0) {
+                     opponent.position.x += opponentJumpDirection.x * opponentJumpSpeed * gameSpeed;
+                     opponent.position.z += opponentJumpDirection.z * opponentJumpSpeed * gameSpeed;
+                 }
+                 opponentJumpVelocityY -= gravity;
+
+                 if (opponent.position.y <= opponentGroundLevel) {
+                     opponent.position.y = opponentGroundLevel;
+                     isOpponentJumping = false;
+                     opponentJumpVelocityY = 0;
+                     opponentJumpDirection.set(0, 0, 0);
+                     console.log("Opponent lands after jump");
+                 }
+             }
+            return;
+        }
+
+        // --- Opponent Jump Physics ---
+         if (isOpponentJumping) {
+             opponent.position.y += opponentJumpVelocityY;
+             // Apply horizontal movement during jump
+             if (opponentJumpDirection.length() > 0) {
+                 opponent.position.x += opponentJumpDirection.x * opponentJumpSpeed * gameSpeed;
+                 opponent.position.z += opponentJumpDirection.z * opponentJumpSpeed * gameSpeed;
+             }
+             opponentJumpVelocityY -= gravity;
+
+             if (opponent.position.y <= opponentGroundLevel) {
+                 opponent.position.y = opponentGroundLevel;
+                 isOpponentJumping = false;
+                 opponentJumpVelocityY = 0;
+                 opponentJumpDirection.set(0, 0, 0);
+                 console.log("Opponent lands");
+             }
+              // If opponent is jumping, pause horizontal movement from AI logic below
+             return;
+         }
+        // --- End Opponent Jump Physics ---
+
+
+        const effectiveOpponentSpeed = baseOpponentSpeed * gameSpeed;
+        let targetPosition = new THREE.Vector3();
+        let movementAllowed = true;
+
+        // Check for random action trigger
+        if (opponentState === 'normal' && currentTime - lastRandomActionTime > randomActionInterval / gameSpeed) {
+             lastRandomActionTime = currentTime;
+             const roll = Math.random();
+
+             if (roll < 0.40) {
+                opponentState = 'randomMove';
+                const randomAngle = Math.random() * Math.PI * 2;
+                const randomDirection = new THREE.Vector3(Math.cos(randomAngle), 0, Math.sin(randomAngle));
+                opponentRandomTarget.copy(opponent.position).add(randomDirection.multiplyScalar(opponentRandomMoveDistance));
+                opponentActionStartTime = currentTime;
+                console.log("Opponent: Random Move");
+             } else if (roll < 0.40 + 0.15) {
+                opponentState = 'targetBall';
+                opponentActionStartTime = currentTime;
+                console.log("Opponent: Target Ball");
+             } else {
+                 // State remains 'normal', no action needed
+                 console.log("Opponent: Normal (No Random Action)");
+             }
+        }
+
+        // Handle states
+        switch (opponentState) {
+            case 'normal':
+                const ballToRim = rim.position.clone().sub(ball.position);
+                const distBallToRim = ballToRim.length();
+
+                if (distBallToRim < 1e-6) {
+                    targetPosition = rim.position.clone();
+                } else {
+                    const dirBallToRim = ballToRim.normalize();
+                    const potentialTarget = ball.position.clone().add(dirBallToRim.multiplyScalar(opponentDistanceFromBall));
+
+                    const ballToPotentialTarget = potentialTarget.clone().sub(ball.position);
+                    const projectionLength = ballToPotentialTarget.dot(dirBallToRim);
+
+                    // If the potential target is beyond the rim relative to the ball, target the rim instead
+                    if (projectionLength >= distBallToRim) {
+                         targetPosition = rim.position.clone();
+                    } else {
+                         targetPosition = potentialTarget;
+                    }
+                }
+                break;
+
+            case 'randomMove':
+                targetPosition.copy(opponentRandomTarget);
+                // Check if target reached
+                if (opponent.position.distanceTo(targetPosition) < effectiveOpponentSpeed) {
+                    opponent.position.copy(targetPosition);
+                    opponentState = 'pause';
+                    opponentActionStartTime = currentTime;
+                    console.log("Opponent: Random Move Target Reached, entering Pause");
+                }
+                // Clamp target position within court bounds if needed, though random move might go slightly outside
+                // For now, let's allow random move to potentially go slightly off court
+                break;
+
+            case 'pause':
+                movementAllowed = false;
+                if (currentTime - opponentActionStartTime > opponentPauseDuration / gameSpeed) {
+                    opponentState = 'normal';
+                    console.log("Opponent: Pause ended, returning to Normal");
+                }
+                break;
+
+            case 'targetBall':
+                targetPosition.copy(ball.position);
+                if (currentTime - opponentActionStartTime > opponentTargetBallDuration / gameSpeed) {
+                    opponentState = 'normal';
+                    console.log("Opponent: Target Ball duration ended, returning to Normal");
+                }
+                 break;
+        }
+
+        // Move opponent towards the target if movement is allowed and not shooting
+        if (movementAllowed && opponentState !== 'pause') {
+            const moveDirection = targetPosition.clone().sub(opponent.position);
+            const distance = moveDirection.length();
+
+            if (distance > 0.01) {
+                moveDirection.normalize();
+                const step = Math.min(effectiveOpponentSpeed, distance);
+                opponent.position.add(moveDirection.multiplyScalar(step));
+            }
+        }
+
+        opponent.position.y = 1.5;
+    }
+
+    // Collision detection between player and opponent
+    function checkPlayerOpponentCollision() {
+      const playerHalfWidth = 0.5;
+      const opponentHalfWidth = 0.75;
+
+      const dx = player.position.x - opponent.position.x;
+      const dz = player.position.z - opponent.position.z;
+      const distance = Math.sqrt(dx * dx + dz * dz);
+
+      const minDistance = playerHalfWidth + opponentHalfWidth;
+
+      if (distance < minDistance) {
+        const overlap = minDistance - distance;
+        const direction = new THREE.Vector3(dx, 0, dz).normalize();
+        // Push both objects away from each other based on overlap
+        player.position.x += direction.x * (overlap / 2);
+        player.position.z += direction.z * (overlap / 2);
+
+        opponent.position.x -= direction.x * (overlap / 2);
+        opponent.position.z -= direction.z * (overlap / 2);
+
+        player.position.y = Math.max(player.position.y, groundLevel);
+         opponent.position.y = 1.5;
+      }
+    }
+
+    // Scoreboard
+    let playerScore = 0;
+    let opponentScore = 0;
+    const infoDiv = document.getElementById('info');
+
+    function updateScoreboard() {
+        infoDiv.textContent = `${playerScore} - ${opponentScore}`;
+    }
+
+    // Opponent-Ball Collision and Scoring
+    const opponentBallCollisionThreshold = 0.5 + Math.max(opponent.geometry.parameters.width, opponent.geometry.parameters.depth) / 2;
+    let canOpponentScore = true;
+
+    function checkOpponentBallCollisionAndScore() {
+        if (!hasPlayerMoved) {
+            return;
+        }
+
+        // Do not check for opponent score if it is currently disabled
+        if (isOpponentScoreDisabled) {
+             return;
+        }
+
+        const distance = ball.position.distanceTo(opponent.position);
+
+        // Check for collision when ball is near opponent base (approx opponent.position.y)
+        if (distance < opponentBallCollisionThreshold && ball.position.y < opponent.position.y + 1.0) {
+            // if (canOpponentScore) { 
+                opponentScore++;
+                updateScoreboard();
+                // canOpponentScore = false; 
+                console.log("Opponent Scored!");
+                resetGameState();
+            // }
+        }
+        // else { 
+        //     canOpponentScore = true;
+        // }
+    }
+
+    // Flag to disable player movement
+    let isPlayerMovementDisabled = false;
+
+    // New flag to control 'e' key usage per possession
+    let canShoot = true;
+
+    // New variable to disable opponent scoring
+    let isOpponentScoreDisabled = false;
+
+    // Function to reset the game state (except score and speed setting)
+    function resetGameState() {
+        canShoot = true;
+        player.position.set(0, groundLevel, 10);
+        isJumping = false;
+        jumpVelocityY = 0;
+        onGround = true;
+        isLimitedMovement = false;
+        jumpDirection.set(0, 0, 0);
+        hasJumpedOnce = false;
+
+        // Reset ball position to player's position on reset
+        ball.position.set(player.position.x, ballGroundLevel, player.position.z);
+        ballVelocityY = 0;
+        isBallNoDribbleAfterLanding = false;
+        ballTargetFollowY = ballGroundLevel;
+
+        opponent.position.set(0, 1.5, 4);
+        isOpponentJumping = false;
+        opponentJumpVelocityY = 0;
+        opponentJumpDirection.set(0, 0, 0);
+        opponentState = 'normal';
+        opponentActionStartTime = 0;
+        lastRandomActionTime = performance.now();
+
+        isCharging = false;
+        chargeStartTime = 0;
+        isFullyCharged = false;
+        powerBarContainer.style.display = 'none';
+        powerBarFill.style.width = '0%';
+
+        // Ensure shooting state is off on reset
+        isShooting = false;
+
+        hasPlayerMoved = false;
+
+        // Explicitly stop any active teleport animation and update its end time
+        isTeleporting = false;
+        lastTeleportEndTime = performance.now();
+
+        // Update camera position to follow the player after reset
+        camera.position.x = player.position.x;
+        camera.position.y = player.position.y + 11;
+        camera.position.z = player.position.z + 13;
+        camera.lookAt(player.position.x, player.position.y, player.position.z);
+
+        // Disable player movement immediately upon reset
+        isPlayerMovementDisabled = true;
+        console.log("Player and opponent movement disabled upon reset.");
+
+        // Re-enable player and opponent movement after reset delay, adjusted by gameSpeed
+        const waitDuration = 1000 / gameSpeed;
+        setTimeout(() => {
+            isPlayerMovementDisabled = false;
+            console.log("Player and opponent movement re-enabled after reset delay");
+        }, waitDuration);
+    }
+
+    // Ball Physics
+    let ballVelocityY = 0;
+    const baseBallGravity = 0.0012;
+    let ballGravity = baseBallGravity;
+    const baseInitialDribbleVelocity = 0.05;
+    const ballGroundLevel = 0.6;
+    const bounceDamping = 0.8;
+    const bounceStopThreshold = 0.005;
+    const baseBounceLimitHeight = 0.6;
+    let bounceLimitHeight = baseBounceLimitHeight;
+
+    let isBallNoDribbleAfterLanding = false;
+
+    // Barriers (Invisible walls)
+    const barrierThickness = 0.5;
+    const barrierHeight = 4;
+    const barriers = [
+      new THREE.Mesh(new THREE.BoxGeometry(barrierThickness, barrierHeight, courtLength), new THREE.MeshBasicMaterial({ visible: false })),
+      new THREE.Mesh(new THREE.BoxGeometry(barrierThickness, barrierHeight, courtLength), new THREE.MeshBasicMaterial({ visible: false })),
+      new THREE.Mesh(new THREE.BoxGeometry(courtWidth * 2.5, barrierHeight, barrierThickness), new THREE.MeshBasicMaterial({ visible: false })),
+      new THREE.Mesh(new THREE.BoxGeometry(courtWidth * 2.5, barrierHeight, barrierThickness), new THREE.MeshBasicMaterial({ visible: false }))
+    ];
+
+    barriers[0].position.set(-courtWidth * 1.25, barrierHeight / 2, 0);
+    barriers[1].position.set(courtWidth * 1.25, barrierHeight / 2, 0);
+    barriers[2].position.set(0, barrierHeight / 2, -courtLength / 2);
+    barriers[3].position.set(0, barrierHeight / 2, courtLength / 2);
+
+    barriers.forEach(barrier => scene.add(barrier));
+
+    // Crowd
+    const crowdGeometry = new THREE.BoxGeometry(1, 3, 1);
+    const crowdMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0xfc5858 }),
+      new THREE.MeshStandardMaterial({ color: 0x00a2ff }),
+      new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
+      new THREE.MeshStandardMaterial({ color: 0xff00ff }),
+      new THREE.MeshStandardMaterial({ color: 0xffff00 }),
+      new THREE.MeshStandardMaterial({ color: 0xf58b40 })
+    ];
+
+    const courtBuffer = 2;
+
+    function createSpectator() {
+      const spectator = new THREE.Mesh(crowdGeometry, crowdMaterials[Math.floor(Math.random() * crowdMaterials.length)]);
+      let posX, posZ;
+      do {
+        posX = Math.random() * mapWidth - mapWidth / 2;
+        posZ = Math.random() * mapLength - mapLength / 2;
+      } while (
+        posX > -courtWidth * 1.25 - courtBuffer && posX < courtWidth * 1.25 + courtBuffer &&
+        posZ > -courtLength / 2 - courtBuffer && posZ < courtLength / 2 + courtBuffer
+      );
+      const height = Math.random() * 1.5 + 3.5;
+      spectator.position.set(posX, 0, posZ);
+      spectator.scale.set(1, height / 3, 1);
+      scene.add(spectator);
+    }
+
+    for (let i = 0; i < 200; i++) {
+      createSpectator();
+    }
+
+    // Power Bar Logic
+    const powerBarContainer = document.getElementById('powerBarContainer');
+    const powerBarFill = document.getElementById('powerBarFill');
+    let isCharging = false;
+    let chargeStartTime = 0;
+    const maxChargeTime = 375;
+	let isFullyCharged = false;
+
+    function startCharging() {
+        if (!isCharging) {
+            isCharging = true;
+			isFullyCharged = false;
+            chargeStartTime = performance.now();
+            powerBarContainer.style.display = 'block';
+            powerBarFill.style.width = '0%';
+
+            // Disable opponent scoring for 2 seconds (scaled by gameSpeed)
+            isOpponentScoreDisabled = true;
+            console.log("Opponent scoring disabled for 2 seconds due to charge.");
+            setTimeout(() => {
+                isOpponentScoreDisabled = false;
+                console.log("Opponent scoring re-enabled.");
+            }, 2000 / gameSpeed); 
+        }
+    }
+
+    function releaseCharge() {
+        if (isCharging) {
+            isCharging = false;
+
+            const heldDuration = performance.now() - chargeStartTime;
+            // Scale the effective maxChargeTime by gameSpeed
+            const effectiveMaxChargeTime = maxChargeTime / gameSpeed;
+            const chargePercentage = Math.min(heldDuration / effectiveMaxChargeTime, 1);
+
+            console.log(`Charge released! Held for ${heldDuration.toFixed(2)}ms, Charge: ${(chargePercentage * 100).toFixed(2)}%`);
+
+            powerBarContainer.style.display = 'none';
+
+            // Determine shot target based on charge percentage
+            const greenZoneStart = 0.80;
+            const greenZoneEnd = 0.95;
+            const offTargetRadius = 2.5;
+
+            const baseTargetPosition = rim.position.clone();
+
+            if (chargePercentage >= greenZoneStart && chargePercentage <= greenZoneEnd) {
+                // Within green zone, target the rim directly
+                shotTargetPosition.copy(baseTargetPosition);
+                console.log("Hit the green zone! Targeting rim directly.");
+
+                // --- Check scoring conditions for Player (2 or 3 points) ---
+                const playerXZ = new THREE.Vector3(player.position.x, 0, player.position.z);
+                const threePointCenterXZ = new THREE.Vector3(centerX, 0, centerZ);
+                const distanceToThreePointCenter = playerXZ.distanceTo(threePointCenterXZ);
+                const distanceToRim = player.position.distanceTo(rim.position);
+
+                // If the player is further from the 3-point line center than the 3-point radius (3-pointer)
+                if (distanceToThreePointCenter >= threePointRadiusVal) {
+                    // Add a delay of 1.5 seconds before adding points and resetting game state
+                    setTimeout(() => {
+                        playerScore += 3;
+                        updateScoreboard();
+                        resetGameState();
+                        console.log("Player scored 3 points from beyond the 3-point line!");
+                    }, 1500 / gameSpeed);
+                }
+                // If player is within the 3-point line AND reasonably far from the rim (2-pointer)
+                else if (distanceToThreePointCenter < threePointRadiusVal && distanceToRim > 2.0) {
+                     setTimeout(() => {
+                        playerScore += 2;
+                        updateScoreboard();
+                        resetGameState();
+                        console.log("Opponent scored 2 points from inside the 3-point line!");
+                    }, 1500 / gameSpeed);
+                }
+                // If player is within the 3-point line and very close to the rim (e.g., under the hoop), no score
+                else {
+                    console.log("Shot taken too close to the rim (inside 2 units). No score.");
+                    // Still reset game state after a short delay if no score, otherwise player is stuck
+                     setTimeout(() => {
+                        resetGameState();
+                         console.log("Game state reset after close shot attempt.");
+                    }, 1500 / gameSpeed);
+                }
+                // --- End scoring conditions check ---
+
+
+            } else {
+                // Outside green zone (white color), target a random point within the radius
+                const angle = Math.random() * Math.PI * 2;
+                const distance = offTargetRadius;
+
+                const offsetX = distance * Math.cos(angle);
+                const offsetZ = distance * Math.sin(angle);
+
+                // Calculate the potential target X and Z relative to the rim's XZ position
+                let potentialTargetX = baseTargetPosition.x + offsetX;
+                let potentialTargetZ = baseTargetPosition.z + offsetZ;
+
+                // --- Check to prevent target being behind the backboard ---
+                const backboardFrontZ = backboard.position.z - backboard.geometry.parameters.depth / 2;
+                const backboardHalfWidth = backboard.geometry.parameters.width / 2;
+                const backboardMinX = backboard.position.x - backboardHalfWidth;
+                const backboardMaxX = backboard.position.x + backboardHalfWidth;
+
+                // If the potential target is horizontally within the backboard width AND behind the front face of the backboard
+                if (potentialTargetX >= backboardMinX && potentialTargetX <= backboardMaxX && potentialTargetZ < backboardFrontZ) {
+                    // Adjust the Z position to be just in front of the backboard
+                    potentialTargetZ = backboardFrontZ + 0.1;
+                    console.log("Adjusted target Z to be in front of backboard.");
+                }
+                // --- End new check ---
+
+                // Set the shot target position using the potentially adjusted Z
+                shotTargetPosition.set(potentialTargetX, baseTargetPosition.y, potentialTargetZ);
+                 console.log(`Outside green zone (white). Targeting random point EXACTLY ${offTargetRadius} units (horizontal) from rim XZ, adjusted for backboard. Target X:${shotTargetPosition.x.toFixed(2)}, Z:${shotTargetPosition.z.toFixed(2)}`);
+
+                // --- Add scoring for Opponent (1 point) ---
+                 setTimeout(() => {
+                    opponentScore++;
+                    updateScoreboard();
+                    resetGameState();
+                    console.log("Opponent scored 1 point after shot on white!");
+                }, 1500 / gameSpeed);
+                // --- End opponent scoring ---
+            }
+
+            // Adjust the vertical target slightly down to appear 'in' the hoop/area
+             shotTargetPosition.y -= 0.5;
+
+            // Initiate the shooting animation
+            isShooting = true;
+            shotStartTime = performance.now();
+            shotStartPosition.copy(ball.position);
+
+            // Disable dribbling and following until reset
+            isBallNoDribbleAfterLanding = true;
+
+            // Disable 'e' key usage until score reset
+            canShoot = false;
+
+            // Disable player movement 1 second after releasing 'e', adjusted by gameSpeed
+            // opponent movement will be disabled at the same time because it checks isPlayerMovementDisabled
+            setTimeout(() => {
+                isPlayerMovementDisabled = true;
+                console.log("Player and opponent movement disabled 1 second after shot release");
+            }, 1000 / gameSpeed);
+
+            // If player is jumping, make them fall immediately
+            if (isJumping) {
+                jumpVelocityY = 0;
+                // isJumping remains true until they hit the ground in handlePlayerMovement
+            }
+        }
+    }
+
+    // Animation Loop
+    let lastTime = 0;
+    const speedSlider = document.getElementById('speedSlider');
+    let gameSpeed = parseFloat(speedSlider.value);
+
+    function updateGameSpeed(speed) {
+      gameSpeed = speed;
+      playerSpeed = 0.05 * gameSpeed;
+
+      gravity = baseGravity * gameSpeed;
+      ballGravity = baseBallGravity * gameSpeed;
+      // Consider scaling other physics constants like jump velocity, bounce height if needed for feel
+      // Currently, jumpVelocityY is calculated using scaled gravity, so jump height should remain consistent.
+    }
+
+    updateGameSpeed(gameSpeed);
+
+    speedSlider.addEventListener('input', () => {
+      updateGameSpeed(parseFloat(speedSlider.value));
+    });
+
+    let groundLevel = 1;
+    let onGround = true;
+
+    // Teleport Animation Variables
+    let isTeleporting = false;
+    const teleportStartPosition = new THREE.Vector3();
+    const teleportTargetPosition = new THREE.Vector3();
+    let teleportStartTime = 0;
+    const teleportDuration = 180;
+    const cameraStartPosition = new THREE.Vector3();
+    const cameraTargetPosition = new THREE.Vector3();
+    const ballInitialOffset = new THREE.Vector3();
+    let lastTeleportEndTime = 0;
+
+    function startTeleport(targetPosition, currentTime) {
+        if (!isTeleporting) {
+            isTeleporting = true;
+            teleportStartPosition.copy(player.position);
+            teleportTargetPosition.copy(targetPosition);
+            teleportStartTime = currentTime;
+
+            // Store camera's start position and calculate target position
+            cameraStartPosition.copy(camera.position);
+            // Target camera position relative to the teleport target position
+            cameraTargetPosition.copy(targetPosition).add(new THREE.Vector3(0, 11, 13));
+
+            // Store ball's offset relative to player at the start of teleport
+            // Capture the current ball offset *before* the teleport starts
+            ballInitialOffset.copy(ball.position).sub(player.position);
+
+            console.log("Teleport animation started.");
+
+            // Disable player movement input while teleporting (already checked in handlePlayerMovement)
+            // PlayerMovementDisabled flag for reset is separate
+        }
+    }
+
+    function handleTeleportAnimation(currentTime) {
+        if (!isTeleporting) {
+            return;
+        }
+
+        // Scale the effective duration by gameSpeed
+        const effectiveDuration = teleportDuration / gameSpeed;
+        const elapsed = currentTime - teleportStartTime;
+        const progress = Math.min(elapsed / effectiveDuration, 1);
+
+        // Interpolate player position
+        player.position.lerpVectors(teleportStartPosition, teleportTargetPosition, progress);
+
+        // Move ball with player, maintaining initial relative offset
+        // The ball's Y position should follow the player during teleport
+        const currentBallOffset = new THREE.Vector3(ballInitialOffset.x, ballInitialOffset.y, ballInitialOffset.z);
+        // Interpolate ball position relative to the player
+        ball.position.copy(player.position).add(currentBallOffset); // Use stored initial offset
+
+        ballShadow.position.set(ball.position.x, 0.01, ball.position.z);
+
+
+        // Interpolate camera position
+        camera.position.lerpVectors(cameraStartPosition, cameraTargetPosition, progress);
+        // Keep camera looking at the player during the teleport animation
+        camera.lookAt(player.position.x, player.position.y, player.position.z);
+
+
+        // Check if animation is finished
+        if (progress >= 1) {
+            // Snap to final position to ensure accuracy
+            player.position.copy(teleportTargetPosition);
+
+            // Snap ball position to player's ground level
+            ball.position.set(player.position.x, ballGroundLevel, player.position.z);
+            ballVelocityY = 0;
+            isBallNoDribbleAfterLanding = false;
+
+            // Snap camera to final position and lookAt
+            camera.position.copy(cameraTargetPosition);
+            camera.lookAt(player.position.x, player.position.y, player.position.z);
+
+            // Reset player states after landing from teleport
+            onGround = true;
+            isJumping = false;
+            jumpVelocityY = 0;
+            jumpDirection.set(0,0,0);
+            hasJumpedOnce = false;
+            isLimitedMovement = false;
+
+            isTeleporting = false;
+            lastTeleportEndTime = performance.now();
+            console.log("Teleport animation finished.");
+
+            // If player movement was disabled due to a score, re-enable it here
+            // (This might conflict with the timeout in resetGameState.
+            // Let's assume the resetGameState timeout should still control re-enabling
+            // overall movement after a score.)
+            // If isPlayerMovementDisabled is false when teleport ends, it stays false.
+            // If isPlayerMovementDisabled is true when teleport ends (due to score reset),
+            // the timeout from resetGameState will handle re-enabling it later.
+        }
+    }
+
+
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+
+      handleTeleportAnimation(currentTime);
+
+      if (isCharging) {
+          const heldDuration = performance.now() - chargeStartTime;
+          // Scale the effective maxChargeTime by gameSpeed for the visual bar
+          const effectiveMaxChargeTime = maxChargeTime / gameSpeed;
+          const chargePercentage = Math.min(heldDuration / effectiveMaxChargeTime, 1);
+          const fillWidth = chargePercentage * 100;
+          powerBarFill.style.width = fillWidth + '%';
+
+		  if (chargePercentage >= 1 && !isFullyCharged) {
+               isFullyCharged = true;
+               powerBarContainer.style.display = 'none';
+               releaseCharge();
+           }
+      }
+
+      handlePlayerMovement();
+      handleBallPhysics(currentTime);
+      handleOpponentMovement(currentTime);
+      checkPlayerOpponentCollision();
+      checkOpponentBallCollisionAndScore();
+
+      renderer.render(scene, camera);
+    }
+
+    animate(0);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- Mobile Controls Logic ---
+    const mobileControls = document.getElementById('mobile-controls');
+    const buttons = mobileControls.querySelectorAll('button');
+
+    // Map button IDs to corresponding key strings
+    const buttonKeyMap = {
+        'btn-w': 'w',
+        'btn-a': 'a',
+        'btn-s': 's',
+        'btn-d': 'd',
+        'btn-z': 'z',
+        'btn-x': 'x',
+        'btn-c': 'c',
+        'btn-space': ' ', 
+        'btn-e': 'e'
+    };
+
+    function handleButtonPress(key) {
+        // Manually trigger keydown behavior
+        // Note: This bypasses the event listener chain and goes directly to
+        // setting the state in the 'keys' object. This is acceptable for mobile controls.
+         if (!keys[key]) { 
+             keys[key] = true;
+
+             // List of keys that should activate opponent movement (same as desktop)
+             const activationKeys = ['w', 'a', 's', 'd', 'z', 'x', 'c', ' ', 'e'];
+
+             // If one of the activation keys is pressed and player hasn't moved yet, start opponent movement
+             if (activationKeys.includes(key) && !hasPlayerMoved) {
+                 hasPlayerMoved = true;
+                 console.log("Opponent movement activated by mobile button press.");
+             }
+
+             // Manually trigger actions that happen on keydown
+             // Handle 'e' key down for charging
+             if (key === 'e' && !isCharging && canShoot && !isShooting && !isPlayerMovementDisabled && !isTeleporting) {
+                 startCharging();
+                 // Trigger opponent jump towards ball upon player 'e' press
+                 const opponentToBallDirection = new THREE.Vector3().subVectors(ball.position, opponent.position);
+                 opponentToBallDirection.y = 0; 
+                 if (opponentToBallDirection.length() > 0) {
+                    opponentToBallDirection.normalize();
+                 }
+                 triggerOpponentJump(opponentToBallDirection);
+             }
+
+             // Handle dribble teleport keys Z, X, C
+             const currentTime = performance.now(); 
+             const teleportCooldown = 800; 
+
+            if (!isTeleporting && !isPlayerMovementDisabled && !isCharging && !isShooting && onGround && (currentTime - lastTeleportEndTime) >= teleportCooldown) {
+                const teleportDistance = 3.5;
+                let triggerTeleport = false;
+
+                // Calculate direction from player towards the rim (ignoring Y)
+                const playerToRimDirection = new THREE.Vector3().subVectors(rim.position, player.position);
+                playerToRimDirection.y = 0; 
+                if (playerToRimDirection.length() > 0) {
+                    playerToRimDirection.normalize();
+                } else {
+                    // If player is exactly at the rim's XZ, use a default forward (e.g., -Z)
+                     playerToRimDirection.set(0, 0, -1);
+                }
+
+                // Calculate the 'right' direction relative to playerToRimDirection
+                const rightToRimDirection = new THREE.Vector3(-playerToRimDirection.z, 0, playerToRimDirection.x);
+                let desiredOffset = new THREE.Vector3();
+
+                // Calculate target position based on key relative to the player's direction towards the rim
+                switch (key) {
+                    case 'z': 
+                        desiredOffset.copy(rightToRimDirection).multiplyScalar(-teleportDistance);
+                        triggerTeleport = true;
+                        break;
+                    case 'x': 
+                        desiredOffset.copy(playerToRimDirection).multiplyScalar(-teleportDistance);
+                        triggerTeleport = true;
+                        break;
+                    case 'c': 
+                        desiredOffset.copy(rightToRimDirection).multiplyScalar(teleportDistance);
+                        triggerTeleport = true;
+                        break;
+                }
+
+                if (triggerTeleport) {
+                    const teleportTargetPosition = player.position.clone().add(desiredOffset);
+
+                    // Clamp target position within court bounds
+                    teleportTargetPosition.x = Math.max(-courtWidth * 1.25, Math.min(courtWidth * 1.25, teleportTargetPosition.x));
+                    teleportTargetPosition.z = Math.max(-courtLength / 2, Math.min(courtLength / 2, teleportTargetPosition.z));
+                    teleportTargetPosition.y = groundLevel; 
+
+                    startTeleport(teleportTargetPosition, currentTime);
+                }
+            }
+
+            // Modified jump logic to allow only one jump per round
+            // Handle 'space' key down for jumping
+             if (key === ' ' && onGround && !hasJumpedOnce && canShoot && !isShooting && !isPlayerMovementDisabled && !isTeleporting) {
+                isJumping = true;
+                onGround = false;
+                isLimitedMovement = false;
+                jumpVelocityY = Math.sqrt(2 * gravity * baseJumpHeight);
+                const moveX = (keys['a'] ? -1 : 0) + (keys['d'] ? 1 : 0);
+                const moveZ = (keys['w'] ? -1 : 0) + (keys['s'] ? 1 : 0);
+                if (moveX !== 0 || moveZ !== 0) {
+                     jumpDirection.set(moveX, 0, moveZ).normalize();
+                } else {
+                     jumpDirection.set(0, 0, 0);
+                }
+                hasJumpedOnce = true;
+
+                // Disable opponent scoring for 2 seconds (scaled by gameSpeed) upon jumping
+                isOpponentScoreDisabled = true;
+                console.log("Opponent scoring disabled for 2 seconds due to jump.");
+                setTimeout(() => {
+                    isOpponentScoreDisabled = false;
+                    console.log("Opponent scoring re-enabled after jump.");
+                }, 2000 / gameSpeed); 
+              }
+        }
+    }
+
+    function handleButtonRelease(key) {
+        // Manually trigger keyup behavior
+        keys[key] = false;
+
+        // Manually trigger actions that happen on keyup
+        // Handle 'e' key up for shooting/releasing charge
+        if (key === 'e' && isCharging && !isShooting) {
+            releaseCharge();
+        }
+    }
+
+    buttons.forEach(button => {
+        const key = buttonKeyMap[button.id];
+        if (key) {
+            // Use touchstart/touchend/touchcancel for mobile
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                handleButtonPress(key);
+            });
+            button.addEventListener('touchend', (e) => {
+                 e.preventDefault();
+                 handleButtonRelease(key);
+            });
+             button.addEventListener('touchcancel', (e) => { 
+                 e.preventDefault();
+                 handleButtonRelease(key);
+            });
+
+            // Also add mouse events for testing on desktop or devices that support both
+             button.addEventListener('mousedown', (e) => {
+                e.preventDefault(); 
+                handleButtonPress(key);
+            });
+            button.addEventListener('mouseup', (e) => {
+                 e.preventDefault();
+                 handleButtonRelease(key);
+            });
+             button.addEventListener('mouseleave', (e) => { 
+                 e.preventDefault();
+                 handleButtonRelease(key);
+            });
+        }
+    });
+
+    // --- End Mobile Controls Logic ---
+  </script>
+</body>
+</html>

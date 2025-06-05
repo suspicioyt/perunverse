@@ -10,26 +10,27 @@
         {
           "title": "Nowości",
           "content": [
-            "🏅 Tipy w ekranie ładowania"
+            "📃 Tipy w ekranie ładowania"
           ]
         },
         {
           "title": "Gry",
           "content": [
-            "⚔️ Dodano NBA 3K i Basketball Game",
+            "🏀 Dodano NBA 3K i Basketball Game",
             "🕹️ Mała aktualizacja kilku gier"
           ]
         },
         {
           "title": "Zmiany",
           "content": [
-            "Usunięto blog developerów i \"Co by było, gdyby...?\"",
-            "Usunięto Event wielkanocny",
+            "✂️ Usunięto blog developerów i \"Co by było, gdyby...?\"",
+            "🐰 Usunięto Event wielkanocny",
             "🏗️ Poprawiono zjeżdzanie pod Parallax",
             "🔧 Poprawiono optymalizację",
-            "Poprawiono błędy",
-            "Poprawiono Chat",
-            "Ulepszono wygląd strony głównej"
+            "🛠️ Poprawiono błędy",
+            "🔧 Poprawiono Chat",
+            "⚒️ Ulepszono wygląd strony głównej",
+            "🆕 Szybsze dodawanie nowej zawartości"
           ]
         }
       ]

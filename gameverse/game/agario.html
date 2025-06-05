@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Agar.io Clone | Perun Gameverse</title>
-    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+    <title>Agar.io | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
     <link rel="stylesheet" href="../style/public.css">
     <style>
         body {
@@ -153,15 +153,16 @@
             position: absolute;
             bottom: 10px;
             right: 10px;
-            width: 150px;
-            height: 150px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 2px solid #333;
-            border-radius: 5px;
+            width: 200px;
+            height: 200px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 3px solid #333;
+            border-radius: 8px;
             transition: background-color 0.5s, border-color 0.5s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
         #minimap.night-mode {
-            background-color: rgba(40, 40, 60, 0.8);
+            background-color: rgba(40, 40, 60, 0.9);
             border-color: #4a4a6e;
         }
         #minimap.near-edge {
@@ -205,6 +206,11 @@
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes powerupGlow {
+            0% { box-shadow: 0 0 5px #FFD700; }
+            50% { box-shadow: 0 0 15px #FFD700; }
+            100% { box-shadow: 0 0 5px #FFD700; }
         }
     </style>
 </head>
@@ -260,8 +266,8 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth * 0.9;
             canvas.height = window.innerHeight * 0.8;
-            minimapCanvas.width = Math.min(150, window.innerWidth * 0.15);
-            minimapCanvas.height = Math.min(150, window.innerHeight * 0.15);
+            minimapCanvas.width = Math.min(200, window.innerWidth * 0.2);
+            minimapCanvas.height = Math.min(200, window.innerHeight * 0.2);
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -298,11 +304,11 @@
             powerup: null,
             powerupTimer: 0,
             shield: false,
-            massBoost: false,
             ghost: false,
             magnet: false,
             burst: false,
             reverse: false,
+            speedBoost: false,
             id: 'player',
             name: 'You'
         };
@@ -345,6 +351,11 @@
             return `rgb(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)})`;
         }
 
+        // Calculate radius from score
+        function calculateRadius(score) {
+            return 20 + Math.sqrt(score) * 2; // Consistent scaling for player and bots
+        }
+
         // Create food particles
         function createFoods() {
             foods.length = 0;
@@ -361,7 +372,7 @@
         // Create power-ups
         function createPowerups() {
             powerups.length = 0;
-            const types = ['speed', 'shield', 'freeze', 'massBoost', 'teleport', 'ghost', 'shrink', 'decoy', 'magnet', 'burst', 'reverse'];
+            const types = ['speed', 'shield', 'freeze', 'ghost', 'shrink', 'decoy', 'magnet', 'burst', 'reverse', 'speedBoost'];
             for (let i = 0; i < powerupCount; i++) {
                 let x, y, safe = false;
                 const type = types[Math.floor(Math.random() * types.length)];
@@ -383,9 +394,9 @@
                     radius: 8,
                     type,
                     color: type === 'speed' ? '#FFD700' : type === 'shield' ? '#00FF00' : type === 'freeze' ? '#00B7EB' : 
-                           type === 'massBoost' ? '#FFA500' : type === 'teleport' ? '#800080' : type === 'ghost' ? '#FFFFFF' : 
-                           type === 'shrink' ? '#FF00FF' : type === 'decoy' ? '#00FFFF' : type === 'magnet' ? '#FF69B4' : 
-                           type === 'burst' ? '#DC143C' : '#FF4500'
+                           type === 'ghost' ? '#FFFFFF' : type === 'shrink' ? '#FF00FF' : type === 'decoy' ? '#00FFFF' : 
+                           type === 'magnet' ? '#FF69B4' : type === 'burst' ? '#DC143C' : type === 'reverse' ? '#FF4500' : 
+                           '#FFA500' // speedBoost
                 });
             }
         }
@@ -479,7 +490,7 @@
             }
             enemies.push({
                 x, y,
-                radius: isHunter ? 10 + Math.random() * 5 : 8 + Math.random() * 12,
+                radius: 20, // Start with same base radius as player
                 color: getRandomColor(),
                 speed: isHunter ? 2.8 + Math.random() * 1.7 : isOpportunist ? 2.0 + Math.random() * 1.0 : 1.2 + Math.random() * 1.3,
                 minSpeed: isHunter ? 0.4 : isOpportunist ? 0.3 : 0.2,
@@ -526,11 +537,9 @@
 
         // Improved dynamic camera scaling
         function getCameraScale() {
-            // Płynne skalowanie oparte na logarytmie promienia gracza
             const baseScale = 60 / player.radius;
             const smoothFactor = Math.log10(player.radius + 10) * 0.7;
             const targetScale = Math.min(2.5, Math.max(0.6, baseScale / smoothFactor));
-            // Wygładzanie zmian skali
             lastCameraScale = lastCameraScale * 0.95 + targetScale * 0.05;
             return lastCameraScale;
         }
@@ -542,7 +551,7 @@
             const dy = targetY - player.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance > 10) {
-                const speed = player.powerup === 'speed' ? player.speed * 1.3 : player.massBoost ? player.speed * 0.8 : player.speed;
+                const speed = player.powerup === 'speed' ? player.speed * 1.3 : player.speedBoost ? player.speed * 1.5 : player.speed;
                 const vx = (dx / distance) * speed;
                 const vy = (dy / distance) * speed;
                 player.x += vx;
@@ -599,7 +608,7 @@
                     });
 
                     enemy.fleeing = false;
-                    if (enemy.radius < 45 || player.powerup === 'freeze' || player.powerup === 'massBoost' || player.powerup === 'burst' || player.powerup === 'reverse') {
+                    if (enemy.radius < 45 || player.powerup === 'freeze' || player.powerup === 'burst' || player.powerup === 'reverse') {
                         enemies.forEach(otherEnemy => {
                             if (otherEnemy !== enemy && otherEnemy.radius > enemy.radius * 1.2) {
                                 const dx = enemy.x - otherEnemy.x;
@@ -611,7 +620,7 @@
                                 }
                             }
                         });
-                        if ((player.radius > enemy.radius * 1.2 || player.powerup === 'freeze' || player.powerup === 'massBoost' || player.powerup === 'burst' || player.powerup === 'reverse') && Math.random() < 0.8) {
+                        if ((player.radius > enemy.radius * 1.2 || player.powerup === 'freeze' || player.powerup === 'burst' || player.powerup === 'reverse') && Math.random() < 0.8) {
                             const dx = enemy.x - player.x;
                             const dy = enemy.y - player.y;
                             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -970,35 +979,14 @@
                         if (index !== -1) {
                             powerups.splice(index, 1);
                             player.powerup = item.type;
-                            player.powerupTimer = item.type === 'massBoost' ? 150 : item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : 300;
+                            player.powerupTimer = item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : item.type === 'speedBoost' ? 300 : 300;
                             player.shield = item.type === 'shield';
-                            player.massBoost = item.type === 'massBoost';
                             player.ghost = item.type === 'ghost';
                             player.magnet = item.type === 'magnet';
                             player.burst = item.type === 'burst';
                             player.reverse = item.type === 'reverse';
+                            player.speedBoost = item.type === 'speedBoost';
                             if (item.type === 'freeze') freezeTimer = 180;
-                            if (item.type === 'massBoost') player.radius *= 1.5;
-                            if (item.type === 'teleport') {
-                                let newX, newY, safe = false;
-                                while (!safe) {
-                                    newX = Math.random() * mapWidth;
-                                    newY = Math.random() * mapHeight;
-                                    safe = true;
-                                    for (let enemy of enemies) {
-                                        const dx = newX - enemy.x;
-                                        const dy = newY - enemy.y;
-                                        if (Math.sqrt(dx * dx + dy * dy) < enemy.radius + player.radius + 50) {
-                                            safe = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                                player.x = newX;
-                                player.y = newY;
-                                targetX = newX;
-                                targetY = newY;
-                            }
                             if (item.type === 'shrink') shrinkTimer = 300;
                             if (item.type === 'decoy') {
                                 decoy = {
@@ -1021,9 +1009,9 @@
                         const index = foods.indexOf(item);
                         if (index !== -1) {
                             foods.splice(index, 1);
-                            player.radius += 0.3;
                             player.score += 1;
-                            player.speed = Math.max(1.8, player.speed - 0.015);
+                            player.radius = calculateRadius(player.score);
+                            player.speed = Math.max(1.8, 3.5 - Math.log10(player.score + 10) * 0.5);
                             scoreDisplay.textContent = player.score;
                             sizeDisplay.textContent = player.radius.toFixed(1);
                             foods.push({
@@ -1050,28 +1038,7 @@
                                 if (index !== -1) {
                                     powerups.splice(index, 1);
                                     enemy.powerup = item.type;
-                                    enemy.powerupTimer = item.type === 'massBoost' ? 150 : item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : 300;
-                                    if (item.type === 'massBoost') enemy.radius *= 1.5;
-                                    if (item.type === 'teleport') {
-                                        let newX, newY, safe = false;
-                                        while (!safe) {
-                                            newX = Math.random() * mapWidth;
-                                            newY = Math.random() * mapHeight;
-                                            safe = true;
-                                            for (let otherEnemy of enemies) {
-                                                if (otherEnemy !== enemy) {
-                                                    const dx = newX - otherEnemy.x;
-                                                    const dy = newY - otherEnemy.y;
-                                                    if (Math.sqrt(dx * dx + dy * dy) < otherEnemy.radius + enemy.radius + 50) {
-                                                        safe = false;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        enemy.x = newX;
-                                        enemy.y = newY;
-                                    }
+                                    enemy.powerupTimer = item.type === 'magnet' ? 600 : item.type === 'burst' ? 300 : item.type === 'reverse' ? 600 : item.type === 'speedBoost' ? 300 : 300;
                                     if (item.type === 'shrink') {
                                         enemies.forEach(otherEnemy => {
                                             if (otherEnemy !== enemy) {
@@ -1092,9 +1059,9 @@
                                 const index = foods.indexOf(item);
                                 if (index !== -1) {
                                     foods.splice(index, 1);
-                                    enemy.radius = Math.min(45, enemy.radius + 0.3);
                                     enemy.score += 1;
-                                    enemy.speed = Math.max(enemy.minSpeed, enemy.speed - 0.01);
+                                    enemy.radius = calculateRadius(enemy.score);
+                                    enemy.speed = Math.max(enemy.minSpeed, 3.5 - Math.log10(enemy.score + 10) * 0.5);
                                     foods.push({
                                         x: Math.random() * mapWidth,
                                         y: Math.random() * mapHeight,
@@ -1109,33 +1076,36 @@
 
                 // Player vs Enemies
                 for (let i = enemies.length - 1; i >= 0; i--) {
-                    const enemy = enemies[i];
-                    const dx = player.x - enemy.x;
-                    const dy = player.y - enemy.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < player.radius + enemy.radius) {
-                        if (enemy.radius > player.radius && !player.shield) {
-                            gameRunning = false;
-                            finalScoreDisplay.textContent = player.score;
-                            finalKillsDisplay.textContent = kills;
-                            highScoreKills = Math.max(highScoreKills, kills);
-                            localStorage.setItem('highScoreKills', highScoreKills);
-                            highScoreKillsDisplay.textContent = highScoreKills;
-                            gameOverScreen.style.display = 'flex';
-                            createExplosion(player.x, player.y, player.color);
-                        } else if (player.radius > enemy.radius * 1.2) {
-                            enemies.splice(i, 1);
-                            player.radius += enemy.radius * 0.3;
-                            player.score += enemy.hunter ? 15 : 10;
-                            kills += 1;
-                            scoreDisplay.textContent = player.score;
-                            killsDisplay.textContent = kills;
-                            sizeDisplay.textContent = player.radius.toFixed(1);
-                            createEnemy();
-                            createExplosion(enemy.x, enemy.y, enemy.color);
-                        }
-                    }
-                }
+    const enemy = enemies[i];
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < player.radius + enemy.radius) {
+        if (enemy.radius > player.radius && !player.shield && !player.ghost) {
+            // Player is eaten by larger bot
+            gameRunning = false;
+            finalScoreDisplay.textContent = player.score;
+            finalKillsDisplay.textContent = kills;
+            highScoreKills = Math.max(highScoreKills, kills);
+            localStorage.setItem('highScoreKills', highScoreKills);
+            highScoreKillsDisplay.textContent = highScoreKills;
+            gameOverScreen.style.display = 'flex';
+            createExplosion(player.x, player.y, player.color);
+        } else if (player.radius > enemy.radius * 1.2 && !player.ghost) {
+            // Player eats smaller bot
+            enemies.splice(i, 1);
+            player.score += enemy.score;
+            player.radius = calculateRadius(player.score);
+            player.speed = Math.max(1.8, 3.5 - Math.log10(player.score + 10) * 0.5);
+            kills += 1;
+            scoreDisplay.textContent = player.score;
+            killsDisplay.textContent = kills;
+            sizeDisplay.textContent = player.radius.toFixed(1);
+            createEnemy();
+            createExplosion(enemy.x, enemy.y, enemy.color);
+        }
+    }
+}
 
                 // Enemies vs Enemies
                 for (let i = enemies.length - 1; i >= 0; i--) {
@@ -1148,8 +1118,9 @@
                             const distance = Math.sqrt(dx * dx + dy * dy);
                             if (distance < enemy.radius + otherEnemy.radius && enemy.radius > otherEnemy.radius * 1.2) {
                                 enemies.splice(j, 1);
-                                enemy.radius = Math.min(45, enemy.radius + otherEnemy.radius * 0.3);
-                                enemy.score += otherEnemy.hunter ? 15 : 10;
+                                enemy.score += otherEnemy.score;
+                                enemy.radius = calculateRadius(enemy.score);
+                                enemy.speed = Math.max(enemy.minSpeed, 3.5 - Math.log10(enemy.score + 10) * 0.5);
                                 createEnemy();
                                 createExplosion(otherEnemy.x, otherEnemy.y, otherEnemy.color);
                             }
@@ -1165,15 +1136,15 @@
         function updatePowerup() {
             if (player.powerupTimer > 0) {
                 player.powerupTimer--;
-                powerupProgress.style.width = `${(player.powerupTimer / (player.powerup === 'massBoost' ? 150 : player.powerup === 'magnet' ? 600 : player.powerup === 'burst' ? 300 : player.powerup === 'reverse' ? 600 : 300)) * 100}%`;
+                powerupProgress.style.width = `${(player.powerupTimer / (player.powerup === 'magnet' ? 600 : player.powerup === 'burst' ? 300 : player.powerup === 'reverse' ? 600 : player.powerup === 'speedBoost' ? 300 : 300)) * 100}%`;
                 if (player.powerupTimer <= 0) {
                     player.powerup = null;
                     player.shield = false;
-                    player.massBoost = false;
                     player.ghost = false;
                     player.magnet = false;
                     player.burst = false;
                     player.reverse = false;
+                    player.speedBoost = false;
                     powerupDisplay.textContent = 'Power-up: None';
                     powerupProgress.style.width = '0%';
                 }
@@ -1245,7 +1216,7 @@
         function updateScoreboard() {
             const allEntities = [player, ...enemies];
             allEntities.sort((a, b) => b.score - a.score);
-            const topEntities = allEntities.slice(0, 10); // Zwiększono limit do 10
+            const topEntities = allEntities.slice(0, 10);
             const leaderScore = topEntities[0]?.score || 1;
             let newScoreboardHTML = `<strong>Scoreboard (High Kills: ${highScoreKills})</strong>`;
             
@@ -1258,7 +1229,6 @@
                 newScoreboardHTML += `<div class="${className}"><span class="color-dot" style="background-color: ${entity.color}"></span>${index + 1}. ${leaderIcon}${entity.name}${isPlayer ? ' (You)' : ''} ${entity.id === 'player' || entity.id === 'decoy' ? '' : typeIcon}: ${entity.score} (${percent}%)</div>`;
             });
 
-            // Aktualizuj tylko jeśli treść się zmieniła
             if (scoreboard.innerHTML !== newScoreboardHTML) {
                 scoreboard.innerHTML = newScoreboardHTML;
             }
@@ -1271,54 +1241,82 @@
             minimapFrame++;
             if (minimapFrame % 2 !== 0) return;
             minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-            minimapCtx.fillStyle = nightMode ? 'rgba(20, 20, 40, 0.9)' : 'rgba(0, 0, 0, 0.1)';
+
+            // Draw background
+            minimapCtx.fillStyle = nightMode ? 'rgba(20, 20, 40, 0.9)' : 'rgba(255, 255, 255, 0.9)';
             minimapCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 
-            // Rysuj granice mapy
+            // Draw map boundaries
             minimapCtx.strokeStyle = nightMode ? '#4a4a6e' : '#333';
-            minimapCtx.lineWidth = 1;
+            minimapCtx.lineWidth = 2;
             minimapCtx.strokeRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 
-            // Sprawdź, czy gracz jest blisko krawędzi
+            // Check if player is near edge
             const edgeThreshold = 100;
             const nearEdge = player.x < edgeThreshold || player.x > mapWidth - edgeThreshold ||
                              player.y < edgeThreshold || player.y > mapHeight - edgeThreshold;
             minimapCanvas.classList.toggle('near-edge', nearEdge);
 
-            // Skala minimapy
+            // Minimap scale
             const scale = minimapCanvas.width / mapWidth;
 
-            // Rysuj gracza
+            // Draw visible area rectangle
+            const viewScale = getCameraScale();
+            const viewWidth = canvas.width / viewScale;
+            const viewHeight = canvas.height / viewScale;
+            minimapCtx.strokeStyle = nightMode ? '#e0e0ff' : '#666';
+            minimapCtx.lineWidth = 1;
+            minimapCtx.strokeRect(
+                (player.x - viewWidth / 2) * scale,
+                (player.y - viewHeight / 2) * scale,
+                viewWidth * scale,
+                viewHeight * scale
+            );
+
+            // Draw player
             minimapCtx.beginPath();
-            minimapCtx.arc(player.x * scale, player.y * scale, 3, 0, Math.PI * 2);
+            minimapCtx.arc(player.x * scale, player.y * scale, Math.max(3, player.radius * scale), 0, Math.PI * 2);
             minimapCtx.fillStyle = player.color;
             minimapCtx.shadowColor = nightMode ? '#e0e0ff' : '#000';
-            minimapCtx.shadowBlur = 3;
+            minimapCtx.shadowBlur = 5;
             minimapCtx.fill();
             minimapCtx.shadowBlur = 0;
 
-            // Rysuj wabik
+            // Draw decoy
             if (decoy) {
                 minimapCtx.beginPath();
-                minimapCtx.arc(decoy.x * scale, decoy.y * scale, 2, 0, Math.PI * 2);
+                minimapCtx.arc(decoy.x * scale, decoy.y * scale, Math.max(2, decoy.radius * scale), 0, Math.PI * 2);
                 minimapCtx.fillStyle = decoy.color;
                 minimapCtx.globalAlpha = 0.7;
                 minimapCtx.fill();
                 minimapCtx.globalAlpha = 1;
             }
 
-            // Rysuj wrogów
+            // Draw enemies
             enemies.forEach(enemy => {
                 minimapCtx.beginPath();
-                minimapCtx.arc(enemy.x * scale, enemy.y * scale, enemy.hunter ? 2.5 : enemy.opportunist ? 2 : 1.5, 0, Math.PI * 2);
+                minimapCtx.arc(enemy.x * scale, enemy.y * scale, Math.max(2, enemy.radius * scale), 0, Math.PI * 2);
                 minimapCtx.fillStyle = enemy.color;
                 minimapCtx.fill();
+                if (enemy.hunter) {
+                    minimapCtx.beginPath();
+                    minimapCtx.moveTo(enemy.x * scale, (enemy.y - enemy.radius - 5) * scale);
+                    minimapCtx.lineTo((enemy.x - 5) * scale, (enemy.y - enemy.radius) * scale);
+                    minimapCtx.lineTo((enemy.x + 5) * scale, (enemy.y - enemy.radius) * scale);
+                    minimapCtx.fillStyle = '#FF0000';
+                    minimapCtx.fill();
+                } else if (enemy.opportunist) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(enemy.x * scale, (enemy.y - enemy.radius - 5) * scale, 2, 0, Math.PI * 2);
+                    minimapCtx.fillStyle = '#FFD700';
+                    minimapCtx.fill();
+                }
             });
 
-            // Rysuj power-upy
+            // Draw power-ups
             powerups.forEach(powerup => {
                 minimapCtx.beginPath();
-                minimapCtx.arc(powerup.x * scale, powerup.y * scale, 1, 0, Math.PI * 2);
+                minimapCtx.arc(powerup.x * scale, powerup.y * scale, 3, 0, Math.PI * 2);
                 minimapCtx.fillStyle = powerup.color;
                 minimapCtx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 500);
                 minimapCtx.fill();
@@ -1536,7 +1534,7 @@
             ctx.shadowBlur = 10;
             ctx.fill();
             ctx.shadowBlur = 0;
-            if (player.speed > 4 || player.powerup === 'speed') {
+            if (player.speed > 4 || player.powerup === 'speed' || player.speedBoost) {
                 ctx.beginPath();
                 ctx.moveTo(player.x, player.y);
                 ctx.lineTo(player.x - (targetX - player.x) * 0.2, player.y - (targetY - player.y) * 0.2);
@@ -1586,6 +1584,13 @@
                 ctx.lineWidth = 2 / scale;
                 ctx.stroke();
             }
+            if (player.speedBoost) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 8, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 3 / scale;
+                ctx.stroke();
+            }
             ctx.restore();
         }
 
@@ -1600,11 +1605,11 @@
             player.powerup = null;
             player.powerupTimer = 0;
             player.shield = false;
-            player.massBoost = false;
             player.ghost = false;
             player.magnet = false;
             player.burst = false;
             player.reverse = false;
+            player.speedBoost = false;
             scoreDisplay.textContent = player.score;
             kills = 0;
             killsDisplay.textContent = kills;
@@ -1654,65 +1659,63 @@
         }
 
         // Initialize game
-        createFoods();
-        createPowerups();
-        createBackgroundDots();
-        createClouds();
-        for (let i = 0; i < 5; i++) createEnemy();
-        scoreDisplay.textContent = player.score;
-        killsDisplay.textContent = kills;
-        sizeDisplay.textContent = player.radius.toFixed(1);
+createFoods();
+createPowerups();
+createBackgroundDots();
+createClouds();
+for (let i = 0; i < 5; i++) createEnemy();
+scoreDisplay.textContent = player.score;
+killsDisplay.textContent = kills;
+sizeDisplay.textContent = player.radius.toFixed(1);
 
-        // Event listeners
-        restartButton.addEventListener('click', resetGame);
-        restartGameOverButton.addEventListener('click', resetGame);
-        nightModeToggle.addEventListener('click', toggleNightMode);
+// Event listeners
+restartButton.addEventListener('click', resetGame);
+restartGameOverButton.addEventListener('click', resetGame);
+nightModeToggle.addEventListener('click', toggleNightMode);
 
-        // FPS calculation
-        function calculateFPS() {
-            const now = performance.now();
-            frameCount++;
-            if (now - lastFrameTime >= 1000) {
-                fps = frameCount;
-                fpsDisplay.textContent = fps;
-                frameCount = 0;
-                lastFrameTime = now;
-            }
-        }
+// FPS calculation
+function calculateFPS() {
+    const now = performance.now();
+    frameCount++;
+    if (now - lastFrameTime >= 1000) {
+        fps = frameCount;
+        fpsDisplay.textContent = fps;
+        frameCount = 0;
+        lastFrameTime = now;
+    }
+}
 
-        // Game loop
-        function gameLoop() {
-            try {
-                calculateFPS();
-                movePlayer();
-                moveDecoy();
-                moveEnemies();
-                moveBackgroundDots();
-                moveClouds();
-                updateExplosionParticles();
-                updateTrailParticles();
-                updatePowerupParticles();
-                updateMagnet();
-                updateBurst();
-                checkCollisions();
-                updatePowerup();
-                updateGameTime();
-                spawnEnemies();
-                updateMaxEnemies();
-                increaseDifficulty();
-                updateScoreboard();
-                draw();
-                drawMinimap();
-                if (gameRunning) {
-                    requestAnimationFrame(gameLoop);
-                }
-            } catch (e) {
-                console.error('Game loop error:', e);
-            }
-        }
+// Game loop
+function gameLoop() {
+    try {
+        calculateFPS();
+        movePlayer();
+        moveDecoy();
+        moveEnemies();
+        moveBackgroundDots();
+        moveClouds();
+        updateExplosionParticles();
+        updateTrailParticles();
+        updatePowerupParticles();
+        updateMagnet();
+        updateBurst();
+        checkCollisions();
+        updatePowerup();
+        updateGameTime();
+        spawnEnemies();
+        updateMaxEnemies();
+        increaseDifficulty();
+        updateScoreboard();
+        draw();
+        drawMinimap();
+        requestAnimationFrame(gameLoop);
+    } catch (e) {
+        console.error('Game loop error:', e);
+    }
+}
 
-        // Start game
-        gameLoop();
+// Start game
+gameLoop();
     </script>
 </body>
 </html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper.io Clone - Poprawiona Wersja</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #2a5298, #1e3c72);
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        canvas {
+            border: 3px solid #fff;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+            background: linear-gradient(180deg, #e8ecef, #f8f9fa);
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 24px;
+            border-radius: 10px;
+        }
+        #restartBtn {
+            display: none;
+            margin-top: 25px;
+            padding: 15px 30px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, #00d4ff, #007bff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.3s, background 0.3s;
+        }
+        #restartBtn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #00b7eb, #0056b3);
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Terytorium: 0%</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <button id="restartBtn" onclick="restartGame()">Restart</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Player properties
+        let player = {
+            x: 600,
+            y: 400,
+            size: 12,
+            speed: 3,
+            direction: { x: 0, y: -1 },
+            trail: [],
+            territory: [],
+            color: '#0055ff',
+            territoryColor: 'rgba(0, 85, 255, 0.4)',
+            startDelay: 180
+        };
+
+        // Bot properties
+        let bot = {
+            x: 200,
+            y: 200,
+            size: 12,
+            speed: 2.5,
+            direction: { x: 1, y: 0 },
+            trail: [],
+            territory: [],
+            color: '#ff3333',
+            territoryColor: 'rgba(255, 51, 51, 0.4)',
+            changeDirectionTimer: 0,
+            startDelay: 180
+        };
+
+        let score = 0;
+        let gameOver = false;
+        let frameCount = 0;
+
+        // Handle input
+        document.addEventListener('keydown', (e) => {
+            if (gameOver) return;
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (player.direction.y === 0) player.direction = { x: 0, y: -1 };
+                    break;
+                case 'ArrowDown':
+                    if (player.direction.y === 0) player.direction = { x: 0, y: 1 };
+                    break;
+                case 'ArrowLeft':
+                    if (player.direction.x === 0) player.direction = { x: -1, y: 0 };
+                    break;
+                case 'ArrowRight':
+                    if (player.direction.x === 0) player.direction = { x: 1, y: 0 };
+                    break;
+            }
+        });
+
+        // Calculate territory percentage
+        function calculateTerritoryPercentage(territory) {
+            let area = 0;
+            for (let i = 0, j = territory.length - 1; i < territory.length; j = i++) {
+                area += (territory[j].x * territory[i].y - territory[i].x * territory[j].y);
+            }
+            area = Math.abs(area) / 2;
+            return Math.min(100, ((area / (canvas.width * canvas.height)) * 100).toFixed(1));
+        }
+
+        // Check if point is inside territory
+        function isPointInTerritory(x, y, territory) {
+            let inside = false;
+            for (let i = 0, j = territory.length - 1; i < territory.length; j = i++) {
+                const xi = territory[i].x, yi = territory[i].y;
+                const xj = territory[j].x, yj = territory[j].y;
+                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // Close loop and update territory
+        function closeLoop(entity) {
+            if (entity.trail.length > 5 && isPointInTerritory(entity.x, entity.y, entity.territory)) {
+                entity.territory = entity.territory.concat(entity.trail);
+                entity.trail = [];
+                if (entity === player) {
+                    score = calculateTerritoryPercentage(player.territory);
+                    scoreDisplay.textContent = `Terytorium: ${score}%`;
+                }
+                console.log(`${entity === player ? 'Player' : 'Bot'} closed loop`, entity.territory);
+            }
+        }
+
+        // Check collisions
+        function checkCollision(entity, opponent) {
+            if (frameCount < 180) return false; // Ignore collisions for first 180 frames
+            // Collision with own trail (skip recent points)
+            for (let i = 15; i < entity.trail.length; i++) {
+                const dx = entity.x - entity.trail[i].x;
+                const dy = entity.y - entity.trail[i].y;
+                if (Math.sqrt(dx * dx + dy * dy) < entity.size) {
+                    console.log(`Collision with own trail at index ${i}`, { entityX: entity.x, entityY: entity.y, trailPoint: entity.trail[i] });
+                    return true;
+                }
+            }
+            // Collision with opponent's trail or territory
+            for (let point of opponent.trail.concat(opponent.territory)) {
+                const dx = entity.x - point.x;
+                const dy = entity.y - point.y;
+                if (Math.sqrt(dx * dx + dy * dy) < entity.size) {
+                    console.log('Collision with opponent', { entityX: entity.x, entityY: entity.y, opponentPoint: point });
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Bot AI
+        function updateBot() {
+            bot.changeDirectionTimer--;
+            if (bot.changeDirectionTimer <= 0) {
+                const directions = [
+                    { x: 1, y: 0 }, { x: -1, y: 0 },
+                    { x: 0, y: 1 }, { x: 0, y: -1 }
+                ];
+                const possibleDirections = directions.filter(d => 
+                    d.x !== -bot.direction.x || d.y !== -bot.direction.y
+                );
+                bot.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                bot.changeDirectionTimer = Math.floor(Math.random() * 60) + 30;
+            }
+        }
+
+        // Restart game
+        function restartGame() {
+            player = {
+                x: 600, y: 400, size: 12, speed: 3, direction: { x: 0, y: -1 },
+                trail: [], territory: [], color: '#0055ff', territoryColor: 'rgba(0, 85, 255, 0.4)',
+                startDelay: 180
+            };
+            bot = {
+                x: 200, y: 200, size: 12, speed: 2.5, direction: { x: 1, y: 0 },
+                trail: [], territory: [], color: '#ff3333', territoryColor: 'rgba(255, 51, 51, 0.4)',
+                changeDirectionTimer: 0, startDelay: 180
+            };
+            score = 0;
+            gameOver = false;
+            frameCount = 0;
+            scoreDisplay.textContent = `Terytorium: 0%`;
+            restartBtn.style.display = 'none';
+            gameLoop();
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (gameOver) {
+                restartBtn.style.display = 'block';
+                return;
+            }
+
+            frameCount++;
+
+            // Update player
+            player.x += player.direction.x * player.speed;
+            player.y += player.direction.y * player.speed;
+            player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+            player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+
+            // Update bot
+            updateBot();
+            bot.x += bot.direction.x * bot.speed;
+            bot.y += bot.direction.y * bot.speed;
+            bot.x = Math.max(bot.size, Math.min(canvas.width - bot.size, bot.x));
+            bot.y = Math.max(bot.size, Math.min(canvas.height - bot.size, bot.y));
+
+            // Add to trails after delay
+            if (player.startDelay > 0) {
+                player.startDelay--;
+            } else if (!isPointInTerritory(player.x, player.y, player.territory)) {
+                player.trail.push({ x: player.x, y: player.y });
+                console.log('Player trail point added', { x: player.x, y: player.y, trailLength: player.trail.length });
+            } else {
+                closeLoop(player);
+            }
+
+            if (bot.startDelay > 0) {
+                bot.startDelay--;
+            } else if (!isPointInTerritory(bot.x, bot.y, bot.territory)) {
+                bot.trail.push({ x: bot.x, y: bot.y });
+                console.log('Bot trail point added', { x: bot.x, y: bot.y, trailLength: bot.trail.length });
+            } else {
+                closeLoop(bot);
+            }
+
+            // Check collisions
+            if (checkCollision(player, bot) || checkCollision(bot, player)) {
+                gameOver = true;
+                alert(`Game Over! Twoje terytorium: ${score}%`);
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw territories with gradients
+            for (let entity of [player, bot]) {
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, entity.color);
+                gradient.addColorStop(1, entity.territoryColor);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                if (entity.territory.length > 0) {
+                    ctx.moveTo(entity.territory[0].x, entity.territory[0].y);
+                    for (let point of entity.territory) {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            // Draw trails with pulse effect
+            for (let entity of [player, bot]) {
+                const pulse = 1 + 0.1 * Math.sin(frameCount * 0.1);
+                ctx.strokeStyle = entity.color;
+                ctx.lineWidth = entity.size * 1.8 * pulse;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = entity.color;
+                ctx.beginPath();
+                if (entity.trail.length > 0) {
+                    ctx.moveTo(entity.trail[0].x, entity.trail[0].y);
+                    for (let point of entity.trail) {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw entities with pulse effect
+            for (let entity of [player, bot]) {
+                const pulse = 1 + 0.2 * Math.sin(frameCount * 0.1);
+                ctx.fillStyle = entity.color;
+                ctx.beginPath();
+                ctx.arc(entity.x, entity.y, (entity.size / 2) * pulse, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        gameLoop();
+    </script>
+</body>
+</html>
