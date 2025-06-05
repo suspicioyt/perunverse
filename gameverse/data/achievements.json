@@ -1,30 +1,74 @@
-[
+{
+  "achievementsData": [
     {
-        "id": "01",
-        "name": "Prezenty 2024",
-        "opis": "Zbierz wszystkie prezenty w evencie bożonarodzeniowym 2024",
-        "classes": ["beta"],
-        "status": ["clickedButtons", 15]
+      "id": "01",
+      "name": "100 gier",
+      "opis": "Zagraj we wszystkie gry w HUBIE",
+      "classes": ["beta"],
+      "condition": { "type": "arrayLength", "key": "playedGames", "threshold": "gamesNumber" }
     },
     {
-        "id": "02",
-        "name": "100 gier",
-        "opis": "Zagraj we wszystkie dostępne gry w HUBIE",
-        "classes": ["beta"],
-        "status": ["playedGames", "gamesNumber"]
+      "id": "02",
+      "name": "Runner",
+      "opis": "Zbierz 150 pkt w Dino",
+      "game": "game/dino.html",
+      "classes": ["beta"],
+      "condition": { "type": "data", "key": "dinoBestScore", "threshold": 150 }
     },
     {
-        "id": "03",
-        "name": "Mistrz odbijania",
-        "opis": "Zbierz 250 punktów w Ping Pongu",
-        "classes": ["beta"],
-        "status": ["pingPong", 20]
+      "id": "03",
+      "name": "Mistrz odbijania",
+      "opis": "Zbierz 11 pkt w Ping Pongu",
+      "game": "game/pingpong.html",
+      "classes": ["beta"],
+      "condition": { "type": "data", "key": "pingPong", "threshold": 11 }
     },
     {
-        "id": "04",
-        "name": "Wieże czy wierze?",
-        "opis": "Zbierz 60 punktów w Flappy Bird",
-        "classes": ["beta"],
-        "status": ["flappyHighScore", 60]
+      "id": "04",
+      "name": "Wieże czy wierze?",
+      "opis": "Zbierz 60 pkt w Flappy Bird",
+      "game": "game/flappybird.html",
+      "classes": ["beta"],
+      "condition": { "type": "data", "key": "flappyHighScore", "threshold": 60 }
+    },
+    {
+      "id": "05",
+      "name": "2048",
+      "opis": "Zbierz 2048 pkt w 2048",
+      "game": "game/2048.html",
+      "classes": ["beta"],
+      "condition": { "type": "data", "key": "2048highScore", "threshold": 2048 }
     }
-]
+  ],
+  "badgesData": [
+    {
+      "id": "B01",
+      "name": "Wielkanoc 2025",
+      "opis": "Ukończ event Wielkanoc 2025: Zbierz 20 pisanek i zająców oraz zbierz 25 pkt. w Jajka Wielkanocne",
+      "icon": "fa-star",
+      "condition": [
+        { "type": "arrayLength", "key": "easter2025Buttons", "threshold": 20 },
+        { "type": "data", "key": "eventGameHighScore", "threshold": 25 }
+      ]
+    },
+    {
+      "id": "B02",
+      "name": "Gracz",
+      "opis": "Ukończ 3 osiągnięcia",
+      "icon": "fa-trophy",
+      "condition": [
+        { "type": "achievementsCount", "threshold": 3 }
+      ]
+    },
+    {
+      "id": "B03",
+      "name": "Mistrz",
+      "opis": "Zagraj w 10 gier, i ukończ 5 osiągnięcia",
+      "icon": "fa-crown",
+      "condition": [
+        { "type": "arrayLength", "key": "playedGames", "threshold": 10 },
+        { "type": "achievementsCount", "threshold": 5 }
+      ]
+    }
+  ]
+}
