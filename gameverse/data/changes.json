@@ -1,5 +1,35 @@
 {
   "tabsData": [
+        {
+      "name": "🗳️ Vote Update",
+      "version": "1.2.0.2",
+      "date": "15.06.2025r.",
+      "quote": "Zagłosuj na nową Hot grę",
+      "backgroundImage": "https://onclusive.com/wp-content/uploads/2024/06/voting.png",
+      "paragraphs": [
+        {
+          "title": "Nowości",
+          "content": [
+            "🗳️ Plebiscyt na Hot grę",
+            "🧳 Tryb kompaktowy"
+          ]
+        },
+        {
+          "title": "Gry",
+          "content": [
+            "🕹️ Poprawiono Wordle"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "🏅 Usunięto wyświetlanie nieaktywnych użytkowników w Rankingu",
+            "🛠️ Zmiana wyglądu kafelków gier"
+          ]
+        },
+        "Głosowanie potrwa kilka tygodni"
+      ]
+    },
     {
       "name": "🏀 Basketball Update",
       "version": "1.2.0.1",

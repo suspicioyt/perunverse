@@ -251,7 +251,7 @@
       "link": "game/nba3k.html",
       "status": "Nowość",
       "tooltip": "Symulator koszykówki",
-      "classes": ["nowosc", "beta"],
+      "classes": ["beta"],
       "ulubione": false
     },
     {
@@ -260,8 +260,18 @@
       "link": "game/basketballgame.html",
       "status": "Nowość",
       "tooltip": "Rzucaj osobiste do kosza",
-      "classes": ["nowosc", "beta"],
+      "classes": ["beta"],
       "ulubione": false
+    },
+    {
+      "id": "30",
+      "name": "Italian Brainrot Guesser",
+      "link": "game/brainrotguesser.html",
+      "status": "Chwilowo nie działa",
+      "tooltip": "Zgaduj Italian Brainroty",
+      "classes": ["nowosc", "ukonczona"],
+      "ulubione": false,
+      "premium": true
     },
     {
       "id": "999",
@@ -316,11 +326,22 @@
     },
     {
       "id": "999",
-      "name": "Italian Brainrot Guesser",
-      "link": "game/brainrotguesser.html",
+      "name": "Papier Kamień Nożyce",
+      "link": "game/rockpaperscissors.html",
       "status": "",
-      "tooltip": "Zgaduj Italian Brainroty",
-      "classes": ["nowosc", "ukonczona"],
+      "tooltip": "Zniszcz przeciwnika",
+      "classes": ["nowosc", "ukonczone"],
+      "ulubione": false,
+      "premium": true
+    },
+        {
+      "id": "999",
+      "name": "Papier Kamień Nożyce Minus 1",
+      "link": "game/rockpaperscissorsminusone.html",
+      "status": "",
+      "tooltip": "Zniszcz przeciwnika",
+      "internet": "https://youtu.be/pAwrDwvIGno?si=wweoHoQ-SyNiAA6Q",
+      "classes": ["nowosc", "ukonczone","internet"],
       "ulubione": false,
       "premium": true
     },
@@ -330,8 +351,17 @@
       "link": "game/minecraft.html",
       "status": "",
       "tooltip": "Uderzaj w krety",
-      "internet": "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
-      "classes": ["nowosc", "testy", "internet"],
+      "classes": ["nowosc", "testy"],
+      "ulubione": false,
+      "premium": true
+    },
+        {
+      "id": "999",
+      "name": "Dino Game",
+      "link": "game/dino2.html",
+      "status": "Przyszła aktualizacja",
+      "tooltip": "Klasyczna gra Dino",
+      "classes": ["nowosc", "testy"],
       "ulubione": false,
       "premium": true
     },
@@ -341,8 +371,7 @@
       "link": "game/geoguesser.html",
       "status": "Nie działa",
       "tooltip": "Uderzaj w krety",
-      "internet": "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
-      "classes": ["nowosc", "konserwacje", "internet"],
+      "classes": ["nowosc", "konserwacje"],
       "ulubione": false,
       "premium": true
     },
