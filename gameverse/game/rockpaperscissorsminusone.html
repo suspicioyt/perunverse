@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papier Kamień Nożyce Minus 1 | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            background-color: rgb(30,30,30);
+            color: palevioletred;
+        }
+        #choice-selected img {
+            width: 180px;
+            height: 180px;
+            margin-top: 10px;
+            border: 1px solid rgb(60, 60, 60);
+            cursor: pointer;
+        }
+        #choices {
+            width: 240px;
+            height: 80px;
+            margin: 0 auto;
+            margin-top: 10px;
+        }
+        #choices img {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="opponent-score">0</h1>
+    <div id="choice-selected">
+        <img src="../img/rockpaperscissors/empty.png" id="opponent-choice0">
+        <img src="../img/rockpaperscissors/empty.png" id="opponent-choice1">
+        <br>
+        <img src="../img/rockpaperscissors/empty.png" id="your-choice0">
+        <img src="../img/rockpaperscissors/empty.png" id="your-choice1">
+    </div>
+    <div id="choices"></div>
+    <h1 id="your-score">0</h1>
+    <p id="instruction">Rock Paper Scissors</p>
+    <script>
+        let yourScore=0;
+        let opponentScore=0;
+        let you;
+        let opponent;
+
+        let choices=["rock","paper","scissors"];
+        let yourChoice0;
+        let yourChoice1;
+        let opponentChoice0;
+        let opponentChoice1;
+        let instructions;
+
+        window.onload = function() {
+            for(let i=0;i<3;i++) {
+                let choice = document.createElement("img");
+                choice.id=choices[i];
+                choice.src="../img/rockpaperscissors/"+choices[i]+".png";
+                choice.addEventListener("click",selectChoice);
+                document.getElementById("choices").append(choice);
+            }
+            yourChoice0=document.getElementById("your-choice0");
+            yourChoice1=document.getElementById("your-choice1");
+            opponentChoice0=document.getElementById("opponent-choice0");
+            opponentChoice1=document.getElementById("opponent-choice1");
+            yourChoice0.addEventListener("click",minusOne);
+            yourChoice1.addEventListener("click",minusOne);
+            instruction=document.getElementById("instruction");
+        }
+        function selectChoice() {
+            if(yourChoice0.src.includes("empty")) {
+                yourChoice0.src="../img/rockpaperscissors/"+this.id+".png";
+            } else {
+                yourChoice1.src="../img/rockpaperscissors/"+this.id+".png";
+                for(let i=0;i<2;i++) {
+                    let opponentChoice =choices[Math.floor(Math.random()*3)];
+                    document.getElementById(`opponent-choice${i}`).src="../img/rockpaperscissors/"+opponentChoice+".png";
+                }
+                document.getElementById("choices").hidden=true;
+                instruction.innerHTML="Minus One!";
+            }
+        }
+        function minusOne() {
+            if(!yourChoice0.src.includes("empty")&&!yourChoice1.src.includes("empty")&&!you&&!opponent) {
+                if(this==yourChoice0) {
+                    yourChoice1.hidden=true;
+                } else {
+                    yourChoice0.hidden=true;
+                }
+                let n=Math.floor(Math.random()*2);
+                let opponentChoice;
+                if(n==0) {
+                    opponentChoice=opponentChoice0;
+                    opponentChoice1.hidden=true;
+                } else {
+                    opponentChoice=opponentChoice1;
+                    opponentChoice0.hidden=true;
+                }
+                for(let i=0;i<choices.length;i++) {
+                    if(getImgName(this).includes(choices[i])) {
+                        you=choices[i];
+                    }
+                    if(getImgName(opponentChoice).includes(choices[i])) {
+                        opponent=choices[i];
+                    }
+                }
+                checkWinner();
+            }
+        }
+        function checkWinner() {
+            if(you!=opponent) {
+                if(you=="rock") {
+                    if(opponent=="scissors") {
+                        yourScore+=1;
+                    } else if(opponent=="paper") {
+                        opponentScore+=1;
+                    }
+                }
+                if(you=="paper") {
+                    if(opponent=="rock") {
+                        yourScore+=1;
+                    } else if(opponent=="scissors") {
+                        opponentScore+=1;
+                    }
+                }
+                if(you=="scissors") {
+                    if(opponent=="paper") {
+                        yourScore+=1;
+                    } else if(opponent=="rock") {
+                        opponentScore+=1;
+                    }
+                }
+            }
+            document.getElementById("your-score").innerHTML=yourScore;
+            document.getElementById("opponent-score").innerHTML=opponentScore;
+            setTimeout(clearChoices,2000);
+        }
+        function clearChoices() {
+            you=null;
+            opponent=null;
+            opponentChoice0.src="../img/rockpaperscissors/empty.png";
+            opponentChoice1.src="../img/rockpaperscissors/empty.png";
+            yourChoice0.src="../img/rockpaperscissors/empty.png";
+            yourChoice1.src="../img/rockpaperscissors/empty.png";
+            opponentChoice0.hidden=false;
+            opponentChoice1.hidden=false;
+            yourChoice0.hidden=false;
+            yourChoice1.hidden=false;
+            document.getElementById("choices").hidden=false;
+            instruction.innerHTML="Rock Paper Scissors!";
+        }
+        function getImgName(img) {
+            let imgSrcArray=img.src.split("/");
+            return imgSrcArray[imgSrcArray.length-1];
+        }
+    </script>
+</body>
+</html>
