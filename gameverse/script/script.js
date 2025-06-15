@@ -16,7 +16,8 @@ const STORAGE_KEYS = {
   HAS_LOADED: 'hasLoaded',
   OPEN_MODALS: 'openModals',
   CHAT_FONT_SIZE: 'chatMessageFontSize',
-  PAGE_BUILDER_PAGES: 'pageBuilder_pages'
+  PAGE_BUILDER_PAGES: 'pageBuilder_pages',
+  VOTING_HISTORY: 'votingHistory' // New key for voting history
 };
 
 const UPDATE_DATE = 'Apr 27, 2025 20:00:00';
@@ -30,7 +31,7 @@ const API_FIELD_MAP = {
   [STORAGE_KEYS.COMPLETED_ACHIEVEMENTS]: 'doneAchievements'
 };
 
-window.API_URL = 'https://script.google.com/macros/s/AKfycbw2jIu8h4oRyElxeiE9w9jGhXilxaWxaSSuEUR_TM_JiBSazrN6yJoHAgBUypqRmU4lKQ/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbzLuqmfiDBw9QVDFuPuWmef1n0_mb6JDF8hy0PwAA8cshdgYeFLqL_n_LzuAVwrcXVpGQ/exec';
   
 window.settingSwitches = [
   { switchId: '01', value: false },//tryb dev
@@ -41,7 +42,7 @@ window.settingSwitches = [
   { switchId: '06', value: true },//ostatnio grana gra
   { switchId: '07', value: true },//powiadomienia
   { switchId: '08', value: true },//grane gry
-  { switchId: '09', value: false },
+  { switchId: '09', value: false },//tryb kompaktowy
   { switchId: '10', value: false }
 ];
   
@@ -971,29 +972,31 @@ async function updateRanking() {
     const tbody = document.getElementById('rankingBody');
     tbody.innerHTML = '';
     ranking.forEach(async (user, index) => {
-      if (user.uuid === (await getData(['localStorage'], STORAGE_KEYS.UUID))) {
-        sessionStorage.setItem('perunPremium', user.premium);
-        sessionStorage.setItem('perunVerified', user.verified);
-      }
+      if(user.rank!=0||user.points!=0||user.pln!=0||user.achievements!=0) {
+        if (user.uuid === (await getData(['localStorage'], STORAGE_KEYS.UUID))) {
+          sessionStorage.setItem('perunPremium', user.premium);
+          sessionStorage.setItem('perunVerified', user.verified);
+        }
 
-      let badges = '';
-      if (user.verified) {
-          badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-      }
-      if (user.premium) {
-          badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-      }
+        let badges = '';
+        if (user.verified) {
+            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
+        }
+        if (user.premium) {
+            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
+        }
 
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${badges} ${user.username}</td>
-        <td>${user.rank}</td>
-        <td>${user.points}</td>
-        <td>${parseFloat(user.pln).toFixed(2)}</td>
-        <td>${user.achievements || '0'}/${achievementsData.length}</td>
-      `;
-      tbody.appendChild(row);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${badges} ${user.username}</td>
+          <td>${user.rank}</td>
+          <td>${user.points}</td>
+          <td>${parseFloat(user.pln).toFixed(2)}</td>
+          <td>${user.achievements || '0'}/${achievementsData.length}</td>
+        `;
+        tbody.appendChild(row);
+      }
     });
     document.getElementById('rankingMessage').textContent = `Ranking zaktualizowany: ${new Date().toLocaleString()}`;
   } catch (error) {
@@ -1314,6 +1317,85 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem("gameVote1")) {
+    document.getElementById("sendVoteButton").disabled = true;
+    document.getElementById("sendVoteButton").setAttribute('aria-busy', 'false');
+  }
   const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
   changeTheme(savedTheme);
 });
+
+async function sendGameVote() {
+  const button = document.querySelector('#sendVoteButton');
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+  }
+
+  const votedGameId = localStorage.getItem("votedGame");
+  if (!votedGameId) {
+    alert('Nie wybrano gry do głosowania.');
+    if (button) {
+      button.disabled = false;
+      button.setAttribute('aria-busy', 'false');
+    }
+    return;
+  }
+  if (localStorage.getItem("gameVote1")) {
+    alert('Już zagłosowano.');
+    if (button) {
+      button.disabled = false;
+      button.setAttribute('aria-busy', 'false');
+    }
+    return;
+  }
+
+  let parsedGameId;
+  try {
+    parsedGameId = JSON.parse(votedGameId);
+    if (parsedGameId === "999") {
+      alert('Nie można głosować na tę grę.');
+      if (button) {
+        button.disabled = false;
+        button.setAttribute('aria-busy', 'false');
+      }
+      return;
+    }
+  } catch {
+    alert('Nieprawidłowy identyfikator gry.');
+    if (button) {
+      button.disabled = false;
+      button.setAttribute('aria-busy', 'false');
+    }
+    return;
+  }
+
+  const username = await getData(['localStorage'], STORAGE_KEYS.USERNAME) || 'anonymous';
+  const sessionId = await getData(['localStorage'], STORAGE_KEYS.UUID) || '';
+
+  const formData = {
+    action: 'addRating',
+    sessionId,
+    username,
+    rating: "",
+    whattodo: `vote:${parsedGameId}`,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await API.post(window.API_URL, formData);
+    localStorage.setItem("gameVote1",localStorage.getItem("votedGame"))
+    notification("Wysłano głos!", "success", {
+      duration: 3000,
+      title: "Operacja zakończona",
+      sound: false // Dźwięk włączony
+    });
+  } catch {
+    alert('Wystąpił błąd podczas wysyłania głosu. Spróbuj ponownie później.');
+  } finally {
+    if (button) {
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'false');
+    }
+  }
+}

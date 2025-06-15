@@ -228,15 +228,71 @@
 }
 .game-icon-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 5px;
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  right: -10px;
+  top: 0px;
 }
 
 .game-status-seen {
+  padding: 5px 10px;
+  border-radius: 50%;
+  right: 10px;
+  bottom: 10px;
+  background-color: black;
   color: #666;
   font-size: 16px;
   cursor: default;
+}
+.vote-button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: transform 0.2s;
+  display: inline-block;
+  padding: 5px 10px;
+  color: black;
+  font-size: 11px;
+  position: absolute;
+  bottom: 5px;
+  z-index: 1;
+  left: auto;
+  right: 5px;
+}
+
+.vote-button:hover {
+  transform: scale(1.05);
+}
+
+.vote-button i.fa-solid {
+  color: #28a745; /* Zielony kolor dla aktywnego głosu */
+}
+
+.vote-button i.fa-regular {
+  color: #6c757d; /* Szary kolor dla nieaktywnego głosu */
+}
+
+.votedGame {
+  background: linear-gradient(132deg, #000000,#00ff00, #0000ff,#e60073,#ff0000,#ffffff);
+  background-size: 400% 400%;
+  animation: BackgroundGradient 15s ease infinite;
+}
+
+@keyframes BackgroundGradient {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+button:disabled {
+    background: gray;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.modal-content iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }

@@ -10,15 +10,15 @@
 
 :root {
     --border-radius: 20px;
-    --primary-color: #e26a00;
+    --primary-color: #F03747;
     --button-disabled-color: #b1b1b1;
     --button-color: #0a7900;
     --button-active-color: #113f00;
     --button-hover-color: #3bde00;
-    --highlight-bg-color: rgba(220, 106, 0, 0.2);
-    --shadow-color: rgba(255, 128, 0, 0.177);
-    --border-color: #e05a00;
-    --background-image: url('https://cdn.magicdecor.in/com/2024/02/08144712/Basketball-Theme-Wallpaper-Mural-O-710x488.jpg');
+    --highlight-bg-color: rgba(220, 0, 128, 0.2);
+    --shadow-color: rgba(255, 0, 85, 0.177);
+    --border-color: #F03747;
+    --background-image: url('https://onclusive.com/wp-content/uploads/2024/06/voting.png');
     --parallax-image: url('../img/perun4.png');
 }
 
@@ -265,6 +265,7 @@ button:hover {
 }
 
 .hot .game-label {
+    z-index: 12;
     background: #ff0000;
     background-color: red;
     box-shadow: -10px -10px 0 10px orange, -20px -20px 0 20px yellow;
@@ -283,7 +284,11 @@ button:hover {
     font-size: 15px;
     border-radius: 50%;
     top:-10px;
-    right: -10px;
+    left: -10px;
+}
+.game-status-money {
+    font-size: 15px;
+    border-radius: 50%;
 }
 .premium-label {
     display: inline-block;
@@ -292,13 +297,24 @@ button:hover {
     color: black;
     font-size: 11px;
     position: absolute;
-    top: 5px;
+    bottom: 5px;
     z-index: 1;
     background: #ffd322;
-    left: auto;
-    right: 5px;
+    right: auto;
+    left: 5px;
 }
-
+.voted-label {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    font-size: 11px;
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    z-index: 1;
+    color: var(--secondary-text-color);
+    background: #ffd322;
+}
 .game-status {
     display: inline-block;
     padding: 5px 10px;
@@ -306,7 +322,6 @@ button:hover {
     font-size: 11px;
     position: absolute;
     top: 5px;
-    right: 5px;
     z-index: 1;
     background: #0cb800;
     color: var(--text-color);
@@ -326,22 +341,20 @@ button:hover {
     padding: 5px 10px;
     border-radius: var(--border-radius);
     font-size: 11px;
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
     z-index: 5;
     background: #0cb800;
     border: 2px solid #0a9900;
 }
 
 .game-status-internet {
-    display: inline-block;
     padding: 5px 10px;
+    right: 10px;
+    bottom: 10px;
+    background-color: black;
+    color: var(--secondary-text-color);
+    font-size: 16px;
+
     border-radius: var(--border-radius);
-    font-size: 11px;
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
     z-index: 5;
     cursor: pointer;
     background: #0068b8;

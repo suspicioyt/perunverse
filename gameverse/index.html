@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="style/chat.css">
     <link rel="stylesheet" href="effects/like.css">
     <link rel="stylesheet" href="style/public.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="img/perun2.1.png">
 </head>
 <body>
@@ -74,6 +74,19 @@
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
+            <div class="event-container">
+                <div class="events" id="easterEvent">
+                    <h1>Plebiscyt na HOT grę!</h1>
+                    <div class="event-block">
+                        1. Kliknij na przycisk Zagłosuj w odpowiednim kafelku gry.<br>
+                        2. Następnie kliknij na przycisk poniżej, aby zaakceptować i wysłać głos.<br>
+                        <button id="sendVoteButton" onclick="sendGameVote()" aria-label="Wyślij głos na wybraną grę">WYŚLIJ GŁOS</button>
+                    </div>
+                </div>
+            </div>
+            <div class="game-container borderColorChange" max="12">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
+            </div>
             <div class="slideshow-container" id="slideshow1">
                 <div class="slides">
                     <h1>Najnowszy update!</h1>
@@ -93,11 +106,7 @@
                     <span class="dot"></span>
                     <span class="dot"></span>
                     <span class="dot"></span>
-                    <span class="dot"></span>
                 </div>
-            </div>
-            <div class="game-container borderColorChange" max="12">
-                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
             <!-- <div class="event-container">
                 <div class="events" id="easterEvent">
@@ -118,7 +127,12 @@
         <p id="footerText">© 2025 Perun Gameverse & ChatGPT & Grok. Wszelkie prawa zastrzeżone. Wersja 1.0.0</p>
     </footer>
 
-
+    <div id="gameModal" class="modal">
+        <h1 id="gameHeader">Gra</h1>
+        <div class="modal-content">
+            <iframe id="gameIframe" src="https://example.com"></iframe>
+        </div>
+    </div>
     <div id="updateModal" class="modal">
         <h1>Dziennik zmian</h1>
         <div class="modal-content">
@@ -188,6 +202,10 @@
                     <div class="thumbnail-header">Gry 3</div>
                     <p>Lista dostępnych gier</p>
                 </div>
+                <div class="thumbnail-item" onclick="scrollToSection('game-container','3')">
+                    <div class="thumbnail-header">Gry 3</div>
+                    <p>Lista dostępnych gier</p>
+                </div>
                 <div class="thumbnail-item" onclick="scrollToSection(1,'')">
                     <div class="thumbnail-header">Stopka</div>
                     <p>Przewiń do dolnej części strony</p>
@@ -249,7 +267,9 @@
             <label class="switch"><input type="checkbox" switchId="04"><span class="slider round"></span></label><label>Ukrywanie zbanowanych słów na Chacie</label><br>
             <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
             <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Powiadomienia</label><br>
-            <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>???</label><br>
+            <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>Własna gra</label><br>
+            <label class="switch"><input type="checkbox" switchId="08"><span class="slider round"></span></label><label>Grane gry</label><br>
+            <label class="switch"><input type="checkbox" switchId="09"><span class="slider round"></span></label><label>Tryb kompaktowy</label><br>
             <button onclick="resetSwitches();initializeSwitches()">Reset</button>
         </div>
     </div>
