@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro Perun SMP</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .legend-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(20e0px, 1fr));
+            gap: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .icon-cell i {
+            margin-right: 8px;
+        }
+        .table-row-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .overworld-bg {
+            background-color: #E0F7FA;
+        }
+        .nether-bg {
+            background-color: #CE93D8;
+        }
+        .end-bg {
+            background-color: #4DB6AC;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">Metro Perun SMP</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="start-search" class="block text-sm font-medium text-gray-700">Szukaj stacji początkowej:</label>
+                <input type="text" id="start-search" placeholder="Wpisz nazwę stacji" oninput="filterStations('start')"
+                       class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
+                <select id="start" class="mt-2 p-3 w-full border rounded-lg bg-gray-50"></select>
+            </div>
+            <div>
+                <label for="end-search" class="block text-sm font-medium text-gray-700">Szukaj stacji końcowej:</label>
+                <input type="text" id="end-search" placeholder="Wpisz nazwę stacji" oninput="filterStations('end')"
+                       class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
+                <select id="end" class="mt-2 p-3 w-full border rounded-lg bg-gray-50"></select>
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="flex items-center">
+                <input type="checkbox" id="via-stations-toggle" onchange="toggleViaStations()" class="mr-2">
+                <span class="text-sm font-medium text-gray-700">Wybierz stacje pośrednie</span>
+            </label>
+            <div id="via-stations-container" class="hidden mt-4">
+                <button onclick="addViaStation()" class="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition duration-200">
+                    + Dodaj stację pośrednią
+                </button>
+                <div id="via-stations-list" class="mt-4 space-y-4"></div>
+            </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onclick="findRoute()" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                Znajdź trasę
+            </button>
+            <button onclick="resetForm()" class="bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition duration-200">
+                Resetuj
+            </button>
+        </div>
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold text-gray-800">Legenda</h2>
+            <div class="legend-container mt-2 p-5 bg-gray-50 rounded-lg">
+                <div class="legend-item">
+                    <i class="fas fa-door-open text-blue-500"></i>
+                    <span>Wejście</span>
+                </div>
+                <div class="legend-item">
+                    <i class="fas fa-star text-blue-500"></i>
+                    <span>Expiarka/Struktura/Farma</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color overworld-bg"></span>
+                    <span>Overworld</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color nether-bg"></span>
+                    <span>Nether</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color end-bg"></span>
+                    <span>End</span>
+                </div>
+            </div>
+        </div>
+        <div id="routesContainer" class="mt-6 p-4 border border-gray-200 rounded-lg"></div>
+    </div>
+
+    <script>
+        // Zunifikowana struktura danych stacji
+        const stations = {
+            'Srodmiescie': {
+                text: 'Śródmieście',
+                dimension: 'overworld',
+                informations: ['door-open', 'star'],
+                connections: [
+                    { station: 'Wzgorze', distance: 178 },
+                    { station: 'KomnatyProb', distance: 189 }
+                ]
+            },
+            'Wzgorze': {
+                text: 'Wzgórze',
+                dimension: 'overworld',
+                informations: ['door-open'],
+                connections: [
+                    { station: 'Srodmiescie', distance: 178 },
+                    { station: 'Port', distance: 0 },
+                ]
+            },
+            'KomnatyProb': {
+                text: 'Komnaty Prób',
+                dimension: 'overworld',
+                informations: ['star'],
+                connections: [
+                    { station: 'Srodmiescie', distance: 189 },
+                    { station: 'NetherGlowny', distance: 119 },
+                    { station: 'Wybrzeze', distance: 249 }
+                ]
+            },
+            'NetherGlowny': {
+                text: 'Nether Główny',
+                dimension: 'nether',
+                informations: ['star'],
+                connections: [
+                    { station: 'KomnatyProb', distance: 119 }
+                ]
+            },
+            'Wybrzeze': {
+                text: 'Wybrzeże',
+                dimension: 'overworld',
+                informations: ['star'],
+                connections: [
+                    { station: 'KomnatyProb', distance: 249 },
+                    { station: 'Najazd', distance: 430 }
+                ]
+            },
+            'Najazd': {
+                text: 'Najazd',
+                dimension: 'overworld',
+                informations: ['door-open', 'star'],
+                connections: [
+                    { station: 'KomnatyProb', distance: 430 }
+                ]
+            },
+            'Port': {
+                text: 'Port',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Wybrzeze', distance: 0 },
+                ]
+            },
+        };
+
+        // Lista wszystkich stacji do filtrowania
+        const allStations = Object.keys(stations).map(key => ({
+            value: key,
+            text: stations[key].text
+        }));
+
+        // Funkcja do inicjalizacji pól wyboru stacji
+        function initializeStations() {
+            const startSelect = document.getElementById('start');
+            const endSelect = document.getElementById('end');
+            startSelect.innerHTML = '';
+            endSelect.innerHTML = '';
+            allStations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.value;
+                option.textContent = station.text;
+                startSelect.appendChild(option.cloneNode(true));
+                endSelect.appendChild(option);
+            });
+        }
+
+        // Funkcja do filtrowania stacji
+        function filterStations(type, index = null) {
+            const searchInput = index !== null
+                ? document.getElementById(`via-search-${index}`).value.toLowerCase()
+                : document.getElementById(`${type}-search`).value.toLowerCase();
+            const select = index !== null
+                ? document.getElementById(`via-select-${index}`)
+                : document.getElementById(type);
+            const selectedValue = select.value;
+            select.innerHTML = '';
+
+            const filteredStations = allStations.filter(station =>
+                station.text.toLowerCase().includes(searchInput)
+            );
+
+            filteredStations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.value;
+                option.textContent = station.text;
+                if (station.value === selectedValue) option.selected = true;
+                select.appendChild(option);
+            });
+
+            if (filteredStations.length === 0) {
+                allStations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.value;
+                    option.textContent = station.text;
+                    if (station.value === selectedValue) option.selected = true;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Funkcja do przełączania sekcji stacji pośrednich
+        function toggleViaStations() {
+            const container = document.getElementById('via-stations-container');
+            container.classList.toggle('hidden', !document.getElementById('via-stations-toggle').checked);
+        }
+
+        // Funkcja do dodawania stacji pośredniej
+        function addViaStation() {
+            const viaList = document.getElementById('via-stations-list');
+            const index = viaList.children.length;
+            const viaDiv = document.createElement('div');
+            viaDiv.className = 'flex items-end gap-2 mt-2';
+            viaDiv.id = `via-station-${index}`;
+            viaDiv.innerHTML = `
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Stacja pośrednia ${index + 1}:</label>
+                    <input type="text" id="via-search-${index}" placeholder="Wpisz nazwę stacji"
+                           oninput="filterStations('via', ${index})"
+                           class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    <select id="via-select-${index}" class="mt-2 p-3 w-full border rounded-lg bg-gray-50">
+                        ${allStations.map(station => `<option value="${station.value}">${station.text}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="moveViaStation(${index}, -1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                        ↑
+                    </button>
+                    <button onclick="moveViaStation(${index}, 1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                        ↓
+                    </button>
+                    <button onclick="removeViaStation(${index})" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200">
+                        🗑
+                    </button>
+                </div>
+            `;
+            viaList.appendChild(viaDiv);
+        }
+
+        // Funkcja do przesuwania stacji pośredniej
+        function moveViaStation(index, direction) {
+            const viaList = document.getElementById('via-stations-list');
+            const children = Array.from(viaList.children);
+            const newIndex = index + direction;
+
+            if (newIndex >= 0 && newIndex < children.length) {
+                viaList.insertBefore(children[index], direction > 0 ? children[newIndex].nextSibling : children[newIndex]);
+                updateViaStationIndices();
+            }
+        }
+
+        // Funkcja do usuwania stacji pośredniej
+        function removeViaStation(index) {
+            const viaDiv = document.getElementById(`via-station-${index}`);
+            if (viaDiv) viaDiv.remove();
+            updateViaStationIndices();
+        }
+
+        // Funkcja do aktualizacji indeksów stacji pośrednich
+        function updateViaStationIndices() {
+            const viaList = document.getElementById('via-stations-list');
+            Array.from(viaList.children).forEach((div, i) => {
+                div.id = `via-station-${i}`;
+                div.querySelector('label').textContent = `Stacja pośrednia ${i + 1}:`;
+                const input = div.querySelector('input');
+                const select = div.querySelector('select');
+                input.id = `via-search-${i}`;
+                input.setAttribute('oninput', `filterStations('via', ${i})`);
+                select.id = `via-select-${i}`;
+                div.querySelectorAll('button')[0].setAttribute('onclick', `moveViaStation(${i}, -1)`);
+                div.querySelectorAll('button')[1].setAttribute('onclick', `moveViaStation(${i}, 1)`);
+                div.querySelectorAll('button')[2].setAttribute('onclick', `removeViaStation(${i})`);
+            });
+        }
+
+        // Funkcja do resetowania formularza
+        function resetForm() {
+            document.getElementById('start-search').value = '';
+            document.getElementById('end-search').value = '';
+            document.getElementById('via-stations-toggle').checked = false;
+            document.getElementById('via-stations-container').classList.add('hidden');
+            document.getElementById('via-stations-list').innerHTML = '';
+            filterStations('start');
+            filterStations('end');
+            document.getElementById('routesContainer').innerHTML = '';
+        }
+
+        // Funkcja do znajdowania tras między dwiema stacjami
+        function findPathsBetween(start, end, maxPaths = 3) {
+            if (start === end) return [[start]];
+
+            const paths = [];
+            const queue = [[start]];
+            const visited = new Map();
+
+            while (queue.length > 0 && paths.length < maxPaths) {
+                const path = queue.shift();
+                const node = path[path.length - 1];
+
+                const pathKey = `${node}:${path.join(',')}`;
+                const visitCount = visited.get(pathKey) || 0;
+
+                if (visitCount < 1) {
+                    visited.set(pathKey, visitCount + 1);
+                    const neighbors = stations[node].connections.map(conn => conn.station);
+                    for (const neighbor of neighbors) {
+                        if (!path.includes(neighbor) || neighbor === end) {
+                            const newPath = [...path, neighbor];
+                            if (neighbor === end) {
+                                paths.push(newPath);
+                            } else {
+                                queue.push(newPath);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return paths
+                .map(path => ({
+                    path,
+                    totalDistance: calculateTotalDistance(path)
+                }))
+                .sort((a, b) => a.totalDistance - b.totalDistance)
+                .map(p => p.path);
+        }
+
+        // Funkcja do znajdowania wszystkich tras z uwzględnieniem stacji pośrednich
+        function findAllPaths(start, end, viaStations, maxPaths = 3) {
+            const allPoints = [start, ...viaStations, end];
+            let combinedPaths = [[]];
+
+            // Znajdź trasy między kolejnymi punktami
+            for (let i = 0; i < allPoints.length - 1; i++) {
+                const segmentPaths = findPathsBetween(allPoints[i], allPoints[i + 1], maxPaths);
+                const newCombinedPaths = [];
+
+                // Połącz trasy z poprzednimi segmentami
+                for (const prevPath of combinedPaths) {
+                    for (const segmentPath of segmentPaths) {
+                        const trimmedSegment = i < allPoints.length - 2 ? segmentPath.slice(0, -1) : segmentPath;
+                        newCombinedPaths.push([...prevPath, ...trimmedSegment]);
+                    }
+                }
+
+                combinedPaths = newCombinedPaths.slice(0, maxPaths);
+            }
+
+            // Sortuj trasy według całkowitej odległości
+            return combinedPaths
+                .map(path => ({
+                    path,
+                    totalDistance: calculateTotalDistance(path)
+                }))
+                .sort((a, b) => a.totalDistance - b.totalDistance)
+                .map(p => p.path);
+        }
+
+        // Funkcja obliczająca całkowitą odległość trasy
+        function calculateTotalDistance(path) {
+            let total = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                const current = path[i];
+                const next = path[i + 1];
+                const connection = stations[current].connections.find(conn => conn.station === next);
+                total += connection ? connection.distance : 0;
+            }
+            return total;
+        }
+
+        // Funkcja wyświetlająca trasy
+        function findRoute() {
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            const viaStations = Array.from(document.getElementById('via-stations-list').children)
+                .map(div => div.querySelector('select').value);
+            const routesContainer = document.getElementById('routesContainer');
+            routesContainer.innerHTML = '';
+
+            const paths = findAllPaths(start, end, viaStations);
+
+            if (paths.length > 0) {
+                paths.forEach((path, index) => {
+                    const table = document.createElement('table');
+                    table.className = 'w-full mt-6 border-collapse fade-in shadow-md rounded-lg';
+                    table.innerHTML = `
+                        <thead>
+                            <tr class="bg-blue-600 text-white">
+                                <th class="p-3 text-left rounded-tl-lg">Stacja</th>
+                                <th class="p-3 text-left">Połączenia</th>
+                                <th class="p-3 text-left">Długość (km)</th>
+                                <th class="p-3 text-left">Informacje</th>
+                                <th class="p-3 text-left rounded-tr-lg">Wymiar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routeBody${index}"></tbody>
+                    `;
+                    const header = document.createElement('h3');
+                    header.className = 'text-xl font-bold text-gray-800 mt-8 mb-2 bg-blue-100 p-2 rounded-lg';
+                    header.textContent = `Trasa ${index + 1} (Całkowita odległość: ${calculateTotalDistance(path)} m)`;
+                    routesContainer.appendChild(header);
+                    routesContainer.appendChild(table);
+
+                    const tbody = document.getElementById(`routeBody${index}`);
+                    let totalDistance = 0;
+
+                    path.forEach((station, i) => {
+                        const row = document.createElement('tr');
+                        row.className = `table-row-enter ${stations[station].dimension}-bg`;
+
+                        // Stacja
+                        const stationCell = document.createElement('td');
+                        stationCell.className = 'p-3';
+                        stationCell.textContent = stations[station].text;
+                        row.appendChild(stationCell);
+
+                        // Połączenia
+                        const connectionsCell = document.createElement('td');
+                        connectionsCell.className = 'p-3';
+                        connectionsCell.textContent = stations[station].connections
+                            .map(conn => stations[conn.station].text)
+                            .join(', ');
+                        row.appendChild(connectionsCell);
+
+                        // Długość
+                        const distanceCell = document.createElement('td');
+                        distanceCell.className = 'p-3';
+                        if (i < path.length - 1) {
+                            const nextStation = path[i + 1];
+                            const connection = stations[station].connections.find(
+                                conn => conn.station === nextStation
+                            );
+                            const distance = connection ? connection.distance : 0;
+                            totalDistance += distance;
+                            distanceCell.textContent = `${distance} m`;
+                        } else {
+                            distanceCell.textContent = '-';
+                        }
+                        row.appendChild(distanceCell);
+
+                        // Informacje (ikony)
+                        const infoCell = document.createElement('td');
+                        infoCell.className = 'p-3 icon-cell';
+                        const infos = stations[station].informations || [];
+                        infos.forEach(info => {
+                            const icon = document.createElement('i');
+                            icon.className = `fas fa-${info} text-blue-500`;
+                            infoCell.appendChild(icon);
+                        });
+                        row.appendChild(infoCell);
+
+                        // Wymiar
+                        const dimensionCell = document.createElement('td');
+                        dimensionCell.className = 'p-3';
+                        dimensionCell.textContent = stations[station].dimension.charAt(0).toUpperCase() + stations[station].dimension.slice(1);
+                        row.appendChild(dimensionCell);
+
+                        tbody.appendChild(row);
+                    });
+
+                    // Dodaj wiersz z sumą odległości
+                    const totalRow = document.createElement('tr');
+                    totalRow.className = `font-bold bg-gray-50 table-row-enter`;
+                    totalRow.innerHTML = `
+                        <td class="p-3">Całkowita odległość</td>
+                        <td class="p-3">-</td>
+                        <td class="p-3">${totalDistance} m</td>
+                        <td class="p-3">-</td>
+                        <td class="p-3">-</td>
+                    `;
+                    tbody.appendChild(totalRow);
+                });
+            } else {
+                alert('Brak tras między wybranymi stacjami z uwzględnieniem stacji pośrednich!');
+                routesContainer.innerHTML = '';
+            }
+        }
+
+        // Inicjalizacja stacji po załadowaniu strony
+        window.onload = initializeStations;
+    </script>
+</body>
+</html>
