@@ -9,21 +9,56 @@
     <style>
         .legend-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(20e0px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
         .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
         }
         .icon-cell i {
-            margin-right: 8px;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        .route-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .route-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .route-connector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4b5563;
+            font-weight: 500;
+            margin: 0.5rem 0;
+            background-color: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        .route-connector i {
+            font-size: 1.2rem;
+            color: #6b7280;
         }
         .table-row-enter {
             animation: slideIn 0.3s ease-out;
@@ -48,54 +83,75 @@
         .end-bg {
             background-color: #4DB6AC;
         }
+        .dimension-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full">
-        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">Metro Perun SMP</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<body class="bg-gradient-to-br from-blue-50 to-gray-200 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-5xl w-full">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8 bg-gradient-to-r from-blue-600 to-blue-400 text-transparent bg-clip-text">Metro Perun SMP</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
                 <label for="start-search" class="block text-sm font-medium text-gray-700">Szukaj stacji początkowej:</label>
                 <input type="text" id="start-search" placeholder="Wpisz nazwę stacji" oninput="filterStations('start')"
-                       class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
-                <select id="start" class="mt-2 p-3 w-full border rounded-lg bg-gray-50"></select>
+                       class="mt-1 p-4 w-full border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 shadow-sm">
+                <select id="start" class="mt-2 p-4 w-full border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 transition duration-200"></select>
             </div>
             <div>
                 <label for="end-search" class="block text-sm font-medium text-gray-700">Szukaj stacji końcowej:</label>
                 <input type="text" id="end-search" placeholder="Wpisz nazwę stacji" oninput="filterStations('end')"
-                       class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
-                <select id="end" class="mt-2 p-3 w-full border rounded-lg bg-gray-50"></select>
+                       class="mt-1 p-4 w-full border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 shadow-sm">
+                <select id="end" class="mt-2 p-4 w-full border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 transition duration-200"></select>
             </div>
         </div>
-        <div class="mb-6">
+        <div class="mb-8">
             <label class="flex items-center">
-                <input type="checkbox" id="via-stations-toggle" onchange="toggleViaStations()" class="mr-2">
+                <input type="checkbox" id="via-stations-toggle" onchange="toggleViaStations()" class="mr-2 h-5 w-5 text-blue-600">
                 <span class="text-sm font-medium text-gray-700">Wybierz stacje pośrednie</span>
             </label>
             <div id="via-stations-container" class="hidden mt-4">
-                <button onclick="addViaStation()" class="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition duration-200">
+                <button onclick="addViaStation()" class="bg-gradient-to-r from-green-600 to-green-500 text-white p-3 rounded-xl hover:from-green-700 hover:to-green-600 transition duration-200 shadow-md">
                     + Dodaj stację pośrednią
                 </button>
                 <div id="via-stations-list" class="mt-4 space-y-4"></div>
             </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onclick="findRoute()" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200">
+            <button onclick="findRoute()" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-xl hover:from-blue-700 hover:to-blue-600 transition duration-200 shadow-md">
                 Znajdź trasę
             </button>
-            <button onclick="resetForm()" class="bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition duration-200">
+            <button onclick="resetForm()" class="bg-gradient-to-r from-gray-500 to-gray-400 text-white p-3 rounded-xl hover:from-gray-600 hover:to-gray-500 transition duration-200 shadow-md">
                 Resetuj
             </button>
         </div>
         <div class="mt-8">
             <h2 class="text-lg font-semibold text-gray-800">Legenda</h2>
-            <div class="legend-container mt-2 p-5 bg-gray-50 rounded-lg">
+            <div class="legend-container mt-2 p-5 bg-gray-50 rounded-xl shadow-sm">
                 <div class="legend-item">
-                    <i class="fas fa-door-open text-blue-500"></i>
+                    <i class="fas fa-door-open text-blue-500 text-lg"></i>
                     <span>Wejście</span>
                 </div>
                 <div class="legend-item">
-                    <i class="fas fa-star text-blue-500"></i>
+                    <i class="fas fa-star text-blue-500 text-lg"></i>
                     <span>Expiarka/Struktura/Farma</span>
                 </div>
                 <div class="legend-item">
@@ -112,7 +168,7 @@
                 </div>
             </div>
         </div>
-        <div id="routesContainer" class="mt-6 p-4 border border-gray-200 rounded-lg"></div>
+        <div id="routesContainer" class="mt-6"></div>
     </div>
 
     <script>
@@ -133,7 +189,8 @@
                 informations: ['door-open'],
                 connections: [
                     { station: 'Srodmiescie', distance: 178 },
-                    { station: 'Port', distance: 0 },
+                    { station: 'Port', distance: 232 },
+                    { station: 'Posterunek', distance: 405 },
                 ]
             },
             'KomnatyProb': {
@@ -168,7 +225,7 @@
                 dimension: 'overworld',
                 informations: ['door-open', 'star'],
                 connections: [
-                    { station: 'KomnatyProb', distance: 430 }
+                    { station: 'Wybrzeze', distance: 430 }
                 ]
             },
             'Port': {
@@ -176,7 +233,60 @@
                 dimension: 'overworld',
                 informations: [],
                 connections: [
-                    { station: 'Wybrzeze', distance: 0 },
+                    { station: 'Wzgorze', distance: 232 },
+                    { station: 'Polana', distance: 222 },
+                ]
+            },
+            'Polana': {
+                text: 'Polana',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Port', distance: 222 },
+                    { station: 'Zatoka', distance: 128 },
+                    { station: 'Ogrody', distance: 179 },
+                ]
+            },
+            'Zatoka': {
+                text: 'Zatoka',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Polana', distance: 128 },
+                ]
+            },
+            'Posterunek': {
+                text: 'Posterunek',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Wzgorze', distance: 405 },
+                    { station: 'Spawn', distance: 647 },
+                ]
+            },
+            'Spawn': {
+                text: 'Spawn',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Posterunek', distance: 647 },
+                ]
+            },
+            'Ogrody': {
+                text: 'Ogrody',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Polana', distance: 179 },
+                    { station: 'Stronghold', distance: 194 },
+                ]
+            },
+            'Stronghold': {
+                text: 'Stronghold',
+                dimension: 'overworld',
+                informations: [],
+                connections: [
+                    { station: 'Ogrody', distance: 194 },
                 ]
             },
         };
@@ -247,27 +357,27 @@
             const viaList = document.getElementById('via-stations-list');
             const index = viaList.children.length;
             const viaDiv = document.createElement('div');
-            viaDiv.className = 'flex items-end gap-2 mt-2';
+            viaDiv.className = 'flex items-end gap-3 mt-3';
             viaDiv.id = `via-station-${index}`;
             viaDiv.innerHTML = `
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-700">Stacja pośrednia ${index + 1}:</label>
                     <input type="text" id="via-search-${index}" placeholder="Wpisz nazwę stacji"
                            oninput="filterStations('via', ${index})"
-                           class="mt-1 p-3 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200">
-                    <select id="via-select-${index}" class="mt-2 p-3 w-full border rounded-lg bg-gray-50">
+                           class="mt-1 p-4 w-full border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 shadow-sm">
+                    <select id="via-select-${index}" class="mt-2 p-4 w-full border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 transition duration-200">
                         ${allStations.map(station => `<option value="${station.value}">${station.text}</option>`).join('')}
                     </select>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="moveViaStation(${index}, -1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200">
-                        ↑
+                    <button onclick="moveViaStation(${index}, -1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button onclick="moveViaStation(${index}, 1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200">
-                        ↓
+                    <button onclick="moveViaStation(${index}, 1)" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-down"></i>
                     </button>
-                    <button onclick="removeViaStation(${index})" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200">
-                        🗑
+                    <button onclick="removeViaStation(${index})" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200 shadow-sm">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             `;
@@ -367,12 +477,10 @@
             const allPoints = [start, ...viaStations, end];
             let combinedPaths = [[]];
 
-            // Znajdź trasy między kolejnymi punktami
             for (let i = 0; i < allPoints.length - 1; i++) {
                 const segmentPaths = findPathsBetween(allPoints[i], allPoints[i + 1], maxPaths);
                 const newCombinedPaths = [];
 
-                // Połącz trasy z poprzednimi segmentami
                 for (const prevPath of combinedPaths) {
                     for (const segmentPath of segmentPaths) {
                         const trimmedSegment = i < allPoints.length - 2 ? segmentPath.slice(0, -1) : segmentPath;
@@ -383,7 +491,6 @@
                 combinedPaths = newCombinedPaths.slice(0, maxPaths);
             }
 
-            // Sortuj trasy według całkowitej odległości
             return combinedPaths
                 .map(path => ({
                     path,
@@ -418,94 +525,66 @@
 
             if (paths.length > 0) {
                 paths.forEach((path, index) => {
-                    const table = document.createElement('table');
-                    table.className = 'w-full mt-6 border-collapse fade-in shadow-md rounded-lg';
-                    table.innerHTML = `
-                        <thead>
-                            <tr class="bg-blue-600 text-white">
-                                <th class="p-3 text-left rounded-tl-lg">Stacja</th>
-                                <th class="p-3 text-left">Połączenia</th>
-                                <th class="p-3 text-left">Długość (km)</th>
-                                <th class="p-3 text-left">Informacje</th>
-                                <th class="p-3 text-left rounded-tr-lg">Wymiar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="routeBody${index}"></tbody>
+                    const routeCard = document.createElement('div');
+                    routeCard.className = 'route-card fade-in';
+                    routeCard.innerHTML = `
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 bg-blue-100 p-3 rounded-lg">
+                            Trasa ${index + 1} (Całkowita odległość: ${calculateTotalDistance(path)} m)
+                        </h3>
+                        <ul class="space-y-2"></ul>
                     `;
-                    const header = document.createElement('h3');
-                    header.className = 'text-xl font-bold text-gray-800 mt-8 mb-2 bg-blue-100 p-2 rounded-lg';
-                    header.textContent = `Trasa ${index + 1} (Całkowita odległość: ${calculateTotalDistance(path)} m)`;
-                    routesContainer.appendChild(header);
-                    routesContainer.appendChild(table);
-
-                    const tbody = document.getElementById(`routeBody${index}`);
+                    const listContainer = routeCard.querySelector('ul');
                     let totalDistance = 0;
 
                     path.forEach((station, i) => {
-                        const row = document.createElement('tr');
-                        row.className = `table-row-enter ${stations[station].dimension}-bg`;
+                        const dimension = stations[station].dimension;
+                        const dimensionIcon = dimension === 'overworld' ? '🌍' : dimension === 'nether' ? '🔥' : '🌌';
+                        const step = document.createElement('li');
+                        step.className = `route-step table-row-enter ${dimension}-bg`;
+                        step.innerHTML = `
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="dimension-icon">${dimensionIcon}</span>
+                                    <span class="font-medium text-gray-800">${stations[station].text}</span>
+                                    <div class="icon-cell">
+                                        ${(stations[station].informations || []).map(info => `
+                                            <i class="fas fa-${info} text-blue-500 tooltip" title="${info === 'door-open' ? 'Wejście' : 'Expiarka/Struktura/Farma'}"></i>
+                                        `).join('') || '-'}
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Połączenia: ${stations[station].connections.map(conn => stations[conn.station].text).join(', ') || '-'}
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Wymiar: ${dimension.charAt(0).toUpperCase() + dimension.slice(1)}
+                                </div>
+                            </div>
+                        `;
+                        listContainer.appendChild(step);
 
-                        // Stacja
-                        const stationCell = document.createElement('td');
-                        stationCell.className = 'p-3';
-                        stationCell.textContent = stations[station].text;
-                        row.appendChild(stationCell);
-
-                        // Połączenia
-                        const connectionsCell = document.createElement('td');
-                        connectionsCell.className = 'p-3';
-                        connectionsCell.textContent = stations[station].connections
-                            .map(conn => stations[conn.station].text)
-                            .join(', ');
-                        row.appendChild(connectionsCell);
-
-                        // Długość
-                        const distanceCell = document.createElement('td');
-                        distanceCell.className = 'p-3';
                         if (i < path.length - 1) {
                             const nextStation = path[i + 1];
-                            const connection = stations[station].connections.find(
-                                conn => conn.station === nextStation
-                            );
-                            const distance = connection ? connection.distance : 0;
+                            const distance = stations[station].connections.find(conn => conn.station === nextStation)?.distance || 0;
                             totalDistance += distance;
-                            distanceCell.textContent = `${distance} m`;
-                        } else {
-                            distanceCell.textContent = '-';
+                            const connector = document.createElement('li');
+                            connector.className = 'route-connector';
+                            connector.innerHTML = `
+                                <i class="fas fa-arrow-down"></i>
+                                <span>${distance} m</span>
+                            `;
+                            listContainer.appendChild(connector);
                         }
-                        row.appendChild(distanceCell);
-
-                        // Informacje (ikony)
-                        const infoCell = document.createElement('td');
-                        infoCell.className = 'p-3 icon-cell';
-                        const infos = stations[station].informations || [];
-                        infos.forEach(info => {
-                            const icon = document.createElement('i');
-                            icon.className = `fas fa-${info} text-blue-500`;
-                            infoCell.appendChild(icon);
-                        });
-                        row.appendChild(infoCell);
-
-                        // Wymiar
-                        const dimensionCell = document.createElement('td');
-                        dimensionCell.className = 'p-3';
-                        dimensionCell.textContent = stations[station].dimension.charAt(0).toUpperCase() + stations[station].dimension.slice(1);
-                        row.appendChild(dimensionCell);
-
-                        tbody.appendChild(row);
                     });
 
-                    // Dodaj wiersz z sumą odległości
-                    const totalRow = document.createElement('tr');
-                    totalRow.className = `font-bold bg-gray-50 table-row-enter`;
+                    const totalRow = document.createElement('li');
+                    totalRow.className = 'route-step font-bold bg-gray-50 table-row-enter';
                     totalRow.innerHTML = `
-                        <td class="p-3">Całkowita odległość</td>
-                        <td class="p-3">-</td>
-                        <td class="p-3">${totalDistance} m</td>
-                        <td class="p-3">-</td>
-                        <td class="p-3">-</td>
+                        <div class="flex flex-col gap-1">
+                            <div class="font-medium text-gray-800">Całkowita odległość: ${totalDistance} m</div>
+                        </div>
                     `;
-                    tbody.appendChild(totalRow);
+                    listContainer.appendChild(totalRow);
+                    routesContainer.appendChild(routeCard);
                 });
             } else {
                 alert('Brak tras między wybranymi stacjami z uwzględnieniem stacji pośrednich!');
