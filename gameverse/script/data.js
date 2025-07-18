@@ -1,8 +1,9 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmlSQtCHeCqIwUA527F2IZJ-l4E11lFkNjS19kysW-nsReK7ivNCXF1OmQP6t53nK5/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby56CL80JeBwzpW_Hlta4xhRPPnytisYsDS_qd4Vh1Q5WGa047x9MXTrVKsifqSlSAI/exec';
 const SYNC_INTERVAL = 5000;
 
 let userDataCache = null;
 let gamesCache = null;
+let isSyncing = false;
 
 async function loadUserData() {
     const token = localStorage.getItem('authToken');
@@ -12,29 +13,15 @@ async function loadUserData() {
         return false;
     }
 
-    const cachedData = sessionStorage.getItem('userData');
-    if (cachedData) {
-        try {
-            userDataCache = JSON.parse(cachedData);
-            if (userDataCache.token === token) {
-                console.log('Użyto buforowanych danych z sessionStorage');
-                sessionStorage.setItem('perunPremium', userDataCache.isPremium === true || userDataCache.isPremium === 'true');
-                return true;
-            } else {
-                console.warn('Token w buforze nie zgadza się z bieżącym tokenem');
-            }
-        } catch (error) {
-            console.error('Błąd parsowania buforowanych danych:', error);
-        }
-    }
-
     try {
         console.log('Wysyłanie żądania weryfikacji z tokenem:', token);
-        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`);
+        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
         if (!response.ok) {
-            console.error('Błąd HTTP:', response.status, response.statusText);
-            sessionStorage.removeItem('userData');
-            sessionStorage.removeItem('perunPremium');
+            console.error(`Błąd HTTP: ${response.status} ${response.statusText}`);
+            userDataCache = null;
             return false;
         }
         const data = await response.json();
@@ -42,29 +29,28 @@ async function loadUserData() {
 
         if (data.status === 'success') {
             userDataCache = { ...data, token };
-            sessionStorage.setItem('userData', JSON.stringify(userDataCache));
-            sessionStorage.setItem('perunPremium', userDataCache.isPremium === true || userDataCache.isPremium === 'true');
-            console.log('Dane użytkownika zapisane w sessionStorage:', userDataCache);
+            console.log('Dane użytkownika załadowane:', userDataCache);
             return true;
         } else {
             console.error('Błąd weryfikacji tokena:', data.message);
-            sessionStorage.removeItem('userData');
-            sessionStorage.removeItem('perunPremium');
+            userDataCache = null;
             return false;
         }
     } catch (error) {
         console.error('Błąd podczas pobierania danych użytkownika:', error);
-        sessionStorage.removeItem('userData');
-        sessionStorage.removeItem('perunPremium');
+        userDataCache = null;
         return false;
     }
 }
 
 async function loadGamesData() {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=getGames`);
+        const response = await fetch(`${SCRIPT_URL}?action=getGames`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
         if (!response.ok) {
-            console.error('Błąd HTTP podczas pobierania gier:', response.status, response.statusText);
+            console.error(`Błąd HTTP podczas pobierania gier: ${response.status} ${response.statusText}`);
             return null;
         }
         const data = await response.json();
@@ -72,7 +58,6 @@ async function loadGamesData() {
         if (data.status === 'success') {
             gamesCache = data.games;
             window.games = gamesCache;
-            localStorage.setItem('gamesData', JSON.stringify(gamesCache));
             return gamesCache;
         } else {
             console.error('Błąd pobierania gier:', data.message);
@@ -85,31 +70,36 @@ async function loadGamesData() {
 }
 
 async function syncUserData() {
+    if (isSyncing) {
+        console.log('Synchronizacja w toku, pomijanie...');
+        return;
+    }
+    isSyncing = true;
     const token = localStorage.getItem('authToken');
     if (!token) {
         console.log('Brak tokena, pomijanie synchronizacji');
+        isSyncing = false;
         return;
     }
 
     try {
         console.log('Synchronizacja - wysyłanie żądania z tokenem:', token);
-        const userResponse = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`);
+        const userResponse = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
         if (!userResponse.ok) {
-            console.error('Błąd HTTP podczas synchronizacji użytkownika:', userResponse.status, userResponse.statusText);
-            sessionStorage.removeItem('userData');
-            sessionStorage.removeItem('perunPremium');
+            console.error(`Błąd HTTP podczas synchronizacji użytkownika: ${userResponse.status} ${userResponse.statusText}`);
+            userDataCache = null;
         } else {
             const userData = await userResponse.json();
             console.log('Synchronizacja - odpowiedź z serwera (użytkownik):', userData);
             if (userData.status === 'success') {
                 userDataCache = { ...userData, token };
-                sessionStorage.setItem('userData', JSON.stringify(userDataCache));
-                sessionStorage.setItem('perunPremium', userDataCache.isPremium === true || userDataCache.isPremium === 'true');
                 console.log('Dane użytkownika zsynchronizowane:', userDataCache);
             } else {
                 console.error('Błąd weryfikacji tokena:', userData.message);
-                sessionStorage.removeItem('userData');
-                sessionStorage.removeItem('perunPremium');
+                userDataCache = null;
             }
         }
 
@@ -133,13 +123,14 @@ async function syncUserData() {
         }
     } catch (error) {
         console.error('Błąd podczas synchronizacji danych:', error);
-        sessionStorage.removeItem('userData');
-        sessionStorage.removeItem('perunPremium');
+        userDataCache = null;
         await updatePlayerBadges();
         if (typeof loadGames === 'function' && window.games) {
             loadFavorites(window.games);
             loadGames(window.games);
         }
+    } finally {
+        isSyncing = false;
     }
 }
 
@@ -168,6 +159,29 @@ async function getAppData(appId, key) {
     }
     console.error(`Dane dla ${appId}.${key} nie istnieją`);
     return null;
+}
+
+async function updateSheetData(key, value) {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        console.error('Brak tokena, nie można zapisać danych w arkuszu');
+        return;
+    }
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=update&key=${key}&token=${token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(value)
+        });
+        if (!response.ok) {
+            console.error(`Błąd HTTP podczas aktualizacji ${key}: ${response.status} ${response.statusText}`);
+            return;
+        }
+        console.log(`Zaktualizowano ${key} w arkuszu`);
+        userDataCache = null; // Wymagaj ponownego załadowania danych
+    } catch (error) {
+        console.error(`Błąd aktualizacji ${key} w arkuszu:`, error);
+    }
 }
 
 async function insertData(element, appId, key) {
@@ -217,11 +231,93 @@ async function updatePlayerBadges() {
         }
     }
 }
+async function addData(token, appId, key, value) {
+    try {
+        // Obsługa tokena 'current'
+        const effectiveToken = token === 'current' ? localStorage.getItem('authToken') : token;
+        if (!effectiveToken) {
+            console.error('Brak tokena uwierzytelnienia');
+            return { status: 'error', message: 'Brak tokena uwierzytelnienia' };
+        }
 
+        // Pobierz dane użytkownika
+        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${effectiveToken}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const userData = await response.json();
+
+        if (userData.status !== 'success') {
+            console.error('Błąd weryfikacji tokena:', userData.message);
+            return { status: 'error', message: userData.message };
+        }
+
+        if (appId === 'sheet') {
+            // Mapowanie klucza na kolumnę w arkuszu
+            const columnMap = {
+                'username': 2,
+                'email': 3,
+                'birthYear': 5,
+                'isVerified': 6,
+                'isPremium': 7,
+                'token': 8
+            };
+            const columnIndex = columnMap[key];
+            if (!columnIndex) {
+                console.error(`Nieprawidłowy klucz dla appId='sheet': ${key}`);
+                return { status: 'error', message: `Nieprawidłowy klucz: ${key}` };
+            }
+
+            // Aktualizacja wartości w arkuszu
+            await updateSheetData(key, value);
+            userDataCache = { ...userData, [key]: value, token: effectiveToken };
+            return { status: 'success', message: `Zaktualizowano ${key} w arkuszu`, [key]: value };
+        } else {
+            // Pobierz bieżące appData
+            let appData = userData.appData || {};
+
+            // Inicjalizuj kategorię, jeśli nie istnieje
+            if (!appData[appId]) {
+                appData[appId] = {};
+            }
+
+            // Sprawdź, czy klucz już istnieje i czy jest tablicą
+            if (appData[appId][key] !== undefined && !Array.isArray(appData[appId][key])) {
+                console.error(`Klucz ${appId}.${key} istnieje i nie jest tablicą`);
+                return { status: 'error', message: `Klucz ${key} nie jest tablicą w ${appId}` };
+            }
+
+            // Inicjalizuj tablicę dla klucza, jeśli nie istnieje
+            if (!Array.isArray(appData[appId][key])) {
+                appData[appId][key] = [];
+            }
+
+            // Dodaj wartość do tablicy (powtarzające się wartości są dozwolone)
+            appData[appId][key].push(value);
+
+            // Zaktualizuj appData w arkuszu
+            const updateResponse = await fetch(`${SCRIPT_URL}?action=updateAppData&token=${effectiveToken}&appId=${appId}&data=${encodeURIComponent(JSON.stringify(appData[appId]))}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const updateResult = await updateResponse.json();
+
+            if (updateResult.status !== 'success') {
+                console.error('Błąd aktualizacji danych:', updateResult.message);
+                return { status: 'error', message: updateResult.message };
+            }
+
+            // Odśwież cache
+            userDataCache = { ...userData, appData: updateResult.appData, token: effectiveToken };
+            return { status: 'success', message: `Dodano ${value} do ${appId}.${key}`, appData: updateResult.appData };
+        }
+    } catch (error) {
+        console.error('Błąd w addData:', error);
+        return { status: 'error', message: 'Wystąpił błąd podczas dodawania danych' };
+    }
+}
 function logout() {
     localStorage.removeItem('authToken');
-    sessionStorage.removeItem('userData');
-    sessionStorage.removeItem('perunPremium');
     userDataCache = null;
     gamesCache = null;
     window.games = null;
