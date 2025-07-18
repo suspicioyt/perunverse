@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perunverse Account</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="perun2.png" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h2>Perunverse Account</h2>
+        <h4>Zaloguj/Zarejestruj się, aby używać aplikacji!</h4>
+        
+        <!-- Zakładki -->
+        <div class="tabs">
+            <button id="loginTab" class="tab-button active" onclick="showTab('login')">Logowanie</button>
+            <button id="registerTab" class="tab-button" onclick="showTab('register')">Rejestracja</button>
+        </div>
+
+        <!-- Formularz logowania -->
+        <div id="login" class="tab-content active">
+            <input type="text" id="loginIdentifier" placeholder="Nazwa użytkownika lub E-mail" required>
+            <input type="password" id="loginPassword" placeholder="Hasło" required>
+            <button onclick="login()">Zaloguj</button>
+            <p class="error" id="loginError"></p>
+        </div>
+
+        <!-- Formularz rejestracji -->
+        <div id="register" class="tab-content">
+            <input type="text" id="registerUsername" placeholder="Nazwa użytkownika" required maxlength="20">
+            <input type="email" id="registerEmail" placeholder="E-mail (opcjonalnie)">
+            <input type="password" id="registerPassword" placeholder="Hasło" required>
+            <input type="password" id="confirmPassword" placeholder="Potwierdź hasło" required>
+            <input type="text" id="birthYearDisplay" placeholder="Wybierz rok urodzenia" readonly onclick="openYearModal()">
+            <input type="hidden" id="birthYear" required>
+            <button onclick="register()">Zarejestruj</button>
+            <p class="error" id="registerError"></p>
+        </div>
+    </div>
+
+    <!-- Modal wyboru roku urodzenia -->
+    <div id="yearModal" class="modal">
+        <div class="modal-content">
+            <h3>Wybierz rok urodzenia</h3>
+            <select id="yearSelect" size="10">
+                <!-- Wypełniane dynamicznie -->
+            </select>
+            <button onclick="selectYear()">Wybierz</button>
+            <button onclick="closeYearModal()">Anuluj</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
