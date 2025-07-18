@@ -11,7 +11,7 @@ const achievementsData = [
         id: "02", 
         name: "Runner", 
         opis: "Zbierz 150 pkt w Dino", 
-        game: "game/dino.html", 
+        game: "game/1/dino.html", 
         classes: ["beta"], 
         condition: { type: "data", key: "dinoBestScore", threshold: 150 } // Pojedyncze dane
     },
@@ -19,7 +19,7 @@ const achievementsData = [
         id: "03", 
         name: "Mistrz odbijania", 
         opis: "Zbierz 11 pkt w Ping Pongu", 
-        game: "game/pingpong.html", 
+        game: "game/1/pingpong.html", 
         classes: ["beta"], 
         condition: { type: "data", key: "pingPong", threshold: 11 }
     },
@@ -27,7 +27,7 @@ const achievementsData = [
         id: "04", 
         name: "Wieże czy wierze?", 
         opis: "Zbierz 60 pkt w Flappy Bird", 
-        game: "game/flappybird.html", 
+        game: "game/1/flappybird.html", 
         classes: ["beta"], 
         condition: { type: "data", key: "flappyHighScore", threshold: 60 }
     },
@@ -35,7 +35,7 @@ const achievementsData = [
         id: "05", 
         name: "2048", 
         opis: "Zbierz 2048 pkt w 2048", 
-        game: "game/2048.html", 
+        game: "game/1/2048.html", 
         classes: ["beta"], 
         condition: { type: "data", key: "2048highScore", threshold: 2048 }
     },
@@ -43,7 +43,7 @@ const achievementsData = [
     //     id: "06", 
     //     name: "Uderzacz", 
     //     opis: "Uderz w 20 kretów w Whack a Mole", 
-    //     game: "game/whackamole.html", 
+    //     game: "game/1/whackamole.html", 
     //     classes: ["beta"], 
     //     condition: { type: "data", key: "whackAMoleHighScore", threshold: 20 }
     // }
@@ -51,7 +51,7 @@ const achievementsData = [
     //     id: "03", 
     //     name: "Mistrz odbijania", 
     //     opis: "Zbierz 10 pkt w Ping Pongu i ukończ 1 inne osiągnięcie", 
-    //     game: "game/pingpong.html", 
+    //     game: "game/1/pingpong.html", 
     //     classes: ["beta"], 
     //     condition: [ // Wiele warunków
     //         { type: "data", key: "pingPong", threshold: 10 },

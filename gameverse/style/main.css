@@ -11,7 +11,7 @@
 :root {
     --border-radius: 20px;
     --primary-color: #F03747;
-    --button-disabled-color: #b1b1b1;
+    --button-disabled-color: #3b3b3b;
     --button-color: #0a7900;
     --button-active-color: #113f00;
     --button-hover-color: #3bde00;
@@ -681,6 +681,7 @@ footer {
     width: 400px;
     max-width: 100%;
     height: auto;
+    text-align: center;
 }
 
 .modal-content p {
@@ -1127,19 +1128,25 @@ a {
     display: flex;
 }
 
-#sidenav a {
+#sidenav button {
     padding: 6px 13px 6px 13px;
+    background-color:transparent;
+    box-shadow: none;
     text-decoration: none;
     font-size: 25px;
     display: block;
     color: var(--tertiary-text-color);
 }
 
-#sidenav a:hover {
+#sidenav button:hover {
     color: var(--text-color);
 }
 
-#sidenav a.active {
+#sidenav button:disabled {
+    color: var(--button-disabled-color);
+}
+
+#sidenav button.active {
     color: var(--button-active-color);
 }
 

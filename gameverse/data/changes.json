@@ -1,7 +1,35 @@
 {
   "tabsData": [
+    {
+      "name": "🗳️ Vote Update part 2",
+      "version": "1.2.0.3",
+      "date": "18.07.2025r.",
+      "quote": "Dalsza część głosowania",
+      "backgroundImage": "https://onclusive.com/wp-content/uploads/2024/06/voting.png",
+      "paragraphs": [
         {
-      "name": "🗳️ Vote Update",
+          "title": "Nowości",
+          "content": [
+            "🪢 Dodano powiązanie z Perun Account"
+          ]
+        },
+        {
+          "title": "Gry",
+          "content": [
+            "💣 Dodano grę Saper"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "❌ Zablokowano tymczasowo kilka funkcji i gier"
+          ]
+        },
+        "pls zagłosuj 🥺"
+      ]
+    },
+    {
+      "name": "🗳️ Vote Update part 1",
       "version": "1.2.0.2",
       "date": "15.06.2025r.",
       "quote": "Zagłosuj na nową Hot grę",
@@ -323,7 +351,7 @@
           "title": "Gry",
           "content": [
             "🕹️ Funkcja Ostatnio Grane",
-            "♣️ Dodano gry: Solitaire <a href=\"game/solitaire.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> , Bloki 2 <a href=\"bloki2/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "♣️ Dodano gry: Solitaire <a href=\"game/1/solitaire.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> , Bloki 2 <a href=\"bloki2/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
           ]
         },
         {
@@ -355,7 +383,7 @@
           "title": "Gry",
           "content": [
             "🐦 Dodano nową grę: Flappy Bird <a href=\"flappybird/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🌟 Zaktualizowano gre: Spadające bloki <a href=\"game/bloki1.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Memory <a href=\"game/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Tetris <a href=\"game/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🌟 Zaktualizowano gre: Spadające bloki <a href=\"game/1/bloki1.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Memory <a href=\"game/1/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Tetris <a href=\"game/1/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
             "🖼️ Poprawiono wygląd tytułów zakładek istniejących gier"
           ]
         },
@@ -446,7 +474,7 @@
         {
           "title": "Gry",
           "content": [
-            "🔤 Dodano grę Memory <a href=\"game/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🔤 Dodano grę Memory <a href=\"game/1/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
             "🖼️ Poprawiono wygląd tytułów zakładek istniejących gier"
           ]
         },
@@ -478,7 +506,7 @@
           "title": "Gry",
           "content": [
             "❄️ Dodano grę Śnieżynki <a href=\"sniezynki/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🖱️ Ulepszono grę Bitcoin Miner <a href=\"game/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🖱️ Ulepszono grę Bitcoin Miner <a href=\"game/1/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
           ]
         },
         {
@@ -510,7 +538,7 @@
         {
           "title": "Gry",
           "content": [
-            "🖱️ Dodano nową grę: BitCoin Clicker <a href=\"game/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🖱️ Dodano nową grę: BitCoin Clicker <a href=\"game/1/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
           ]
         },
         {
@@ -540,8 +568,8 @@
         {
           "title": "Gry",
           "content": [
-            "🪛 Ulepszenie gier: Kółko-Krzyżyk <a href=\"game/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🟥 Dodano gry: Tetris <a href=\"game/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> i Obby <a href=\"obby/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🪛 Ulepszenie gier: Kółko-Krzyżyk <a href=\"game/1/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🟥 Dodano gry: Tetris <a href=\"game/1/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> i Obby <a href=\"obby/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
             "😺 Pet Simulator jest zupełnie nowy <a href=\"petsim/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
           ]
         },
@@ -575,7 +603,7 @@
           "title": "Gry",
           "content": [
             "🎮 Dodano nową grę: Rizz Party Tycoon <a href=\"rizzparty/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🪛 Ulepszono grę w Kółko i Krzyżyk <a href=\"game/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🪛 Ulepszono grę w Kółko i Krzyżyk <a href=\"game/1/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
             "🏗️ Rozpoczęto prace nad RPG HTML <a href=\"rpghtml/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
           ]
         },

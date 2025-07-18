@@ -28,7 +28,8 @@
             <h3>Najlepsze gry na wyciągnięcie ręki</h3>
         </div>
         <div id="user-info-container" onclick="Modal.open('playerInfoModal')" class="user-info" style="cursor: pointer;">
-            <div id="playerName">?</div>
+            <div id="playerName" data-app-id="sheet" data-key="username">?</div>
+            <div id="playerBadges"></div>
             <div id="playerPLN">?</div>
             <div id="playerRank">?</div>
             <i class="fas fa-user" style="font-size: 30px;"></i>
@@ -38,22 +39,19 @@
     <div id="parallaxEnd"></div>
     <main>
         <div id="sidenav">
-            <a onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></a>
-            <a onclick="Modal.open('achievementModal')" class="sidenavButton" title="Osiągnięcia"><i class="fa-solid fa-trophy"></i></a>
-            <a onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></a>
-            <a onclick="Modal.open('personalizationModal')" class="sidenavButton" title="Personalizacje"><i class="fa-solid fa-palette"></i></a>
-            <a onclick="Modal.open('chatModal');scrollToBottom()" class="sidenavButton" title="Chat"><i class="fa-solid fa-comments"></i></a>
-            <a onclick="Modal.open('rankingModal')" class="sidenavButton" title="Ranking"><i class="fa-solid fa-ranking-star"></i></a>
-            <a onclick="Modal.open('aiModal')" class="sidenavButton" title="Perun AI"><i class="fa-solid fa-robot"></i></a>
-            <a onclick="Modal.open('challengesModal')" class="sidenavButton" title="Wyzwania"><i class="fa-solid fa-star"></i></a>
-            <a onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></a>
-            <a onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></a>
-            <a onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></a>
+            <button onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></button>
+            <button disabled onclick="Modal.open('achievementModal')" class="sidenavButton" title="Osiągnięcia"><i class="fa-solid fa-trophy"></i></button>
+            <button onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></button>
+            <button onclick="Modal.open('personalizationModal')" class="sidenavButton" title="Personalizacje"><i class="fa-solid fa-palette"></i></button>
+            <button disabled onclick="Modal.open('chatModal');scrollToBottom()" class="sidenavButton" title="Chat"><i class="fa-solid fa-comments"></i></button>
+            <button disabled onclick="Modal.open('rankingModal')" class="sidenavButton" title="Ranking"><i class="fa-solid fa-ranking-star"></i></button>
+            <button disabled onclick="Modal.open('aiModal')" class="sidenavButton" title="Perun AI"><i class="fa-solid fa-robot"></i></button>
+            <button disabled onclick="Modal.open('challengesModal')" class="sidenavButton" title="Wyzwania"><i class="fa-solid fa-star"></i></button>
+            <button disabled onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></button>
+            <button onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></button>
+            <button onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></button>
           </div>
         <div id="mainwindow">
-            <div id="usernameDemoContainer" style="display: none;">
-                Twoja wersja Demo Zmiany Użytkownika potrwa jeszcze: ??:??:??
-            </div>
             <div class="search-filters-container borderColorChange">
                 <input type="text" id="searchInput" placeholder="Szukaj">
                 <div class="filterdropdown">
@@ -159,12 +157,9 @@
             <div class="firework"></div>
             <div class="firework"></div>
             <h2>Witaj na PERUN GAMEVERSE!</h2>
-            <p>Cieszymy się, że do nas dołączyłeś! Teraz możesz zagrać w dowolną grę, jaką tylko chcesz. <br><b>Miłej zabawy!</b> <br>Ale najpierw wpisz swoją nazwę użytkownika.</p>
-            <form id="usernameForm">
-                <input type="text" style="display: block;" id="usernameInput" placeholder="Twoja nazwa" required min="3" max="15">
-                <button id="saveUsernameBtn">Zapisz nazwę</button>
-                <p id="errorMessage">Proszę wpisać nazwę użytkownika.</p>
-              </form>
+            <p style="color: green;">Zostałeś  pomyślnie zalogowany!</p>
+            <p>Cieszymy się, że do nas dołączyłeś! Teraz możesz zagrać w dowolną grę, jaką tylko chcesz. <br><b>Miłej zabawy!</b></p>
+            <button id="saveUsernameBtn">OK</button>
         </div>
     </div>
     <div id="achievementModal" class="modal">
@@ -250,13 +245,6 @@
         <h1>Ustawienia</h1>
         <div class="modal-content">
             <h2>Ustawienia</h2>
-            <label>Nazwa użytkownika:</label>
-            <input type="text" name="nameInput" id="usernameSettingsInput">
-            <button onclick="handleUsernameChange()" id="usernameChangeButton">Zmień</button>
-            <br><br>
-            <label>Avatar:</label>
-            <input type="file" id="avatarUpload" accept="image/*">
-            <br><br>
             <label>Rozmiar czcionki wiadomości: </label>
             <input type="range" id="chatFontSizeSlider" min="10" max="30" value="16"><button onclick='document.getElementById("chatFontSizeSlider").value=17;document.documentElement.style.setProperty("--chatMessageFontSize", `17px`);localStorage.setItem("chatMessageFontSize", 17)'>Reset</button>
             <hr>
@@ -427,7 +415,20 @@
         <div class="loading-tip" id="loading-tip"></div>
         <div class="siteLoadingSpinner"></div>
     </div>
+    
+    <script src="script/data.js"></script>
     <script src="script/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const elements = document.querySelectorAll('[data-app-id][data-key]');
+            await loadUserData(); // Pobierz dane użytkownika raz
+            elements.forEach(element => {
+                const appId = element.getAttribute('data-app-id');
+                const key = element.getAttribute('data-key');
+                insertData(element, appId, key);
+            });
+        });
+    </script>
     <script src="script/achievements.js"></script>
     <script src="script/games.js"></script>
     <script src="script/changes.js"></script>

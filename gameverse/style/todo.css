@@ -296,3 +296,8 @@ button:disabled {
   height: 100%;
   border: none;
 }
+.game-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}

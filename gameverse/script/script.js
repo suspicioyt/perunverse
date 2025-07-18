@@ -3,6 +3,7 @@
 // await getData(['dataBase'], 'perunVerified');
 const STORAGE_KEYS = {
   USERNAME: 'perunUsername',
+  ISFIRSTVISIT: 'isFirstVisit',
   UUID: 'perunUUID',
   POINTS: 'perunPoints',
   RANK: 'perunRank',
@@ -371,88 +372,18 @@ document.addEventListener('click', event => {
   }
 });
 
-function generateUUID() {
-  let uuid;
-  if (crypto && crypto.randomUUID) {
-      uuid = crypto.randomUUID();
-  } else {
-      // Fallback UUID generation
-      uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-          const r = (Math.random() * 16) | 0;
-          const v = c === 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-      });
-  }
-
-  // Replace last segment with variant + YYYYMMDD + random hex
-  const date = new Date();
-  const datePart = date.getFullYear().toString() +
-                   ('0' + (date.getMonth() + 1)).slice(-2) +
-                   ('0' + date.getDate()).slice(-2);
-  const variantChar = ['8', '9', 'a', 'b'][Math.floor(Math.random() * 4)]; // Ensure variant 1
-  const randomSuffix = Array(3).fill().map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-  const lastSegment = variantChar + datePart + randomSuffix; // e.g., "820250421abc"
-
-  // Replace the last 12 characters of the UUID
-  return uuid.slice(0, -12) + lastSegment;
-}
-function generateAndCheckUUIDs(count) {
-  if (!Number.isInteger(count) || count < 1) {
-      throw new Error('Count must be a positive integer');
-  }
-
-  // Generate UUIDs
-  const uuids = Array.from({ length: count }, () => generateUUID());
-
-  // Check for duplicates
-  const uuidCounts = {};
-  uuids.forEach(uuid => {
-      uuidCounts[uuid] = (uuidCounts[uuid] || 0) + 1;
-  });
-
-  // Identify duplicates
-  const duplicates = Object.entries(uuidCounts)
-      .filter(([uuid, count]) => count > 1)
-      .map(([uuid, count]) => ({ uuid, count }));
-
-  return {
-      uuids, // Array of generated UUIDs
-      hasDuplicates: duplicates.length > 0, // Boolean indicating if duplicates exist
-      duplicates // Array of objects with duplicate UUIDs and their counts
-  };
-}
 // User Initialization
-async function initializeUser() {
-  const storedUsername = await getData(['localStorage'], STORAGE_KEYS.USERNAME);
-  const storedUUID = await getData(['localStorage'], STORAGE_KEYS.UUID);
-
-  if (storedUsername && storedUUID) {
-    Modal.close('welcomeModal');
-  } else {
-    if (!storedUUID) {
-      localStorage.setItem(STORAGE_KEYS.UUID, generateUUID());
-      location.reload();
-    }
+function initializeUser() {
+  if (!getAppData('gameverse', 'opened')||getAppData('gameverse', 'opened')==false) {
     document.getElementById('welcomeModal').style.display="block";
-    Modal.open('welcomeModal');
     loadFireworksStyles();
+  } else {
+    document.getElementById('welcomeModal').style.display="none";
   }
-
   document.getElementById('saveUsernameBtn')?.addEventListener('click', async () => {
-    const username = document.getElementById('usernameInput')?.value.trim();
-    if (username === 'SUSpicio' || username === 'SUSpicioDEV') {
-      document.getElementById('errorMessage').style.display = 'block';
-      return;
-    }
-    if (username && username.length > 3 && username.length < 15) {
-      localStorage.setItem(STORAGE_KEYS.USERNAME, username);
-      localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, 'false');
       document.getElementById('fireworksStyles')?.remove();
-      Modal.close('welcomeModal');
-      document.getElementById('player-name').textContent = username;
-    } else {
-      document.getElementById('errorMessage').style.display = 'block';
-    }
+      document.getElementById('welcomeModal').style.display="none";
+      setAppData('gameverse', 'opened', true)
   });
 }
 
@@ -540,85 +471,56 @@ const timer = setInterval(() => {
   
   // Loader
  async function initializeLoader() {
-            const loader = document.getElementById('loader');
-            const tipElement = document.getElementById('loading-tip'); // Updated ID
-
-            // Fetch tips from JSON file
-            async function fetchTips() {
-                try {
-                    const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/tips.json'); // Updated file name
-                    const data = await response.json();
-                    return data.tips || []; // Updated key
-                } catch (error) {
-                    console.error('Error fetching tips:', error);
-                    return ['Loading...']; // Fallback tip
-                }
-            }
-
-            // Select a random tip
-            function getRandomTip(tips) {
-                if (!tips.length) return 'Loading...';
-                const randomIndex = Math.floor(Math.random() * tips.length);
-                return tips[randomIndex];
-            }
-
-            const hasLoaded = await getData(['sessionStorage'], STORAGE_KEYS.HAS_LOADED);
-            if (hasLoaded) {
-                loader.classList.add('hidden');
-            } else {
-                // Fetch and display random tip
-                const tips = await fetchTips();
-                const randomTip = getRandomTip(tips);
-                tipElement.textContent = randomTip;
-
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                    sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
-                }, 5000);
-            }
-        }
-  
-  // Player Data Updates
-  async function updatePlayerName() {
-    try {
-        // Retrieve data from storage
-        const username = await getData(['localStorage'], STORAGE_KEYS.USERNAME);
-        const uuid = await getData(['localStorage'], STORAGE_KEYS.UUID);
-        const perunVerified = await getData(['sessionStorage'], 'perunVerified');
-        const perunPremium = await getData(['sessionStorage'], 'perunPremium');
-
-        // Get the DOM element
-        const dynamicTextElement = document.getElementById('playerName');
-        if (!dynamicTextElement) {
-            console.warn('Element with ID "playerName" not found');
-            return;
-        }
-
-        // Initialize the display text with the username or fallback
-        let displayText = username || '???';
-
-        // Check verification status (convert string to boolean if necessary)
-        const isVerified = perunVerified === true || perunVerified === 'true';
-        const isPremium = perunPremium === true || perunPremium === 'true';
-
-        // Build the HTML with badges
-        let badges = '';
-        if (isVerified) {
-            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-        }
-        if (isPremium) {
-            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-        }
-
-        // Update the element
-        dynamicTextElement.innerHTML = `${displayText}${badges}`;
-    } catch (error) {
-        console.error('Error updating player name:', error);
-        const dynamicTextElement = document.getElementById('playerName');
-        if (dynamicTextElement) {
-            dynamicTextElement.textContent = '?';
+    const loader = document.getElementById('loader');
+    const tipElement = document.getElementById('loading-tip'); // Updated ID // Fetch tips from JSON file
+    async function fetchTips() {
+        try {
+            const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/tips.json'); // Updated file name
+            const data = await response.json();
+            return data.tips || []; // Updated key
+        } catch (error) {
+            console.error('Error fetching tips:', error);
+            return ['Loading...']; // Fallback tip
         }
     }
+    // Select a random tip
+    function getRandomTip(tips) {
+        if (!tips.length) return 'Loading...';
+        const randomIndex = Math.floor(Math.random() * tips.length);
+        return tips[randomIndex];
+    }
+    const hasLoaded = await getData(['sessionStorage'], STORAGE_KEYS.HAS_LOADED);
+    if (hasLoaded) {
+        loader.classList.add('hidden');
+    } else {
+        // Fetch and display random tip
+        const tips = await fetchTips();
+        const randomTip = getRandomTip(tips);
+        tipElement.textContent = randomTip;
+        setTimeout(() => {
+            loader.classList.add('hidden');
+            sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
+        }, 7000);
+    }
+}
+  
+  // Player Data Updates
+function updatePlayerBadges() {
+  // Check verification status (convert string to boolean if necessary)
+  const isVerified = getSheetData('isVerified')===true||getSheetData('isVerified')==='true';
+  const isPremium = getSheetData('isPremium')===true||getSheetData('isPremium')==='true';
+
+  // Build the HTML with badges
+  let badges = '';
+  if (isVerified) {
+      badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
+  }
+  if (isPremium) {
+      badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
+  }
+
+  // Update the element
+  document.getElementById('playerBadges').innerHTML = `${badges}`;
 }
   
 async function updatePlayerPLN() {
@@ -1247,7 +1149,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initializeFontSizeSlider();
   await initializeUsernameChange();
   await restoreModalState();
-  await updatePlayerName();
   await updatePlayerPLN();
   await updatePlayerRank();
   await updateRanking();
@@ -1315,6 +1216,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (parallax) {
       parallax.style.height = `${window.innerWidth * 0.34 + 75}px`;
   }
+  updatePlayerBadges();
 });
 document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem("gameVote1")) {
@@ -1388,7 +1290,7 @@ async function sendGameVote() {
     notification("Wysłano głos!", "success", {
       duration: 3000,
       title: "Operacja zakończona",
-      sound: false // Dźwięk włączony
+      sound: false
     });
   } catch {
     alert('Wystąpił błąd podczas wysyłania głosu. Spróbuj ponownie później.');
@@ -1398,4 +1300,40 @@ async function sendGameVote() {
       button.setAttribute('aria-busy', 'false');
     }
   }
+}
+
+async function updatePlayerBadges() {
+    try {
+        // Czekaj na wyniki asynchroniczne
+        const isVerified = await getSheetData('isVerified');
+        const isPremium = await getSheetData('isPremium');
+
+        // Konwertuj wartości na boolean
+        const verified = isVerified === true || isVerified === 'true';
+        const premium = isPremium === true || isPremium === 'true';
+
+        // Buduj HTML z odznakami
+        let badges = '';
+        if (verified) {
+            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
+        }
+        if (premium) {
+            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
+        }
+
+        // Aktualizuj element, jeśli istnieje
+        const badgesElement = document.getElementById('playerBadges');
+        if (badgesElement) {
+            badgesElement.innerHTML = badges || '???';
+            console.log('Odznaki zaktualizowane:', badges || '???');
+        } else {
+            console.warn('Element #playerBadges nie istnieje');
+        }
+    } catch (error) {
+        console.error('Błąd podczas aktualizacji odznak:', error);
+        const badgesElement = document.getElementById('playerBadges');
+        if (badgesElement) {
+            badgesElement.innerHTML = '???';
+        }
+    }
 }
