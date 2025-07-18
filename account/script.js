@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoytFEHLOBpCupgr1GLO8cfAG7jE5mkecOLE1d4ukbrlpBoe0fo2Gi_MaZ1qYcTNXK/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby56CL80JeBwzpW_Hlta4xhRPPnytisYsDS_qd4Vh1Q5WGa047x9MXTrVKsifqSlSAI/exec';
 
 // Funkcja przełączania zakładek
 function showTab(tabName) {
