@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby56CL80JeBwzpW_Hlta4xhRPPnytisYsDS_qd4Vh1Q5WGa047x9MXTrVKsifqSlSAI/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJjpTiVWKCSuJOCXLontvI0l34AbgdtAIlZVL3cbSkjMc7QWaCZ04ZnqKRRQYOyEoh/exec';
 
 // Funkcja przełączania zakładek
 function showTab(tabName) {
@@ -75,6 +75,8 @@ function login() {
     const identifier = document.getElementById('loginIdentifier').value;
     const password = document.getElementById('loginPassword').value;
     const errorMessage = document.getElementById('loginError');
+    errorMessage.textContent = ''; // Reset komunikatu
+    errorMessage.classList.remove('show');
 
     if (!identifier) {
         errorMessage.textContent = 'Wprowadź nazwę użytkownika lub email';
@@ -82,7 +84,10 @@ function login() {
         return;
     }
 
-    fetch(`${SCRIPT_URL}?action=login&identifier=${encodeURIComponent(identifier)}&password=${encodeURIComponent(password)}`)
+    fetch(`${SCRIPT_URL}?action=login&identifier=${encodeURIComponent(identifier)}&password=${encodeURIComponent(password)}`, {
+        method: 'GET',
+        mode: 'cors'
+    })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
@@ -94,7 +99,7 @@ function login() {
             }
         })
         .catch(error => {
-            errorMessage.textContent = 'Błąd serwera';
+            errorMessage.textContent = 'Błąd serwera: ' + error.message;
             errorMessage.classList.add('show');
         });
 }
@@ -107,6 +112,8 @@ function register() {
     const confirmPassword = document.getElementById('confirmPassword').value;
     const birthYear = document.getElementById('birthYear').value;
     const errorMessage = document.getElementById('registerError');
+    errorMessage.textContent = ''; // Reset komunikatu
+    errorMessage.classList.remove('show');
 
     // Walidacja
     if (!validateUsername(username)) {
@@ -130,14 +137,17 @@ function register() {
         return;
     }
     if (!birthYear || isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
-        errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia';
+        errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia (1900–' + new Date().getFullYear() + ')';
         errorMessage.classList.add('show');
         return;
     }
 
     const params = `action=register&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&birthYear=${birthYear}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
     
-    fetch(`${SCRIPT_URL}?${params}`)
+    fetch(`${SCRIPT_URL}?${params}`, {
+        method: 'GET',
+        mode: 'cors'
+    })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
@@ -149,7 +159,7 @@ function register() {
             }
         })
         .catch(error => {
-            errorMessage.textContent = 'Błąd serwera';
+            errorMessage.textContent = 'Błąd serwera: ' + error.message;
             errorMessage.classList.add('show');
         });
 }
