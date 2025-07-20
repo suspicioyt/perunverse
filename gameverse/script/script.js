@@ -1325,7 +1325,6 @@ async function updatePlayerBadges() {
         const badgesElement = document.getElementById('playerBadges');
         if (badgesElement) {
             badgesElement.innerHTML = badges || '???';
-            console.log('Odznaki zaktualizowane:', badges || '???');
         } else {
             console.warn('Element #playerBadges nie istnieje');
         }

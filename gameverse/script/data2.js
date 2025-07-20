@@ -46,29 +46,6 @@ async function loadUserData() {
     }
 }
 
-async function loadGamesData() {
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=getGames`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            console.error(`Błąd HTTP podczas pobierania gier: ${response.status} ${response.statusText}`);
-            return null;
-        }
-        const data = await response.json();
-        if (data.status === 'success') {
-            gamesCache = data.games;
-            window.games = gamesCache;
-            return gamesCache;
-        } else {
-            return null;
-        }
-    } catch (error) {
-        return null;
-    }
-}
-
 async function syncUserData() {
     if (isSyncing) {
         console.log('Synchronizacja w toku, pomijanie...');
@@ -205,37 +182,6 @@ async function insertData(element, appId, key) {
     }
 }
 
-async function updatePlayerBadges() {
-    try {
-        const isVerified = await getSheetData('isVerified');
-        const isPremium = await getSheetData('isPremium');
-
-        const verified = isVerified === true || isVerified === 'true';
-        const premium = isPremium === true || isPremium === 'true';
-
-        let badges = '';
-        if (verified) {
-            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-        }
-        if (premium) {
-            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-        }
-
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = badges || '???';
-        } else {
-            console.warn('Element #playerBadges nie istnieje');
-        }
-    } catch (error) {
-        console.error('Błąd podczas aktualizacji odznak:', error);
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = '???';
-        }
-    }
-}
-
 async function addData(token, appId, key, value) {
     try {
         const effectiveToken = token === 'current' ? localStorage.getItem('authToken') : token;
@@ -309,14 +255,6 @@ async function addData(token, appId, key, value) {
         window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return { status: 'error', message: 'Wystąpił błąd podczas dodawania danych' };
     }
-}
-
-function logout() {
-    localStorage.removeItem('authToken');
-    userDataCache = null;
-    gamesCache = null;
-    window.games = null;
-    window.location.href = '../account/index.html';
 }
 
 setInterval(syncUserData, SYNC_INTERVAL);
