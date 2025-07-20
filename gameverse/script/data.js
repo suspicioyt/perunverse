@@ -46,29 +46,6 @@ async function loadUserData() {
     }
 }
 
-async function loadGamesData() {
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=getGames`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            console.error(`Błąd HTTP podczas pobierania gier: ${response.status} ${response.statusText}`);
-            return null;
-        }
-        const data = await response.json();
-        if (data.status === 'success') {
-            gamesCache = data.games;
-            window.games = gamesCache;
-            return gamesCache;
-        } else {
-            return null;
-        }
-    } catch (error) {
-        return null;
-    }
-}
-
 async function syncUserData() {
     if (isSyncing) {
         console.log('Synchronizacja w toku, pomijanie...');

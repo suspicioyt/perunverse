@@ -1,5 +1,5 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzGu4orOZhX9Cf0G1tR38dMGiTtYdLIejJSjPC6FOlkBnl2KCnP9ub31-OsamR87lJU/exec';
-const SYNC_INTERVAL = 5000; // Zwiększono do 10 sekund
+const SYNC_INTERVAL = 10000; // 10 sekund
 
 let userDataCache = null;
 let gamesCache = null;
@@ -105,11 +105,6 @@ async function syncUserData() {
         console.error('Błąd podczas synchronizacji danych:', error);
         userDataCache = null;
         window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        await updatePlayerBadges();
-        if (typeof loadGames === 'function' && window.games) {
-            loadFavorites(window.games);
-            loadGames(window.games);
-        }
     } finally {
         isSyncing = false;
     }
@@ -191,7 +186,7 @@ async function addData(token, appId, key, value) {
             return { status: 'error', message: 'Brak tokena uwierzytelnienia' };
         }
 
-        const response = await fetch(`${SCRIPT_URL}?action=verify_requestedUserData&token=${effectiveToken}`, {
+        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${effectiveToken}`, {
             method: 'GET',
             mode: 'cors'
         });
@@ -255,6 +250,14 @@ async function addData(token, appId, key, value) {
         window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return { status: 'error', message: 'Wystąpił błąd podczas dodawania danych' };
     }
+}
+
+function logout() {
+    localStorage.removeItem('authToken');
+    userDataCache = null;
+    gamesCache = null;
+    window.games = null;
+    window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html';
 }
 
 setInterval(syncUserData, SYNC_INTERVAL);
