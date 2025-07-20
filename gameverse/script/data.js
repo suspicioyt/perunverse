@@ -1,5 +1,5 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby56CL80JeBwzpW_Hlta4xhRPPnytisYsDS_qd4Vh1Q5WGa047x9MXTrVKsifqSlSAI/exec';
-const SYNC_INTERVAL = 5000;
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJjpTiVWKCSuJOCXLontvI0l34AbgdtAIlZVL3cbSkjMc7QWaCZ04ZnqKRRQYOyEoh/exec';
+const SYNC_INTERVAL = 5000; // Zwiększono do 10 sekund
 
 let userDataCache = null;
 let gamesCache = null;
@@ -17,11 +17,12 @@ async function loadUserData() {
         console.log('Wysyłanie żądania weryfikacji z tokenem:', token);
         const response = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            mode: 'cors'
         });
         if (!response.ok) {
             console.error(`Błąd HTTP: ${response.status} ${response.statusText}`);
             userDataCache = null;
+            window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return false;
         }
         const data = await response.json();
@@ -34,11 +35,13 @@ async function loadUserData() {
         } else {
             console.error('Błąd weryfikacji tokena:', data.message);
             userDataCache = null;
+            window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return false;
         }
     } catch (error) {
         console.error('Błąd podczas pobierania danych użytkownika:', error);
         userDataCache = null;
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return false;
     }
 }
@@ -47,7 +50,7 @@ async function loadGamesData() {
     try {
         const response = await fetch(`${SCRIPT_URL}?action=getGames`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            mode: 'cors'
         });
         if (!response.ok) {
             console.error(`Błąd HTTP podczas pobierania gier: ${response.status} ${response.statusText}`);
@@ -78,6 +81,7 @@ async function syncUserData() {
     const token = localStorage.getItem('authToken');
     if (!token) {
         console.log('Brak tokena, pomijanie synchronizacji');
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         isSyncing = false;
         return;
     }
@@ -86,11 +90,12 @@ async function syncUserData() {
         console.log('Synchronizacja - wysyłanie żądania z tokenem:', token);
         const userResponse = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            mode: 'cors'
         });
         if (!userResponse.ok) {
             console.error(`Błąd HTTP podczas synchronizacji użytkownika: ${userResponse.status} ${userResponse.statusText}`);
             userDataCache = null;
+            window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         } else {
             const userData = await userResponse.json();
             console.log('Synchronizacja - odpowiedź z serwera (użytkownik):', userData);
@@ -100,6 +105,7 @@ async function syncUserData() {
             } else {
                 console.error('Błąd weryfikacji tokena:', userData.message);
                 userDataCache = null;
+                window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
             }
         }
 
@@ -124,6 +130,7 @@ async function syncUserData() {
     } catch (error) {
         console.error('Błąd podczas synchronizacji danych:', error);
         userDataCache = null;
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         await updatePlayerBadges();
         if (typeof loadGames === 'function' && window.games) {
             loadFavorites(window.games);
@@ -165,6 +172,7 @@ async function updateSheetData(key, value) {
     const token = localStorage.getItem('authToken');
     if (!token) {
         console.error('Brak tokena, nie można zapisać danych w arkuszu');
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return;
     }
     try {
@@ -181,6 +189,7 @@ async function updateSheetData(key, value) {
         userDataCache = null; // Wymagaj ponownego załadowania danych
     } catch (error) {
         console.error(`Błąd aktualizacji ${key} w arkuszu:`, error);
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
     }
 }
 
@@ -231,29 +240,29 @@ async function updatePlayerBadges() {
         }
     }
 }
+
 async function addData(token, appId, key, value) {
     try {
-        // Obsługa tokena 'current'
         const effectiveToken = token === 'current' ? localStorage.getItem('authToken') : token;
         if (!effectiveToken) {
             console.error('Brak tokena uwierzytelnienia');
+            window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return { status: 'error', message: 'Brak tokena uwierzytelnienia' };
         }
 
-        // Pobierz dane użytkownika
-        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${effectiveToken}`, {
+        const response = await fetch(`${SCRIPT_URL}?action=verify_requestedUserData&token=${effectiveToken}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            mode: 'cors'
         });
         const userData = await response.json();
 
         if (userData.status !== 'success') {
             console.error('Błąd weryfikacji tokena:', userData.message);
+            window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return { status: 'error', message: userData.message };
         }
 
         if (appId === 'sheet') {
-            // Mapowanie klucza na kolumnę w arkuszu
             const columnMap = {
                 'username': 2,
                 'email': 3,
@@ -268,34 +277,23 @@ async function addData(token, appId, key, value) {
                 return { status: 'error', message: `Nieprawidłowy klucz: ${key}` };
             }
 
-            // Aktualizacja wartości w arkuszu
             await updateSheetData(key, value);
             userDataCache = { ...userData, [key]: value, token: effectiveToken };
             return { status: 'success', message: `Zaktualizowano ${key} w arkuszu`, [key]: value };
         } else {
-            // Pobierz bieżące appData
             let appData = userData.appData || {};
-
-            // Inicjalizuj kategorię, jeśli nie istnieje
             if (!appData[appId]) {
                 appData[appId] = {};
             }
-
-            // Sprawdź, czy klucz już istnieje i czy jest tablicą
             if (appData[appId][key] !== undefined && !Array.isArray(appData[appId][key])) {
                 console.error(`Klucz ${appId}.${key} istnieje i nie jest tablicą`);
                 return { status: 'error', message: `Klucz ${key} nie jest tablicą w ${appId}` };
             }
-
-            // Inicjalizuj tablicę dla klucza, jeśli nie istnieje
             if (!Array.isArray(appData[appId][key])) {
                 appData[appId][key] = [];
             }
-
-            // Dodaj wartość do tablicy (powtarzające się wartości są dozwolone)
             appData[appId][key].push(value);
 
-            // Zaktualizuj appData w arkuszu
             const updateResponse = await fetch(`${SCRIPT_URL}?action=updateAppData&token=${effectiveToken}&appId=${appId}&data=${encodeURIComponent(JSON.stringify(appData[appId]))}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -304,18 +302,20 @@ async function addData(token, appId, key, value) {
 
             if (updateResult.status !== 'success') {
                 console.error('Błąd aktualizacji danych:', updateResult.message);
+                window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
                 return { status: 'error', message: updateResult.message };
             }
 
-            // Odśwież cache
             userDataCache = { ...userData, appData: updateResult.appData, token: effectiveToken };
             return { status: 'success', message: `Dodano ${value} do ${appId}.${key}`, appData: updateResult.appData };
         }
     } catch (error) {
         console.error('Błąd w addData:', error);
+        window.location.href = '../account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return { status: 'error', message: 'Wystąpił błąd podczas dodawania danych' };
     }
 }
+
 function logout() {
     localStorage.removeItem('authToken');
     userDataCache = null;

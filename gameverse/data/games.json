@@ -278,18 +278,16 @@
       "tooltip": "Zgaduj Italian Brainroty",
       "classes": ["nowosc", "ukonczona"],
       "ulubione": false,
-      "premium": true,
       "disabled":true
     },
     {
-      "id": "999",
+      "id": "31",
       "name": "Saper",
       "link": "game/1/saper.html",
       "status": "",
       "tooltip": "Znajdź wszystkie miny",
       "classes": ["nowosc", "konserwacje"],
-      "ulubione": false,
-      "premium": true
+      "ulubione": false
     },
     {
       "id": "999",
