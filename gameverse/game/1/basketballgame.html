@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Basketball Game | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 20px auto;
+            background: #f0e68c;
+        }
+        body {
+            background: #8b4513;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+        }
+        h1 {
+            font-size: 36px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rzuty Osobiste 1950s</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const ball = {
+            x: 400,
+            y: 500,
+            radius: 15,
+            dx: 0,
+            dy: 0,
+            inAir: false
+        };
+
+        const hoop = {
+            x: 350,
+            y: 150,
+            width: 100,
+            height: 10,
+            dx: 2,
+            dy: 1,
+            minX: 300,
+            maxX: 500,
+            minY: 100,
+            maxY: 250
+        };
+
+        let score = 0;
+        let lives = 3;
+        let angle = 0;
+        let power = 0;
+        let isCharging = false;
+        let chargeTime = 0;
+        const maxChargeTime = 120;
+        const maxPower = 15;
+
+        function drawCourt() {
+            ctx.beginPath();
+            ctx.rect(0, 400, canvas.width, 200);
+            ctx.fillStyle = '#cd853f';
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.beginPath();
+            ctx.arc(400, 500, 50, 0, Math.PI, true);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#d2691e';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawHoop() {
+            ctx.beginPath();
+            ctx.rect(hoop.x, hoop.y, hoop.width, hoop.height);
+            ctx.fillStyle = '#ff0000';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawHUD() {
+            ctx.font = '24px Courier New';
+            ctx.fillStyle = '#000';
+            ctx.fillText('Punkty: ' + score, 10, 30);
+            ctx.fillText('Życia: ' + lives, 10, 60);
+        }
+
+        function drawAim() {
+            if (!ball.inAir) {
+                ctx.beginPath();
+                ctx.moveTo(ball.x, ball.y);
+                ctx.lineTo(ball.x + Math.cos(angle) * 80, ball.y - Math.sin(angle) * 80);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.closePath();
+
+                if (isCharging) {
+                    ctx.beginPath();
+                    ctx.rect(ball.x - 20, ball.y + 20, 40 * (power / maxPower), 10);
+                    ctx.fillStyle = power > maxPower / 2 ? '#00ff00' : '#ff0000';
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+
+        function updateBall() {
+            if (ball.inAir) {
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+                ball.dy += 0.3;
+
+                if (ball.x + ball.radius > hoop.x && ball.x - ball.radius < hoop.x + hoop.width &&
+                    ball.y + ball.radius > hoop.y && ball.y - ball.radius < hoop.y + hoop.height &&
+                    ball.dy > 0) {
+                    score++;
+                    resetBall();
+                }
+
+                if (ball.y > canvas.height || ball.x < 0 || ball.x > canvas.width) {
+                    lives--;
+                    resetBall();
+                }
+            }
+        }
+
+        function updateHoop() {
+            hoop.x += hoop.dx;
+            hoop.y += hoop.dy;
+            if (hoop.x < hoop.minX || hoop.x + hoop.width > hoop.maxX) hoop.dx = -hoop.dx;
+            if (hoop.y < hoop.minY || hoop.y > hoop.maxY) hoop.dy = -hoop.dy;
+        }
+
+        function updatePower() {
+            if (isCharging) {
+                chargeTime++;
+                if (chargeTime <= maxChargeTime) {
+                    power = (chargeTime / maxChargeTime) * maxPower;
+                } else {
+                    power = maxPower - ((chargeTime - maxChargeTime) / maxChargeTime) * maxPower;
+                    if (power < 0) power = 0;
+                }
+            }
+        }
+
+        function resetBall() {
+            ball.x = 400;
+            ball.y = 500;
+            ball.dx = 0;
+            ball.dy = 0;
+            ball.inAir = false;
+            if (lives <= 0) {
+                alert('Koniec gry! Twój wynik: ' + score);
+                score = 0;
+                lives = 3;
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCourt();
+            drawBall();
+            drawHoop();
+            drawHUD();
+            drawAim();
+            updateBall();
+            updateHoop();
+            updatePower();
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener('mousemove', function(event) {
+            if (!ball.inAir) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                angle = Math.atan2(ball.y - mouseY, mouseX - ball.x);
+            }
+        });
+
+        canvas.addEventListener('mousedown', function() {
+            if (!ball.inAir) {
+                isCharging = true;
+                chargeTime = 0;
+                power = 0;
+            }
+        });
+
+        canvas.addEventListener('mouseup', function() {
+            if (isCharging && !ball.inAir) {
+                ball.dx = Math.cos(angle) * power;
+                ball.dy = -Math.sin(angle) * power;
+                ball.inAir = true;
+                isCharging = false;
+                power = 0;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>

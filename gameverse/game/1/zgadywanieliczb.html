@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zgadywanie Liczb | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .container {
+            text-align: center;
+            background-color: #3c4043;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        input[type="number"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            width: 100px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        
+        #gamesCount {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zgadywanie liczb</h1>
+        <p>Komputer wylosował liczbę od 1 do 100. Spróbuj ją zgadnąć!</p>
+        <input type="number" id="guessInput" min="1" max="100" placeholder="Wprowadź swoją liczbę">
+        <button id="guessButton">Zgadywanie!</button>
+        <p id="result"></p>
+        <button id="resetButton" style="display: none;">Zagraj ponownie</button>
+        <p id="gamesCount">Liczba wygranych gier: <span id="winCount">0</span></p>
+    </div>
+    <script>
+        let randomNumber = Math.floor(Math.random() * 100) + 1; // Losowanie liczby od 1 do 100
+        let guessCount = 0;
+
+        // Zapisz liczbę wygranych gier w localStorage
+        let winCount = localStorage.getItem("winCount") ? parseInt(localStorage.getItem("winCount")) : 0;
+        document.getElementById("winCount").textContent = winCount;
+
+        document.getElementById("guessButton").addEventListener("click", function() {
+            const userGuess = Number(document.getElementById("guessInput").value);
+            guessCount++;
+            const resultText = document.getElementById("result");
+        
+            if (userGuess === randomNumber) {
+                winCount++; // Zwiększ licznik wygranych
+                localStorage.setItem("winCount", winCount); // Zapisz do localStorage
+                resultText.textContent = `Brawo! Zgadłeś liczbę ${randomNumber} w ${guessCount} próbach!`;
+                document.getElementById("resetButton").style.display = "block";
+                document.getElementById("guessButton").disabled = true; // Zablokuj przycisk zgadywania
+                document.getElementById("winCount").textContent = winCount; // Aktualizuj wyświetlaną liczbę wygranych
+            } else if (userGuess < randomNumber) {
+                resultText.textContent = "Za niska liczba. Spróbuj ponownie!";
+            } else {
+                resultText.textContent = "Za wysoka liczba. Spróbuj ponownie!";
+            }
+        });
+
+        document.getElementById("resetButton").addEventListener("click", function() {
+            randomNumber = Math.floor(Math.random() * 100) + 1; // Losowanie nowej liczby
+            guessCount = 0;
+            document.getElementById("result").textContent = "";
+            document.getElementById("guessInput").value = "";
+            document.getElementById("resetButton").style.display = "none";
+            document.getElementById("guessButton").disabled = false; // Odblokuj przycisk zgadywania
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>GeoGuesser | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        #panorama {
+            width: 800px;
+            height: 400px;
+            margin: 20px auto;
+        }
+        #map {
+            width: 800px;
+            height: 300px;
+            margin: 20px auto;
+            display: none;
+        }
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GeoGuessr</h1>
+    <p>Zgadnij, gdzie jesteś! Użyj widoku Street View, aby się rozejrzeć.</p>
+    
+    <div id="panorama"></div>
+    <div id="map"></div>
+    
+    <button onclick="makeGuess()">Zgaduję!</button>
+    <button onclick="revealLocation()">Pokaż lokalizację</button>
+    <button onclick="newLocation()">Nowa lokalizacja</button>
+    
+    <p id="result"></p>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initGame" async defer></script>
+    <script>
+        let panorama, map;
+        let actualLocation;
+        const resultElement = document.getElementById('result');
+
+        function initGame() {
+            panorama = new google.maps.StreetViewPanorama(
+                document.getElementById('panorama'),
+                {
+                    pov: { heading: 0, pitch: 0 },
+                    zoom: 1,
+                    addressControl: false,
+                    linksControl: true,
+                    panControl: true,
+                    enableCloseButton: false
+                }
+            );
+            
+            map = new google.maps.Map(
+                document.getElementById('map'),
+                {
+                    zoom: 2,
+                    center: { lat: 0, lng: 0 }
+                }
+            );
+            
+            newLocation();
+        }
+
+        function newLocation() {
+            // Losowe współrzędne
+            const lat = (Math.random() * 180) - 90;
+            const lng = (Math.random() * 360) - 180;
+            
+            const location = new google.maps.LatLng(lat, lng);
+            
+            panorama.setPosition(location);
+            actualLocation = { lat, lng };
+            
+            document.getElementById('map').style.display = 'none';
+            resultElement.textContent = '';
+            
+            // Sprawdzanie, czy Street View jest dostępne
+            const service = new google.maps.StreetViewService();
+            service.getPanorama({ location: location, radius: 50000 }, (data, status) => {
+                if (status === 'OK') {
+                    panorama.setPosition(data.location.latLng);
+                    actualLocation = {
+                        lat: data.location.latLng.lat(),
+                        lng: data.location.latLng.lng()
+                    };
+                } else {
+                    newLocation(); // Próba nowej lokalizacji, jeśli Street View nie jest dostępne
+                }
+            });
+        }
+
+        function makeGuess() {
+            resultElement.textContent = 'Kliknij na mapie, gdzie myślisz, że jesteś!';
+            document.getElementById('map').style.display = 'block';
+            
+            google.maps.event.clearListeners(map, 'click');
+            map.addListener('click', (event) => {
+                const guess = {
+                    lat: event.latLng.lat(),
+                    lng: event.latLng.lng()
+                };
+                
+                const distance = calculateDistance(guess, actualLocation);
+                resultElement.textContent = `Jesteś ${distance.toFixed(2)} km od prawdziwej lokalizacji!`;
+                
+                // Pokaż znaczniki
+                new google.maps.Marker({
+                    position: guess,
+                    map: map,
+                    title: 'Twoje zgadnięcie'
+                });
+                new google.maps.Marker({
+                    position: actualLocation,
+                    map: map,
+                    title: 'Prawdziwa lokalizacja'
+                });
+            });
+        }
+
+        function revealLocation() {
+            document.getElementById('map').style.display = 'block';
+            map.setCenter(actualLocation);
+            map.setZoom(8);
+            
+            new google.maps.Marker({
+                position: actualLocation,
+                map: map,
+                title: 'Prawdziwa lokalizacja'
+            });
+        }
+
+        function calculateDistance(loc1, loc2) {
+            const R = 6371; // Promień Ziemi w kilometrach
+            const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+            const dLng = (loc2.lng - loc1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+    </script>
+</body>
+</html>

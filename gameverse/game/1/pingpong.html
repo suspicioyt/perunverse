@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-top: 20px;
+        }
+
+        p {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            background: black;
+            display: block;
+            margin: auto;
+            border: 2px solid white;
+            border-radius: 10px;
+        }
+
+        .middle-line {
+            position: absolute;
+            left: 50%;
+            height: 100%;
+            border-left: 2px dashed white;
+        }
+    </style>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.png">
+</head>
+<body>
+    <h1>Ping Pong</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const paddleWidth = 10, paddleHeight = 117.5;
+        let playerY = canvas.height / 2 - paddleHeight / 2;
+        let aiY = canvas.height / 2 - paddleHeight / 2;
+        let ballX = canvas.width / 2, ballY = canvas.height / 2;
+        let ballSpeedX = 6, ballSpeedY = 4.5;
+        let playerScore = 0, aiScore = 0;
+        let aiPaddleColor = "white"; // Domyślny kolor paletki AI
+
+        const speedIncreaseFactor = 0.25;
+        const winningScore = 11;
+        const aiMissChance = 0.3;
+        const speedBoostChance = 0.6;
+        let baseSpeedX = ballSpeedX, baseSpeedY = ballSpeedY;
+
+        // Load the highest score from localStorage
+        let highestScore = localStorage.getItem("pingPong") || 0;
+
+        document.addEventListener("mousemove", (e) => {
+            let rect = canvas.getBoundingClientRect();
+            let root = document.documentElement;
+            playerY = e.clientY - rect.top - root.scrollTop - paddleHeight / 2;
+            
+            if (playerY < 0) playerY = 0;
+            if (playerY + paddleHeight > canvas.height) playerY = canvas.height - paddleHeight;
+        });
+
+        function drawRect(x, y, width, height, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        function drawCircle(x, y, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, true);
+            ctx.fill();
+        }
+
+        function drawText(text, x, y, fontSize = 24) {
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = "white";
+            ctx.fillText(text, x, y);
+        }
+
+        function drawMiddleLine() {
+            ctx.setLineDash([5, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function moveBall() {
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+
+        if (ballY <= 10 || ballY >= canvas.height - 10) {
+            ballSpeedY = -ballSpeedY;
+            ballY = ballY <= 10 ? 10 : canvas.height - 10;
+        }
+
+        // Gracz
+        if (ballX <= paddleWidth + 10) {
+            if (ballY >= playerY && ballY <= playerY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+                let hitPos = (ballY - playerY) / paddleHeight - 0.5;
+                ballSpeedY += hitPos * 4;
+                ballX = paddleWidth + 10;
+            } else if (ballX <= 0) {
+                aiScore++;
+                if (aiScore === winningScore) {
+                    alert("AI wygrywa! Koniec gry.");
+                    resetGame();
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        // AI
+        if (ballX >= canvas.width - paddleWidth - 10) {
+            if (ballY >= aiY && ballY <= aiY + paddleHeight) {
+                let shouldMiss = Math.random() < aiMissChance; // Losowanie opuszczenia
+                if (!shouldMiss) { // Odbicie
+                    ballSpeedX = -ballSpeedX;
+                    let hitPos = (ballY - aiY) / paddleHeight - 0.5;
+                    ballSpeedY = hitPos * 6; // Zwiększona losowość odbicia (zmiana z += na =)
+                    ballX = canvas.width - paddleWidth - 10;
+                    if (Math.random() < speedBoostChance) {
+                        ballSpeedX *= 2;
+                        ballSpeedY *= 2;
+                        setTimeout(() => {
+                            ballSpeedX = baseSpeedX * (ballSpeedX > 0 ? 1 : -1);
+                            ballSpeedY = baseSpeedY * (ballSpeedY > 0 ? 1 : -1);
+                        }, 5000);
+                    }
+                } else { // Opuszczenie – zmiana koloru paletki
+                    aiPaddleColor = "red";
+                    setTimeout(() => {
+                        aiPaddleColor = "white"; // Powrót do domyślnego koloru po 2s
+                    }, 500);
+                    playerScore++;
+                    updateHighestScore();
+                    if (playerScore === winningScore) {
+                        alert("Gracz wygrywa! Koniec gry.");
+                        resetGame();
+                    } else {
+                        increaseSpeed();
+                        resetBall();
+                    }
+                }
+            } else if (ballX >= canvas.width) {
+                playerScore++;
+                updateHighestScore();
+                if (playerScore === winningScore) {
+                    alert("Gracz wygrywa! Koniec gry.");
+                    resetGame();
+                } else {
+                    increaseSpeed();
+                    resetBall();
+                }
+            }
+        }
+
+        // AI movement
+        let aiTarget = ballY - (aiY + paddleHeight / 2);
+        if (ballX >= canvas.width - paddleWidth && ballY >= aiY && ballY <= aiY + paddleHeight && Math.random() < aiMissChance) {
+            aiY -= aiTarget * 0.1; // Odwrócony ruch przy opuszczeniu
+        } else {
+            aiY += aiTarget * 0.1;
+        }
+        if (aiY < 0) aiY = 0;
+        if (aiY + paddleHeight > canvas.height) aiY = canvas.height - paddleHeight;
+    }
+
+        function resetBall() {
+                ballX = canvas.width / 2;
+                ballY = canvas.height / 2;
+                ballSpeedX = 6 * (Math.random() > 0.5 ? 1 : -1); // Szybsza baza
+                ballSpeedY = 4.5 * (Math.random() > 0.5 ? 1 : -1);
+                baseSpeedX = ballSpeedX;
+                baseSpeedY = ballSpeedY;
+        }
+
+        function increaseSpeed() {
+            let totalScore = playerScore + aiScore;
+            let speedFactor = totalScore * speedIncreaseFactor;
+            baseSpeedX += speedFactor * (baseSpeedX > 0 ? 1 : -1);
+            baseSpeedY += speedFactor * (baseSpeedY > 0 ? 1 : -1);
+            ballSpeedX = baseSpeedX;
+            ballSpeedY = baseSpeedY;
+        }
+
+        function resetGame() {
+            playerScore = 0;
+            aiScore = 0;
+            aiPaddleColor = "white"; // Reset koloru paletki
+            resetBall();
+        }
+
+        function drawGame() {
+            drawRect(0, 0, canvas.width, canvas.height, "black");
+            drawMiddleLine();
+            drawRect(0, playerY, paddleWidth, paddleHeight, "white");
+            drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, aiPaddleColor); // Użycie zmiennej koloru
+            drawCircle(ballX, ballY, 10, "white");
+
+            drawText("Gracz: " + playerScore, 50, 30);
+            drawText("AI: " + aiScore, canvas.width - 120, 30);
+            drawText("Najwyższy wynik: " + highestScore, canvas.width / 2 - 100, 30);
+        }
+
+        function updateHighestScore() {
+            if (playerScore > highestScore) {
+                highestScore = playerScore;
+                localStorage.setItem("pingPong", highestScore);
+            }
+        }
+
+        function gameLoop() {
+            moveBall();
+            drawGame();
+            updateHighestScore();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

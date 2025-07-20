@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kółko-Krzyżyk | Perun Gameverse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        /* Resetowanie domyślnych styli */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Zmienne dla kolorów */
+:root {
+    --background-color: #121212;
+    --text-color: #E0E0E0;
+    --board-color: #1E1E1E;
+    --button-color: #2196F3;
+    --button-active-color: #035598;
+    --button-hover-color: #1976D2;
+    --winner-color: #FFD700; /* Złoty dla wygranej */
+}
+
+/* Globalne style */
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Kontener dla planszy */
+.container {
+    text-align: center;
+}
+
+/* Plansza */
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 10px;
+    margin: 20px auto;
+}
+
+/* Styl dla pól planszy */
+.cell {
+    background-color: var(--board-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cell.x {
+    background-color: #F44336; /* Kolor dla X */
+}
+
+.cell.o {
+    background-color: #4CAF50; /* Kolor dla O */
+}
+
+.cell.winner {
+    animation: highlight 1s ease-out;
+    color: var(--winner-color);
+    font-size: 64px;
+}
+
+@keyframes highlight {
+    0% { background-color: var(--winner-color); }
+    50% { background-color: var(--highlight-color); }
+    100% { background-color: var(--winner-color); }
+}
+.cell:hover {
+    background-color: var(--button-hover-color);
+}
+
+/* Przyciski */
+.mode-button, .reset-button {
+    background-color: var(--button-color);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+.mode-buttons .active {
+    background-color: var(--button-active-color);
+    color: var(--text-color);
+}
+.mode-button:hover, .reset-button:hover {
+    background-color: var(--button-hover-color);
+}
+
+/* Styl informacji o wyniku */
+.status-text {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+    color: #ffffff;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.status-text.win {
+    color: green;
+    background-color: #e0ffe0;
+}
+
+.status-text.draw {
+    color: orange;
+    background-color: #fff3e0;
+}
+
+.status-text:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Licznik wygranych */
+#win-counter {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+#win-counter-x {
+    color: #F44336;
+}
+#win-counter-o {
+    color: #4CAF50;
+}
+#win-counter div {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+@media (max-width: 600px) {
+    .board {
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 80px);
+        gap: 5px;
+    }
+
+    .cell {
+        font-size: 28px;
+    }
+
+    .mode-button, .reset-button {
+        font-size: 14px;
+    }
+}
+#status {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: var(--board-color);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+#status.X {
+    background-color: #F44336; /* Czerwony dla gracza X */
+}
+
+#status.O {
+    background-color: #4CAF50; /* Zielony dla gracza O */
+}
+.mode-button, .reset-button {
+    background-color: var(--button-color);
+    color: var(--text-color);
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.mode-button:hover, .reset-button:hover {
+    background-color: var(--button-hover-color);
+    transform: scale(1.05);
+}
+
+.mode-button:active, .reset-button:active {
+    transform: scale(0.95);
+}
+.hidden {
+    opacity: 0;
+    pointer-events: none; /* Zapobiega interakcji z przyciskiem */
+    transition: opacity 0.3s ease;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kółko-Krzyżyk</h1>
+        <div class="mode-buttons">
+            <button id="two-player" class="mode-button active">Gracz vs Gracz</button>
+            <button id="vs-bot" class="mode-button">Gracz vs Bot</button>
+        </div>
+        <div id="status" class="status-text">Teraz gra X</div>
+        <div id="win-counter">
+            <div id="win-counter-x">Wygrane X: 0</div>
+            <div id="win-counter-o">Wygrane O: 0</div>
+        </div>
+        <div id="board" class="board"></div>
+        <button id="reset-button" class="reset-button">Resetuj Grę</button>
+    </div>
+    <script>
+        let currentPlayer = 'X';
+let board = ['', '', '', '', '', '', '', '', ''];
+let gameActive = true;
+let winCounterX = 0;
+let winCounterO = 0;
+let mode = 'two-player'; // Domyślny tryb gry
+
+const winningConditions = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+];
+
+const statusDisplay = document.getElementById('status');
+const winCounterXDisplay = document.getElementById('win-counter-x');
+const winCounterODisplay = document.getElementById('win-counter-o');
+
+// Funkcja do stworzenia planszy
+function createBoard() {
+    const boardElement = document.getElementById('board');
+    boardElement.innerHTML = '';
+    board.forEach((cell, index) => {
+        const cellElement = document.createElement('div');
+        cellElement.classList.add('cell');
+        cellElement.dataset.index = index;
+        cellElement.innerText = cell;
+        cellElement.addEventListener('click', handleCellClick);
+        boardElement.appendChild(cellElement);
+    });
+}
+
+// Funkcja obsługująca kliknięcie w pole planszy
+function handleCellClick(event) {
+    const clickedCell = event.target;
+    const clickedCellIndex = clickedCell.dataset.index;
+
+    if (board[clickedCellIndex] !== '' || !gameActive) {
+        return;
+    }
+
+    board[clickedCellIndex] = currentPlayer;
+    clickedCell.innerText = currentPlayer;
+    clickedCell.classList.add(currentPlayer.toLowerCase());
+
+    checkResult();
+}
+
+// Funkcja sprawdzająca wynik
+function checkResult() {
+    let roundWon = false;
+    for (let i = 0; i < winningConditions.length; i++) {
+        const condition = winningConditions[i];
+        const a = board[condition[0]];
+        const b = board[condition[1]];
+        const c = board[condition[2]];
+
+        if (a === '' || b === '' || c === '') {
+            continue;
+        }
+        if (a === b && b === c) {
+            roundWon = true;
+            break;
+        }
+    }
+
+    if (roundWon) {
+        gameActive = false;
+        statusDisplay.innerHTML = `Gratulacje! Gracz ${currentPlayer} wygrał!`;
+        statusDisplay.classList.add('win');
+        highlightWinningCells();
+        updateWinCounter(currentPlayer);
+        return;
+    }
+
+    if (!board.includes('')) {
+        gameActive = false;
+        statusDisplay.innerHTML = 'Remis!';
+        statusDisplay.classList.add('draw');
+        return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    statusDisplay.innerHTML = `Teraz gra ${currentPlayer}`;
+    
+    // Jeśli tryb to 'vs-bot', niech bot zagra
+    if (mode === 'vs-bot' && currentPlayer === 'O') {
+        botPlay();
+    }
+}
+
+// Funkcja podświetlająca wygraną linię
+function highlightWinningCells() {
+    for (let i = 0; i < winningConditions.length; i++) {
+        const condition = winningConditions[i];
+        const a = board[condition[0]];
+        const b = board[condition[1]];
+        const c = board[condition[2]];
+
+        if (a === b && b === c && a !== '') {
+            condition.forEach(index => {
+                const cell = document.querySelector(`.cell[data-index='${index}']`);
+                cell.classList.add('winner');
+            });
+        }
+    }
+}
+
+// Funkcja aktualizująca licznik wygranych
+function updateWinCounter(player) {
+    if (player === 'X') {
+        winCounterX++;
+        winCounterXDisplay.innerText = `Wygrane X: ${winCounterX}`;
+    } else {
+        winCounterO++;
+        winCounterODisplay.innerText = `Wygrane O: ${winCounterO}`;
+    }
+}
+
+// Funkcja, w której bot gra
+function botPlay() {
+    const availableCells = board.map((value, index) => (value === '' ? index : null)).filter(index => index !== null);
+
+    // Sprawdź, czy bot może wygrać
+    let bestMove = findBestMove('O', availableCells);
+    if (bestMove !== -1) {
+        board[bestMove] = 'O';
+        updateCell(bestMove, 'O');
+        checkResult();
+        return;
+    }
+
+    // Sprawdź, czy gracz może wygrać, jeśli tak to zablokuj
+    bestMove = findBestMove('X', availableCells);
+    if (bestMove !== -1) {
+        board[bestMove] = 'O';
+        updateCell(bestMove, 'O');
+        checkResult();
+        return;
+    }
+
+    // Jeśli nie ma ruchu wygranej lub blokady, wykonaj losowy ruch z dostępnych
+    const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+    board[randomIndex] = 'O';
+    updateCell(randomIndex, 'O');
+    checkResult();
+}
+
+// Funkcja znajdująca najlepszy ruch dla bota lub gracza
+function findBestMove(player, availableCells) {
+    // Sprawdź, czy można wygrać
+    for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        const cells = [a, b, c];
+
+        // Zbierz pustą komórkę w danej kombinacji
+        const emptyCell = cells.find(cell => board[cell] === '');
+        if (emptyCell !== undefined) {
+            // Sprawdź, czy reszta pól ma wartość gracza
+            if (cells.filter(cell => board[cell] === player).length === 2) {
+                // Jeśli jest możliwa wygrana, zwróć ten ruch
+                if (availableCells.includes(emptyCell)) {
+                    return emptyCell;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+// Funkcja do zaktualizowania komórki na planszy
+function updateCell(index, player) {
+    const cellElement = document.querySelector(`.cell[data-index='${index}']`);
+    cellElement.innerText = player;
+    cellElement.classList.add(player.toLowerCase());
+}
+
+// Funkcja resetująca grę
+function resetGame() {
+    currentPlayer = 'X';
+    gameActive = true;
+    board = ['', '', '', '', '', '', '', '', ''];
+    createBoard();
+    statusDisplay.innerHTML = `Teraz gra ${currentPlayer}`;
+    statusDisplay.classList.remove('win', 'draw', 'lose');
+}
+
+// Funkcja zmieniająca tryb
+function changeMode(newMode) {
+    document.getElementById(mode).classList.remove('active')
+    mode = newMode;
+    document.getElementById(mode).classList.add('active')
+    resetGame();
+    winCounterX = 0;
+    winCounterO = 0;
+    winCounterXDisplay.innerText = `Wygrane X: ${winCounterX}`;
+    winCounterODisplay.innerText = `Wygrane O: ${winCounterO}`;
+    statusDisplay.innerHTML = `Teraz gra ${currentPlayer}`;
+}
+
+// Event Listeners dla przycisków
+document.getElementById('reset-button').addEventListener('click', resetGame);
+document.getElementById('two-player').addEventListener('click', () => changeMode('two-player'));
+document.getElementById('vs-bot').addEventListener('click', () => changeMode('vs-bot'));
+
+// Inicjalizacja planszy
+createBoard();
+
+    </script>
+</body>
+</html>

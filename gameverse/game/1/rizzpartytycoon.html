@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rizz Party Tycoon | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            background-color: #0A0A0A;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1A1A1A, #333);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #FFD700;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            color: #FFD700;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        #stats {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            background: #1A1A1A;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        #party-area {
+            position: relative;
+            height: 300px;
+            background: url('https://via.placeholder.com/600x300/1A1A1A/FFD700?text=Imprezowy+Vibe') no-repeat center;
+            background-size: cover;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 3px solid #FFD700;
+            transition: all 0.5s ease;
+        }
+        #party-area.active {
+            filter: brightness(1.2) saturate(1.3);
+            box-shadow: 0 0 20px #FFD700;
+            animation: partyVibe 2s infinite;
+        }
+        @keyframes partyVibe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        #party-guests {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .guest {
+            position: absolute;
+            font-size: 28px;
+            animation: groove 3s infinite;
+            opacity: 0.8;
+        }
+        @keyframes groove {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        #actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1A1A1A;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background: linear-gradient(135deg, #FFA500, #FFD700);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+        }
+        button:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #log {
+            background: #1A1A1A;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 2px solid #FFD700;
+        }
+        #log h2 {
+            color: #FFD700;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        #logEntries div {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+            font-size: 1.1rem;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #E0E0E0;
+            border-top: 3px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #vibe-meter {
+            margin: 15px auto;
+            width: 300px;
+            height: 25px;
+            background: #333;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #FFD700;
+        }
+        #vibe-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Rizz Party Tycoon</h1>
+    </header>
+    <main>
+        <section id="stats">
+            <div>💎 Rizz: <span id="rizz">0</span></div>
+            <div>🎉 Goście: <span id="guests">0</span></div>
+            <div>💰 Kasa: <span id="money">100</span></div>
+            <div>⭐ Ranking: <span id="rank">1</span></div>
+            <div>🔥 Punkty Vibe: <span id="vibePoints">0</span></div>
+        </section>
+        <div id="party-area">
+            <div id="party-guests"></div>
+        </div>
+        <div id="vibe-meter"><div id="vibe-fill" style="width: 0%"></div></div>
+        <section id="actions">
+            <button onclick="throwParty('domowka')">🏠 Domówka (20 zł)</button>
+            <button onclick="throwParty('klub')">🎵 Noc w Klubie (50 zł)</button>
+            <button onclick="throwParty('festiwal')">🎤 Festiwal (100 zł)</button>
+            <button onclick="buyUpgrade('dj', 50, 5, 0.1)">🎧 DJ (5 Rizz, +10% Vibe, 50 zł)</button>
+            <button onclick="buyUpgrade('swiatla', 80, 8, 0.15)">💡 Oświetlenie (8 Rizz, +15% Vibe, 80 zł)</button>
+            <button onclick="buyUpgrade('bar', 120, 10, 0.2)">🍹 Bar (10 Rizz, +20% Vibe, 120 zł)</button>
+            <button onclick="buyUpgrade('naglosnienie', 150, 12, 0.25)">🔊 Nagłośnienie (12 Rizz, +25% Vibe, 150 zł)</button>
+            <button onclick="buyUpgrade('tancerze', 200, 15, 0.3)">💃 Tancerze (15 Rizz, +30% Vibe, 200 zł)</button>
+            <button onclick="buyUpgrade('fotobudka', 100, 7, 0.15)">📸 Fotobudka (7 Rizz, +15% Vibe, 100 zł)</button>
+            <button onclick="advertise()">📢 Reklama (30 zł)</button>
+            <button onclick="signSponsor()">✍️ Sponsor</button>
+            <button onclick="hostSpecialEvent()">🌟 Wydarzenie Specjalne (200 zł)</button>
+        </section>
+        <section id="log">
+            <h2>Log Imprezy</h2>
+            <div id="logEntries"></div>
+        </section>
+    </main>
+    <audio id="partyMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" preload="auto"></audio>
+
+    <script>
+        // Stan gry
+        let gameState = {
+            rizz: 0,
+            guests: 0,
+            money: 100,
+            rank: 1,
+            vibePoints: 0,
+            entryFee: 5,
+            vibeMultiplier: 1,
+            sponsorCooldown: false,
+            activeSponsor: null,
+            partyInProgress: false,
+            specialEventCooldown: false,
+            upgrades: { dj: 0, swiatla: 0, bar: 0, naglosnienie: 0, tancerze: 0, fotobudka: 0 }
+        };
+
+        const sponsors = [
+            { name: "Żywiec", payout: 50, vibeBoost: 0.05 },
+            { name: "Tymbark", payout: 100, vibeBoost: 0.1 },
+            { name: "Red Bull", payout: 150, vibeBoost: 0.15 }
+        ];
+
+        const partyTypes = {
+            domowka: { cost: 20, baseGuests: 10, rizzBoost: 2, duration: 2000, bg: "https://via.placeholder.com/600x300/1A1A1A/FFD700?text=Domówka" },
+            klub: { cost: 50, baseGuests: 25, rizzBoost: 5, duration: 3000, bg: "https://via.placeholder.com/600x300/333/FFA500?text=Noc+w+Klubie" },
+            festiwal: { cost: 100, baseGuests: 50, rizzBoost: 10, duration: 4000, bg: "https://via.placeholder.com/600x300/444/FFD700?text=Festiwal" }
+        };
+
+        // Aktualizacja wyświetlacza
+        function updateStats() {
+            document.getElementById("rizz").textContent = Math.floor(gameState.rizz);
+            document.getElementById("guests").textContent = Math.floor(gameState.guests);
+            document.getElementById("money").textContent = Math.floor(gameState.money);
+            document.getElementById("rank").textContent = gameState.rank;
+            document.getElementById("vibePoints").textContent = gameState.vibePoints;
+            document.getElementById("vibe-fill").style.width = `${Math.min(gameState.vibeMultiplier * 50, 100)}%`;
+        }
+
+        // Logowanie wydarzeń
+        function logEvent(message) {
+            const logEntries = document.getElementById("logEntries");
+            const newLog = document.createElement("div");
+            newLog.innerHTML = message;
+            logEntries.prepend(newLog);
+            if (logEntries.children.length > 12) logEntries.removeChild(logEntries.lastChild);
+        }
+
+        // Sprawdzanie affordability
+        function canAfford(cost) {
+            return gameState.money >= cost;
+        }
+
+        // Animacja gości
+        function animateGuests(count) {
+            const guestArea = document.getElementById("party-guests");
+            guestArea.innerHTML = "";
+            const guestIcons = ["🕺", "💃", "🎉", "🍻"];
+            for (let i = 0; i < Math.min(count, 20); i++) {
+                const guest = document.createElement("div");
+                guest.className = "guest";
+                guest.textContent = guestIcons[Math.floor(Math.random() * guestIcons.length)];
+                guest.style.left = `${Math.random() * 90}%`;
+                guest.style.top = `${Math.random() * 80}%`;
+                guest.style.animationDelay = `${Math.random() * 1}s`;
+                guestArea.appendChild(guest);
+            }
+        }
+
+        // Organizowanie imprezy
+        async function throwParty(type) {
+            if (gameState.partyInProgress) {
+                logEvent("Impreza już trwa! Poczekaj chwilę.");
+                return;
+            }
+
+            const party = partyTypes[type];
+            if (!canAfford(party.cost)) {
+                logEvent(`Za mało kasy na ${type === "domowka" ? "domówkę" : type === "klub" ? "klub" : "festiwal"}!`);
+                return;
+            }
+
+            gameState.partyInProgress = true;
+            gameState.money -= party.cost;
+            document.getElementById("party-area").style.backgroundImage = `url(${party.bg})`;
+            document.getElementById("party-area").classList.add("active");
+            document.getElementById("partyMusic").play();
+            logEvent(`<span class="spinner"></span> Rozkręcamy ${type === "domowka" ? "Domówkę" : type === "klub" ? "Noc w Klubie" : "Festiwal"}...`);
+            updateStats();
+
+            // Mini-gra: Zwiększ vibe
+            let vibeBoost = 0;
+            const vibeButton = document.createElement("button");
+            vibeButton.textContent = "🔥 Podkręć Vibe!";
+            vibeButton.style.position = "absolute";
+            vibeButton.style.top = "50%";
+            vibeButton.style.left = "50%";
+            vibeButton.style.transform = "translate(-50%, -50%)";
+            vibeButton.onclick = () => vibeBoost += 0.15;
+            document.getElementById("party-area").appendChild(vibeButton);
+
+            await new Promise(resolve => setTimeout(resolve, party.duration));
+
+            vibeButton.remove();
+            const newGuests = Math.floor((Math.random() * party.baseGuests + party.baseGuests) * (gameState.vibeMultiplier + vibeBoost));
+            const rizzBoost = Math.floor(Math.random() * 5) + party.rizzBoost + 
+                gameState.upgrades.dj * 5 + gameState.upgrades.swiatla * 8 + gameState.upgrades.bar * 10 + 
+                gameState.upgrades.naglosnienie * 12 + gameState.upgrades.tancerze * 15 + gameState.upgrades.fotobudka * 7;
+            const earnings = newGuests * gameState.entryFee + (gameState.activeSponsor ? gameState.activeSponsor.payout : 0);
+            const vibePoints = Math.floor(newGuests / 10);
+
+            gameState.guests += newGuests;
+            gameState.rizz += rizzBoost;
+            gameState.money += earnings;
+            gameState.vibePoints += vibePoints;
+            animateGuests(newGuests);
+
+            logEvent(`<b>${type === "domowka" ? "Domówka" : type === "klub" ? "Noc w Klubie" : "Festiwal"} zakończona!</b> ${newGuests} gości, +${rizzBoost} Rizz, +${earnings} zł, +${vibePoints} Punktów Vibe!`);
+            gameState.partyInProgress = false;
+            document.getElementById("party-area").classList.remove("active");
+            document.getElementById("partyMusic").pause();
+            document.getElementById("partyMusic").currentTime = 0;
+            updateStats();
+            checkRank();
+        }
+
+        // Kupowanie ulepszeń
+        function buyUpgrade(type, cost, rizzValue, vibeValue) {
+            if (!canAfford(cost)) {
+                logEvent(`Za mało kasy na ${type === "dj" ? "DJ-a" : type === "swiatla" ? "oświetlenie" : type === "bar" ? "bar" : type === "naglosnienie" ? "nagłośnienie" : type === "tancerze" ? "tancerzy" : "fotobudkę"}!`);
+                return;
+            }
+
+            gameState.money -= cost;
+            gameState.rizz += rizzValue;
+            gameState.vibeMultiplier += vibeValue;
+            gameState.upgrades[type]++;
+            logEvent(`Kupiono ${type === "dj" ? "DJ-a" : type === "swiatla" ? "Oświetlenie" : type === "bar" ? "Bar" : type === "naglosnienie" ? "Nagłośnienie" : type === "tancerze" ? "Tancerzy" : "Fotobudkę"}! +${rizzValue} Rizz, +${vibeValue * 100}% Vibe!`);
+            updateStats();
+        }
+
+        // Reklama
+        function advertise() {
+            if (!canAfford(30)) {
+                logEvent("Za mało kasy na reklamę!");
+                return;
+            }
+
+            gameState.money -= 30;
+            const newGuests = Math.floor(Math.random() * 30) + 15;
+            gameState.guests += newGuests;
+            gameState.vibePoints += 5;
+            logEvent(`Reklama zadziałała! ${newGuests} nowych gości i +5 Punktów Vibe!`);
+            updateStats();
+            checkRank();
+        }
+
+        // Podpisanie sponsora
+        function signSponsor() {
+            if (gameState.sponsorCooldown) {
+                logEvent("Sponsorzy mają przerwę – wróć później!");
+                return;
+            }
+
+            gameState.activeSponsor = sponsors[Math.floor(Math.random() * sponsors.length)];
+            gameState.vibeMultiplier += gameState.activeSponsor.vibeBoost;
+            logEvent(`Podpisano umowę z ${gameState.activeSponsor.name}! +${gameState.activeSponsor.payout} zł za imprezę, +${gameState.activeSponsor.vibeBoost * 100}% Vibe!`);
+            gameState.sponsorCooldown = true;
+            setTimeout(() => {
+                gameState.sponsorCooldown = false;
+                logEvent("Nowi sponsorzy gotowi do współpracy!");
+            }, 300000); // 5 minut
+            updateStats();
+        }
+
+        // Wydarzenie specjalne
+        async function hostSpecialEvent() {
+            if (gameState.specialEventCooldown) {
+                logEvent("Wydarzenie Specjalne na cooldownie – daj mu chwilę!");
+                return;
+            }
+            if (!canAfford(200)) {
+                logEvent("Za mało kasy na Wydarzenie Specjalne!");
+                return;
+            }
+
+            gameState.money -= 200;
+            document.getElementById("party-area").style.backgroundImage = `url(https://via.placeholder.com/600x300/FFD700/1A1A1A?text=Wydarzenie+Specjalne)`;
+            document.getElementById("party-area").classList.add("active");
+            logEvent(`<span class="spinner"></span> Organizujemy Wydarzenie Specjalne...`);
+            updateStats();
+
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            const newGuests = Math.floor(Math.random() * 100) + 100;
+            const rizzBoost = Math.floor(Math.random() * 20) + 20;
+            const earnings = newGuests * gameState.entryFee * 2;
+            const vibePoints = Math.floor(newGuests / 5);
+
+            gameState.guests += newGuests;
+            gameState.rizz += rizzBoost;
+            gameState.money += earnings;
+            gameState.vibePoints += vibePoints;
+            animateGuests(newGuests);
+
+            logEvent(`<b>Wydarzenie Specjalne się udało!</b> ${newGuests} gości, +${rizzBoost} Rizz, +${earnings} zł, +${vibePoints} Punktów Vibe!`);
+            gameState.specialEventCooldown = true;
+            document.getElementById("party-area").classList.remove("active");
+            setTimeout(() => {
+                gameState.specialEventCooldown = false;
+                logEvent("Gotowi na kolejne Wydarzenie Specjalne!");
+            }, 600000); // 10 minut
+            updateStats();
+            checkRank();
+        }
+
+        // Generowanie pasywnego dochodu
+        function generateIncome() {
+            const income = Math.floor(gameState.guests * gameState.entryFee * 0.3);
+            if (income > 0) {
+                gameState.money += income;
+                gameState.vibePoints += Math.floor(income / 20);
+                logEvent(`Goście zostawili ${income} zł i +${Math.floor(income / 20)} Punktów Vibe na parkiecie!`);
+                updateStats();
+            }
+        }
+
+        // Losowe wydarzenie
+        function randomEvent() {
+            const chance = Math.random();
+            if (chance < 0.2) {
+                const bonusGuests = Math.floor(Math.random() * 150) + 50;
+                const bonusMoney = bonusGuests * gameState.entryFee;
+                gameState.guests += bonusGuests;
+                gameState.money += bonusMoney;
+                gameState.vibePoints += 20;
+                logEvent(`<b>Hit!</b> Znana gwiazda wpadła na imprezę! +${bonusGuests} gości, +${bonusMoney} zł, +20 Punktów Vibe!`);
+            } else if (chance < 0.35) {
+                const penalty = Math.floor(Math.random() * 100) + 50;
+                gameState.money -= penalty;
+                gameState.guests = Math.max(0, gameState.guests - 30);
+                logEvent(`Awaria prądu! Straciłeś ${penalty} zł, a 30 gości poszło do domu.`);
+            } else if (chance < 0.5) {
+                gameState.rizz += 25;
+                gameState.vibePoints += 10;
+                logEvent(`DJ puścił sztos! +25 Rizz i +10 Punktów Vibe!`);
+            } else {
+                logEvent("Tłum szaleje – utrzymuj ten klimat!");
+            }
+            updateStats();
+            checkRank();
+        }
+
+        // Sprawdzanie rankingu
+        function checkRank() {
+            if (gameState.vibePoints >= 5000) gameState.rank = 5;
+            else if (gameState.vibePoints >= 2000) gameState.rank = 4;
+            else if (gameState.vibePoints >= 1000) gameState.rank = 3;
+            else if (gameState.vibePoints >= 500) gameState.rank = 2;
+            else gameState.rank = 1;
+        }
+
+        // Punkty vibe
+        function earnVibePoints() {
+            const points = Math.floor(Math.random() * 15) + 10;
+            gameState.vibePoints += points;
+            logEvent(`Goście kochają ten vibe! +${points} Punktów Vibe!`);
+            updateStats();
+        }
+
+        // Interwały gry
+        setInterval(generateIncome, 30000); // Dochód co 30 sekund
+        setInterval(randomEvent, 60000); // Wydarzenie co 60 sekund
+        setInterval(earnVibePoints, 600000); // Vibe co 10 minut
+
+        // Inicjalizacja
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG | Perun Gameverse</title>
+    <link rel="icon" type="image/x-icon" href="../img/perun2.1.png">
+    <link rel="stylesheet" href="../style/public.css">
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            color: #e8e6d9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #game-container {
+            background: #1c2526;
+            padding: 40px;
+            border-radius: 20px;
+            width: 1400px;
+            max-width: 95%;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+        h1 {
+            color: #f4d03f;
+            text-shadow: 0 0 10px #f39c12;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #bb86fc;
+            text-shadow: 0 0 5px #6200ea;
+        }
+        button {
+            background: linear-gradient(45deg, #6d2077, #a33abf);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        button:hover {
+            background: linear-gradient(45deg, #a33abf, #d45deb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(163, 58, 191, 0.5);
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #2a3439;
+            padding: 30px;
+            border-radius: 15px;
+            width: 700px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+            border: 2px solid #bb86fc;
+        }
+        .battle-modal .modal-content {
+            width: 1000px;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, #2a3439, #1c2526);
+        }
+        .battle-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        .battle-stats > div {
+            width: 45%;
+            background: #1c2526;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #bb86fc;
+        }
+        .close {
+            float: right;
+            font-size: 32px;
+            cursor: pointer;
+            color: #fff;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: #f4d03f;
+        }
+        .item {
+            background: #3b444b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .item:hover {
+            background: #4b565e;
+        }
+        #event-log, #quest-log {
+            background: #1c2526;
+            padding: 20px;
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #666;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        #battle-log {
+            background: #1c2526;
+            padding: 20px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #666;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .stat-bar {
+            background: #444;
+            height: 30px;
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+            border: 1px solid #666;
+        }
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+        .health { background: linear-gradient(45deg, #cf6679, #e57373); }
+        .mana { background: linear-gradient(45deg, #03dac6, #4dd0e1); }
+        .stamina { background: linear-gradient(45deg, #ffca28, #ffd54f); }
+        .enemy-health { background: linear-gradient(45deg, #b00020, #d32f2f); }
+        .stat-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 14px;
+            text-shadow: 0 0 3px #000;
+            font-weight: bold;
+        }
+        #world-map {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .world {
+            background: #3b444b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #666;
+        }
+        .world:hover {
+            background: #4b565e;
+            transform: scale(1.05);
+            border-color: #bb86fc;
+        }
+        .world.locked {
+            background: #2a2a2a;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #444;
+        }
+        .quest {
+            background: #3b444b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .tooltip {
+            position: absolute;
+            background: linear-gradient(to bottom, #2a3439, #1c2526);
+            color: #e8e6d9;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            z-index: 1001;
+            pointer-events: none;
+            border: 2px solid #bb86fc;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+            max-width: 320px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .tooltip.visible {
+            opacity: 1;
+        }
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            border-top: 2px solid #bb86fc;
+            border-left: 2px solid #bb86fc;
+            background: #2a3439;
+            width: 14px;
+            height: 14px;
+        }
+        .event-choice {
+            background: #3b444b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        .event-choice:hover {
+            background: #4b565e;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #bb86fc;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .notification.show {
+            opacity: 1;
+        }
+        #companion-info {
+            background: #3b444b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Legenda Krain: Wieczna Saga</h1>
+        <div id="player-stats">
+            <h2>Gracz: <span id="player-name">Bohater</span></h2>
+            <p>Poziom: <span id="player-level">1</span> | Doświadczenie: <span id="player-exp">0</span>/<span id="exp-to-level">100</span></p>
+            <p>Złoto: <span id="player-gold">100</p>
+            <p>Klasa: <span id="player-class">Wojownik</span> | Specjalizacja: <span id="player-spec">Brak</span></p>
+            <p>Reputacja: <span id="player-reputation">0</span></p>
+            <div>Siła: <span id="player-strength">10</span> | Zręczność: <span id="player-dexterity">8</span> | Magia: <span id="player-magic">5</span> | Charyzma: <span id="player-charisma">5</span> | Wytrzymałość: <span id="player-endurance">5</span></div>
+            <div>Zdrowie: <span id="player-health">100</span>/<span id="player-max-health">100</span></div>
+            <div class="stat-bar"><div class="stat-bar-fill health" id="health-bar"></div><span class="stat-text" id="health-text"></span></div>
+            <div>Mana: <span id="player-mana">50</span>/<span id="player-max-mana">50</span></div>
+            <div class="stat-bar"><div class="stat-bar-fill mana" id="mana-bar"></div><span class="stat-text" id="mana-text"></span></div>
+            <div>Wytrzymałość: <span id="player-stamina">100</span>/<span id="player-max-stamina">100</span></div>
+            <div class="stat-bar"><div class="stat-bar-fill stamina" id="stamina-bar"></div><span class="stat-text" id="stamina-text"></span></div>
+        </div>
+        <div id="companion-info">
+            <h3>Towarzysz: <span id="companion-name">Brak</span></h3>
+            <p>Zdrowie: <span id="companion-health">0</span>/<span id="companion-max-health">0</span></p>
+            <div class="stat-bar"><div class="stat-bar-fill health" id="companion-health-bar"></div><span class="stat-text" id="companion-health-text"></span></div>
+            <p>Umiejętność: <span id="companion-skill">Brak</span></p>
+        </div>
+        <div id="actions">
+            <button onclick="openModal('inventory-modal')" data-tooltip="Przeglądaj i zarządzaj przedmiotami w ekwipunku">Ekwipunek</button>
+            <button onclick="openModal('shop-modal')" data-tooltip="Handluj z kupcami, kupuj i sprzedawaj przedmioty">Sklep</button>
+            <button onclick="openModal('quests-modal')" data-tooltip="Sprawdź dostępne zadania i ich nagrody">Zadania</button>
+            <button onclick="openModal('skills-modal')" data-tooltip="Rozwijaj swoje umiejętności bojowe i magiczne">Umiejętności</button>
+            <button onclick="openModal('world-modal')" data-tooltip="Wybierz krainę do eksploracji">Mapa Światów</button>
+            <button onclick="openModal('crafting-modal')" data-tooltip="Twórz potężne przedmioty z materiałów">Rzemiosło</button>
+            <button onclick="exploreWorld()" id="explore-btn" data-tooltip="Wyrusz na przygodę w wybranym świecie">Eksploruj</button>
+        </div>
+        <div id="quest-log"></div>
+        <div id="event-log"></div>
+    </div>
+
+    <!-- Modal Ekwipunku -->
+    <div id="inventory-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('inventory-modal')" data-tooltip="Zamknij okno ekwipunku">&times;</span>
+            <h2>Ekwipunek</h2>
+            <div id="inventory-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Sklepu -->
+    <div id="shop-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('shop-modal')" data-tooltip="Zamknij okno sklepu">&times;</span>
+            <h2>Sklep</h2>
+            <div id="shop-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Zadań -->
+    <div id="quests-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('quests-modal')" data-tooltip="Zamknij okno zadań">&times;</span>
+            <h2>Zadania</h2>
+            <div id="quests-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Umiejętności -->
+    <div id="skills-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('skills-modal')" data-tooltip="Zamknij okno umiejętności">&times;</span>
+            <h2>Umiejętności</h2>
+            <div id="skills-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Światów -->
+    <div id="world-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('world-modal')" data-tooltip="Zamknij mapę światów">&times;</span>
+            <h2>Mapa Światów</h2>
+            <div id="world-map"></div>
+        </div>
+    </div>
+
+    <!-- Modal Rzemiosła -->
+    <div id="crafting-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('crafting-modal')" data-tooltip="Zamknij okno rzemiosła">&times;</span>
+            <h2>Rzemiosło</h2>
+            <div id="crafting-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Walki -->
+    <div id="battle-modal" class="modal battle-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('battle-modal'); endBattle();" data-tooltip="Ucieknij z walki (tracisz nagrody)">&times;</span>
+            <h2>Walka!</h2>
+            <div class="battle-stats">
+                <div id="player-battle-stats">
+                    <h3>Gracz: <span id="battle-player-name"></span></h3>
+                    <p>Zdrowie: <span id="battle-player-health"></span>/<span id="battle-player-max-health"></span></p>
+                    <div class="stat-bar"><div class="stat-bar-fill health" id="battle-player-health-bar"></div><span class="stat-text" id="battle-player-health-text"></span></div>
+                    <p>Mana: <span id="battle-player-mana"></span>/<span id="battle-player-max-mana"></span></p>
+                    <div class="stat-bar"><div class="stat-bar-fill mana" id="battle-player-mana-bar"></div><span class="stat-text" id="battle-player-mana-text"></span></div>
+                    <p>Wytrzymałość: <span id="battle-player-stamina"></span>/<span id="battle-player-max-stamina"></span></p>
+                    <div class="stat-bar"><div class="stat-bar-fill stamina" id="battle-player-stamina-bar"></div><span class="stat-text" id="battle-player-stamina-text"></span></div>
+                </div>
+                <div id="enemy-battle-stats">
+                    <h3>Przeciwnik: <span id="battle-enemy-name"></span> (Poziom: <span id="battle-enemy-level"></span>)</h3>
+                    <p>Zdrowie: <span id="battle-enemy-health"></span>/<span id="battle-enemy-max-health"></span></p>
+                    <div class="stat-bar"><div class="stat-bar-fill enemy-health" id="battle-enemy-health-bar"></div><span class="stat-text" id="battle-enemy-health-text"></span></div>
+                    <p>Siła: <span id="battle-enemy-strength"></span> | Zręczność: <span id="battle-enemy-dexterity"></span></p>
+                </div>
+            </div>
+            <div id="battle-actions">
+                <button onclick="playerAttack('basic')" data-tooltip="Zwykły atak\nKoszt: Brak\nObrażenia: 80-120% siły">Atak podstawowy</button>
+                <button onclick="playerAttack('power')" data-tooltip="Mocny atak\nKoszt: 20 wytrzymałości\nObrażenia: 120-180% siły">Atak silny</button>
+                <button onclick="useMagic('fireball')" data-tooltip="Rzuć kulę ognia\nKoszt: 15 many\nObrażenia: 100-150% magii">Kula ognia</button>
+                <button onclick="useMagic('heal')" data-tooltip="Ulecz siebie\nKoszt: 20 many\nEfekt: Leczy 80-120% magii">Leczenie</button>
+                <button onclick="useSkill('critical')" data-tooltip="Cios krytyczny\nKoszt: 30 wytrzymałości\nObrażenia: 200% siły, szansa na krytyk">Cios krytyczny</button>
+                <button onclick="useCompanionSkill()" id="companion-skill-btn" data-tooltip="Użyj zdolności towarzysza\nEfekt: Zależy od towarzysza" style="display: none;">Umiejętność towarzysza</button>
+                <button onclick="fleeBattle()" data-tooltip="Spróbuj uciec\nSzansa: 50% + zręczność/200\nKoszt: Brak">Uciekaj</button>
+            </div>
+            <div id="battle-log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Dane gry
+        let player = {
+            name: "Bohater",
+            level: 1,
+            exp: 0,
+            expToLevel: 100,
+            gold: 100,
+            class: "Wojownik",
+            specialization: "Brak",
+            strength: 10,
+            dexterity: 8,
+            magic: 5,
+            charisma: 5,
+            endurance: 5,
+            health: 100,
+            maxHealth: 100,
+            mana: 50,
+            maxMana: 50,
+            stamina: 100,
+            maxStamina: 100,
+            reputation: 0,
+            inventory: [
+                { id: 1, name: "Miecz treningowy", type: "weapon", slot: "main-hand", strength: 5, equipped: true, rarity: "common" },
+                { id: 2, name: "Mikstura zdrowia", type: "potion", effect: "heal", value: 30, quantity: 3, rarity: "common" },
+                { id: 11, name: "Ruda żelaza", type: "material", quantity: 5, rarity: "common" }
+            ],
+            skills: [
+                { id: 1, name: "Cios krytyczny", type: "attack", cost: { stamina: 30 }, damage: 2.0, level: 1, unlocked: true },
+                { id: 2, name: "Tarcza many", type: "defense", cost: { mana: 25 }, effect: "shield", value: 50, level: 1, unlocked: false }
+            ],
+            quests: [
+                { id: 1, name: "Pierwsze kroki", description: "Pokonaj 3 szkielety", progress: 0, goal: 3, reward: { exp: 100, gold: 50 }, world: 1, active: true },
+                { id: 2, name: "Zaginiony skarb", description: "Znajdź skarb w Zielonych Równinach", progress: 0, goal: 1, reward: { exp: 150, gold: 100, itemId: 3 }, world: 1, active: true },
+                { id: 3, name: "Rzemieślnicza próba", description: "Stwórz przedmiot w warsztacie", progress: 0, goal: 1, reward: { exp: 200, gold: 150 }, world: 1, active: true }
+            ],
+            currentWorld: 1,
+            worldsUnlocked: [1],
+            companion: null
+        };
+
+        // Towarzysze
+        const companions = [
+            { name: "Feniks", health: 50, maxHealth: 50, skill: "Ogniste pióra", effect: "damage", value: 30, cost: 1000, repReq: 50 },
+            { name: "Duch lasu", health: 80, maxHealth: 80, skill: "Leczący powiew", effect: "heal", value: 40, cost: 1500, repReq: 100 },
+            { name: "Smoczy jeździec", health: 100, maxHealth: 100, skill: "Smoczy oddech", effect: "damage", value: 50, cost: 2000, repReq: 200 }
+        ];
+
+        // Światy
+        const worlds = [
+            {
+                id: 1,
+                name: "Zielone Równiny",
+                levelReq: 1,
+                enemies: [
+                    { name: "Szkielet", level: 1, health: 50, maxHealth: 50, strength: 8, dexterity: 5, exp: 20, gold: 10, drops: [{ id: 4, chance: 0.3 }, { id: 11, chance: 0.5 }] },
+                    { name: "Goblin", level: 2, health: 70, maxHealth: 70, strength: 10, dexterity: 8, exp: 30, gold: 15, drops: [{ id: 5, chance: 0.2 }, { id: 12, chance: 0.4 }] },
+                    { name: "Wilczy jeździec", level: 3, health: 90, maxHealth: 90, strength: 12, dexterity: 10, exp: 40, gold: 20, drops: [{ id: 13, chance: 0.25 }] }
+                ],
+                events: [
+                    { type: "battle", weight: 35 },
+                    { type: "treasure", weight: 20 },
+                    { type: "merchant", weight: 15 },
+                    { type: "trap", weight: 10 },
+                    { type: "npc", weight: 10 },
+                    { type: "companion", weight: 5 },
+                    { type: "resource", weight: 5 }
+                ]
+            },
+            {
+                id: 2,
+                name: "Mroczne Bagna",
+                levelReq: 5,
+                enemies: [
+                    { name: "Bagienny Troll", level: 5, health: 120, maxHealth: 120, strength: 15, dexterity: 6, exp: 60, gold: 30, drops: [{ id: 6, chance: 0.25 }, { id: 14, chance: 0.3 }] },
+                    { name: "Wąż", level: 6, health: 90, maxHealth: 90, strength: 12, dexterity: 10, exp: 50, gold: 20, drops: [{ id: 7, chance: 0.15 }, { id: 15, chance: 0.2 }] },
+                    { name: "Błotny duch", level: 7, health: 100, maxHealth: 100, strength: 14, dexterity: 12, exp: 70, gold: 25, drops: [{ id: 16, chance: 0.1 }] }
+                ],
+                events: [
+                    { type: "battle", weight: 30 },
+                    { type: "treasure", weight: 15 },
+                    { type: "merchant", weight: 15 },
+                    { type: "trap", weight: 15 },
+                    { type: "npc", weight: 15 },
+                    { type: "companion", weight: 5 },
+                    { type: "resource", weight: 5 }
+                ]
+            },
+            {
+                id: 3,
+                name: "Płonące Góry",
+                levelReq: 10,
+                enemies: [
+                    { name: "Ognisty Smok", level: 10, health: 200, maxHealth: 200, strength: 25, dexterity: 12, exp: 120, gold: 80, drops: [{ id: 8, chance: 0.1 }, { id: 17, chance: 0.05 }] },
+                    { name: "Lawowy Golem", level: 12, health: 250, maxHealth: 250, strength: 30, dexterity: 8, exp: 150, gold: 100, drops: [{ id: 8, chance: 0.05 }, { id: 18, chance: 0.05 }] },
+                    { name: "Piekielny rycerz", level: 15, health: 300, maxHealth: 300, strength: 35, dexterity: 15, exp: 200, gold: 120, drops: [{ id: 19, chance: 0.02 }] }
+                ],
+                events: [
+                    { type: "battle", weight: 40 },
+                    { type: "treasure", weight: 10 },
+                    { type: "merchant", weight: 10 },
+                    { type: "trap", weight: 20 },
+                    { type: "npc", weight: 10 },
+                    { type: "companion", weight: 5 },
+                    { type: "resource", weight: 5 }
+                ]
+            },
+            {
+                id: 4,
+                name: "Kryształowe Jaskinie",
+                levelReq: 15,
+                enemies: [
+                    { name: "Kryształowy wąż", level: 15, health: 220, maxHealth: 220, strength: 20, dexterity: 18, exp: 180, gold: 90, drops: [{ id: 20, chance: 0.1 }] },
+                    { name: "Golem szafiru", level: 17, health: 280, maxHealth: 280, strength: 28, dexterity: 10, exp: 220, gold: 110, drops: [{ id: 21, chance: 0.08 }] },
+                    { name: "Cień kryształu", level: 20, health: 350, maxHealth: 350, strength: 40, dexterity: 20, exp: 300, gold: 150, drops: [{ id: 22, chance: 0.05 }] }
+                ],
+                events: [
+                    { type: "battle", weight: 45 },
+                    { type: "treasure", weight: 10 },
+                    { type: "merchant", weight: 10 },
+                    { type: "trap", weight: 20 },
+                    { type: "npc", weight: 10 },
+                    { type: "companion", weight: 3 },
+                    { type: "resource", weight: 2 }
+                ]
+            }
+        ];
+
+        // Przedmioty w sklepie i materiały
+        const shopItems = [
+            { id: 3, name: "Stalowy Miecz", type: "weapon", slot: "main-hand", strength: 12, price: 80, rarity: "uncommon", world: 1 },
+            { id: 4, name: "Mikstura zdrowia", type: "potion", effect: "heal", value: 30, price: 15, rarity: "common", world: 1 },
+            { id: 5, name: "Mikstura many", type: "potion", effect: "mana", value: 25, price: 20, rarity: "common", world: 1 },
+            { id: 6, name: "Zbroja płytowa", type: "armor", slot: "chest", health: 60, price: 150, rarity: "rare", world: 2 },
+            { id: 7, name: "Pierścień mocy", type: "accessory", slot: "ring", strength: 5, magic: 5, price: 100, rarity: "uncommon", world: 2 },
+            { id: 8, name: "Płaszcz smoka", type: "armor", slot: "cloak", health: 40, magic: 10, price: 300, rarity: "epic", world: 3 },
+            { id: 9, name: "Łuk precyzji", type: "weapon", slot: "main-hand", dexterity: 15, price: 120, rarity: "rare", world: 2 },
+            { id: 10, name: "Amulet życia", type: "accessory", slot: "neck", health: 50, price: 200, rarity: "epic", world: 3 },
+            { id: 11, name: "Ruda żelaza", type: "material", price: 10, rarity: "common", world: 1 },
+            { id: 12, name: "Skóra goblina", type: "material", price: 15, rarity: "common", world: 1 },
+            { id: 13, name: "Wilcze futro", type: "material", price: 20, rarity: "uncommon", world: 1 },
+            { id: 14, name: "Bagienna liana", type: "material", price: 25, rarity: "uncommon", world: 2 },
+            { id: 15, name: "Jad węża", type: "material", price: 30, rarity: "rare", world: 2 },
+            { id: 16, name: "Esencja ducha", type: "material", price: 50, rarity: "rare", world: 2 },
+            { id: 17, name: "Smocza łuska", type: "material", price: 100, rarity: "epic", world: 3 },
+            { id: 18, name: "Lawowy rdzeń", type: "material", price: 120, rarity: "epic", world: 3 },
+            { id: 19, name: "Piekielny kryształ", type: "material", price: 150, rarity: "legendary", world: 3 },
+            { id: 20, name: "Kryształowy pył", type: "material", price: 80, rarity: "rare", world: 4 },
+            { id: 21, name: "Szafirowe odłamki", type: "material", price: 100, rarity: "epic", world: 4 },
+            { id: 22, name: "Esencja cienia", type: "material", price: 200, rarity: "legendary", world: 4 }
+        ];
+
+        // Przepisy rzemieślnicze
+        const craftingRecipes = [
+            {
+                id: 1,
+                name: "Ulepszony miecz",
+                type: "weapon",
+                slot: "main-hand",
+                strength: 20,
+                rarity: "rare",
+                materials: [
+                    { id: 11, quantity: 10 },
+                    { id: 12, quantity: 5 }
+                ],
+                craftTime: 5000
+            },
+            {
+                id: 2,
+                name: "Pancerz smoczej łuski",
+                type: "armor",
+                slot: "chest",
+                health: 100,
+                magic: 10,
+                rarity: "epic",
+                materials: [
+                    { id: 17, quantity: 3 },
+                    { id: 18, quantity: 2 }
+                ],
+                craftTime: 10000
+            },
+            {
+                id: 3,
+                name: "Kryształowy amulet",
+                type: "accessory",
+                slot: "neck",
+                health: 80,
+                magic: 15,
+                rarity: "legendary",
+                materials: [
+                    { id: 20, quantity: 5 },
+                    { id: 21, quantity: 3 },
+                    { id: 22, quantity: 1 }
+                ],
+                craftTime: 15000
+            }
+        ];
+
+        // Umiejętności dostępne do odblokowania
+        const availableSkills = [
+            { id: 3, name: "Wir ostrzy", type: "attack", cost: { stamina: 40 }, damage: 2.5, levelReq: 3, costGold: 100 },
+            { id: 4, name: "Leczenie grupowe", type: "heal", cost: { mana: 35 }, value: 50, levelReq: 5, costGold: 150 },
+            { id: 5, name: "Magiczna strzała", type: "attack", cost: { mana: 20 }, damage: 1.8, levelReq: 4, costGold: 120 },
+            { id: 6, name: "Szał bojowy", type: "buff", cost: { stamina: 50 }, effect: "strength", value: 20, duration: 3, levelReq: 6, costGold: 200 },
+            { id: 7, name: "Bariera lodu", type: "defense", cost: { mana: 30 }, effect: "shield", value: 80, levelReq: 7, costGold: 180 }
+        ];
+
+        let currentEnemy = null;
+        let inBattle = false;
+        let battleTurn = 0;
+        let currentEvent = null;
+        let activeBuffs = [];
+
+        // Inicjalizacja gry
+        function initGame() {
+            updatePlayerStats();
+            updateInventory();
+            updateShop();
+            updateQuests();
+            updateSkills();
+            updateWorldMap();
+            updateCrafting();
+            updateCompanion();
+            updateQuestLog();
+            setupTooltips();
+        }
+
+        // Aktualizacja statystyk gracza
+        function updatePlayerStats() {
+            document.getElementById("player-name").textContent = player.name;
+            document.getElementById("player-level").textContent = player.level;
+            document.getElementById("player-exp").textContent = player.exp;
+            document.getElementById("exp-to-level").textContent = player.expToLevel;
+            document.getElementById("player-gold").textContent = player.gold;
+            document.getElementById("player-class").textContent = player.class;
+            document.getElementById("player-spec").textContent = player.specialization;
+            document.getElementById("player-reputation").textContent = player.reputation;
+            document.getElementById("player-strength").textContent = player.strength;
+            document.getElementById("player-dexterity").textContent = player.dexterity;
+            document.getElementById("player-magic").textContent = player.magic;
+            document.getElementById("player-charisma").textContent = player.charisma;
+            document.getElementById("player-endurance").textContent = player.endurance;
+            document.getElementById("player-health").textContent = player.health;
+            document.getElementById("player-max-health").textContent = player.maxHealth;
+            document.getElementById("player-mana").textContent = player.mana;
+            document.getElementById("player-max-mana").textContent = player.maxMana;
+            document.getElementById("player-stamina").textContent = player.stamina;
+            document.getElementById("player-max-stamina").textContent = player.maxStamina;
+            document.getElementById("health-bar").style.width = (player.health / player.maxHealth * 100) + "%";
+            document.getElementById("mana-bar").style.width = (player.mana / player.maxMana * 100) + "%";
+            document.getElementById("stamina-bar").style.width = (player.stamina / player.maxStamina * 100) + "%";
+            document.getElementById("health-text").textContent = `${player.health}/${player.maxHealth}`;
+            document.getElementById("mana-text").textContent = `${player.mana}/${player.maxMana}`;
+            document.getElementById("stamina-text").textContent = `${player.stamina}/${player.maxStamina}`;
+        }
+
+        // Otwieranie modala
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "flex";
+            setupTooltips();
+        }
+
+        // Zamykanie modala
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        // Pokazywanie powiadomienia
+        function showNotification(message) {
+            let notification = document.createElement("div");
+            notification.className = "notification";
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add("show");
+                setTimeout(() => {
+                    notification.classList.remove("show");
+                    setTimeout(() => notification.remove(), 500);
+                }, 3000);
+            }, 100);
+        }
+
+        // Logowanie wydarzeń
+        function logEvent(message) {
+            const eventLog = document.getElementById("event-log");
+            const entry = document.createElement("div");
+            entry.textContent = message;
+            eventLog.appendChild(entry);
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        // Logowanie walki
+        function logBattle(message) {
+            const battleLog = document.getElementById("battle-log");
+            const entry = document.createElement("div");
+            entry.textContent = message;
+            battleLog.appendChild(entry);
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        // Aktualizacja ekwipunku
+        function updateInventory() {
+            const inventoryList = document.getElementById("inventory-list");
+            inventoryList.innerHTML = "";
+            const slots = ["main-hand", "off-hand", "chest", "head", "ring", "neck", "cloak"];
+            slots.forEach(slot => {
+                const equippedItem = player.inventory.find(i => i.equipped && i.slot === slot);
+                const slotDiv = document.createElement("div");
+                slotDiv.className = "item";
+                slotDiv.innerHTML = `<strong>${slot.replace('-', ' ').toUpperCase()}</strong>: ${equippedItem ? equippedItem.name : "Pusto"}`;
+                if (equippedItem) {
+                    slotDiv.innerHTML += ` <button onclick="unequipItem(${equippedItem.id})" data-tooltip="Zdejmij ten przedmiot z wyposażenia">Zdejmij</button>`;
+                }
+                inventoryList.appendChild(slotDiv);
+            });
+            const categories = ["weapon", "armor", "accessory", "potion", "material"];
+            categories.forEach(category => {
+                const items = player.inventory.filter(i => i.type === category && !i.equipped);
+                if (items.length > 0) {
+                    const categoryDiv = document.createElement("div");
+                    categoryDiv.innerHTML = `<h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
+                    inventoryList.appendChild(categoryDiv);
+                    items.forEach(item => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "item";
+                        let details = `<span style="color: ${getRarityColor(item.rarity)}">${item.name}</span>`;
+                        if (item.type === "weapon") {
+                            details += ` (Siła: +${item.strength || 0}, Zręczność: +${item.dexterity || 0}, Slot: ${item.slot})`;
+                            details += ` <button onclick="equipItem(${item.id})" data-tooltip="Załóż ten przedmiot">Załóż</button>`;
+                        } else if (item.type === "armor") {
+                            details += ` (Zdrowie: +${item.health}${item.magic ? ', Magia: +' + item.magic : ''}, Slot: ${item.slot})`;
+                            details += ` <button onclick="equipItem(${item.id})" data-tooltip="Załóż ten przedmiot">Załóż</button>`;
+                        } else if (item.type === "accessory") {
+                            details += ` (Siła: +${item.strength || 0}, Magia: +${item.magic || 0}, Zdrowie: +${item.health || 0}, Slot: ${item.slot})`;
+                            details += ` <button onclick="equipItem(${item.id})" data-tooltip="Załóż ten przedmiot">Załóż</button>`;
+                        } else if (item.type === "potion") {
+                            details += ` (Efekt: ${item.effect === "heal" ? "Leczenie" : "Mana"} +${item.value}, Ilość: ${item.quantity})`;
+                            details += ` <button onclick="usePotion(${item.id})" data-tooltip="Użyj mikstury, by odzyskać ${item.effect === 'heal' ? 'zdrowie' : 'manę'}">Użyj</button>`;
+                        } else if (item.type === "material") {
+                            details += ` (Ilość: ${item.quantity})`;
+                        }
+                        details += ` <button onclick="sellItem(${item.id})" data-tooltip="Sprzedaj za ${Math.floor(getItemPrice(item) * 0.5)} złota">Sprzedaj</button>`;
+                        itemDiv.innerHTML = details;
+                        inventoryList.appendChild(itemDiv);
+                    });
+                }
+            });
+        }
+
+        // Kolory rzadkości
+        function getRarityColor(rarity) {
+            const colors = {
+                common: "#e8e6d9",
+                uncommon: "#66ff66",
+                rare: "#3399ff",
+                epic: "#cc00cc",
+                legendary: "#ff9900"
+            };
+            return colors[rarity] || "#e8e6d9";
+        }
+
+        // Cena przedmiotu
+        function getItemPrice(item) {
+            return shopItems.find(i => i.name === item.name)?.price || 10;
+        }
+
+        // Założenie przedmiotu
+        function equipItem(itemId) {
+            const item = player.inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            player.inventory.forEach(i => {
+                if (i.slot === item.slot) {
+                    i.equipped = false;
+                }
+            });
+
+            item.equipped = true;
+            calculatePlayerStats();
+            updatePlayerStats();
+            updateInventory();
+            showNotification(`Założono: ${item.name}`);
+        }
+
+        // Zdejmowanie przedmiotu
+        function unequipItem(itemId) {
+            const item = player.inventory.find(i => i.id === itemId);
+            if (!item) return;
+            item.equipped = false;
+            calculatePlayerStats();
+            updatePlayerStats();
+            updateInventory();
+            showNotification(`Zdjęto: ${item.name}`);
+        }
+
+        // Sprzedaż przedmiotu
+        function sellItem(itemId) {
+            const item = player.inventory.find(i => i.id === itemId);
+            if (!item) return;
+            const sellPrice = Math.floor(getItemPrice(item) * 0.5);
+            if (item.quantity > 1) {
+                item.quantity--;
+                player.gold += sellPrice;
+            } else {
+                player.inventory = player.inventory.filter(i => i.id !== itemId);
+                player.gold += sellPrice;
+            }
+            calculatePlayerStats();
+            updatePlayerStats();
+            updateInventory();
+            updateCrafting();
+            showNotification(`Sprzedano ${item.name} za ${sellPrice} złota`);
+        }
+
+        // Użycie mikstury
+        function usePotion(itemId) {
+            const item = player.inventory.find(i => i.id === itemId);
+            if (!item || item.quantity <= 0) return;
+
+            if (item.effect === "heal") {
+                player.health = Math.min(player.health + item.value, player.maxHealth);
+                if (player.companion) {
+                    player.companion.health = Math.min(player.companion.health + Math.floor(item.value / 2), player.companion.maxHealth);
+                }
+            } else if (item.effect === "mana") {
+                player.mana = Math.min(player.mana + item.value, player.maxMana);
+            }
+
+            item.quantity--;
+            if (item.quantity <= 0) {
+                player.inventory = player.inventory.filter(i => i.id !== itemId);
+            }
+
+            updatePlayerStats();
+            updateInventory();
+            updateCompanion();
+            if (inBattle) {
+                updateBattleStats();
+                enemyTurn();
+            }
+            showNotification(`Użyto: ${item.name}`);
+        }
+
+        // Obliczanie statystyk gracza
+        function calculatePlayerStats() {
+            player.strength = 10;
+            player.dexterity = 8;
+            player.magic = 5;
+            player.charisma = 5;
+            player.endurance = 5;
+            player.maxHealth = 100;
+            player.maxMana = 50;
+            player.maxStamina = 100;
+
+            player.inventory.forEach(item => {
+                if (item.equipped) {
+                    if (item.strength) player.strength += item.strength;
+                    if (item.dexterity) player.dexterity += item.dexterity;
+                    if (item.health) player.maxHealth += item.health;
+                    if (item.magic) player.magic += item.magic;
+                }
+            });
+
+            activeBuffs.forEach(buff => {
+                if (buff.effect === "strength") {
+                    player.strength += buff.value;
+                }
+            });
+
+            player.maxHealth += player.endurance * 10;
+            player.maxStamina += player.endurance * 5;
+            player.health = Math.min(player.health, player.maxHealth);
+            player.mana = Math.min(player.mana, player.maxMana);
+            player.stamina = Math.min(player.stamina, player.maxStamina);
+        }
+
+        // Aktualizacja sklepu
+        function updateShop() {
+            const shopList = document.getElementById("shop-list");
+            shopList.innerHTML = "";
+            shopItems.filter(item => item.world <= player.currentWorld && item.type !== "material").forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "item";
+                const discountedPrice = Math.floor(item.price * (1 - player.charisma / 100));
+                let details = `<span style="color: ${getRarityColor(item.rarity)}">${item.name}</span> - ${discountedPrice} złota`;
+                if (item.type === "weapon") {
+                    details += ` (Siła: +${item.strength || 0}, Zręczność: +${item.dexterity || 0}, Slot: ${item.slot})`;
+                } else if (item.type === "armor") {
+                    details += ` (Zdrowie: +${item.health}${item.magic ? ', Magia: +' + item.magic : ''}, Slot: ${item.slot})`;
+                } else if (item.type === "accessory") {
+                    details += ` (Siła: +${item.strength || 0}, Magia: +${item.magic || 0}, Zdrowie: +${item.health || 0}, Slot: ${item.slot})`;
+                } else if (item.type === "potion") {
+                    details += ` (Efekt: ${item.effect === "heal" ? "Leczenie" : "Mana"} +${item.value})`;
+                }
+                details += ` <button onclick="buyItem(${item.id})" data-tooltip="Kup za ${discountedPrice} złota">Kup</button>`;
+                itemDiv.innerHTML = details;
+                shopList.appendChild(itemDiv);
+            });
+            companions.forEach(companion => {
+                if (!player.companion || player.companion.name !== companion.name) {
+                    const companionDiv = document.createElement("div");
+                    companionDiv.className = "item";
+                    companionDiv.innerHTML = `<span style="color: ${getRarityColor('epic')}">${companion.name}</span> - ${companion.cost} złota (Wymagana reputacja: ${companion.repReq}) <button onclick="recruitCompanion('${companion.name}')" data-tooltip="Zrekrutuj towarzysza za ${companion.cost} złota">Rekrutuj</button>`;
+                    shopList.appendChild(companionDiv);
+                }
+            });
+        }
+
+        // Kupowanie przedmiotu
+        function buyItem(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (!item) return;
+            const discountedPrice = Math.floor(item.price * (1 - player.charisma / 100));
+            if (player.gold < discountedPrice) {
+                showNotification("Nie masz dość złota!");
+                return;
+            }
+
+            player.gold -= discountedPrice;
+            let inventoryItem = player.inventory.find(i => i.name === item.name && (i.type === "potion" || i.type === "material"));
+            if (inventoryItem) {
+                inventoryItem.quantity = (inventoryItem.quantity || 1) + 1;
+            } else {
+                const newItem = { ...item, id: Math.max(...player.inventory.map(i => i.id), 0) + 1, quantity: (item.type === "potion" || item.type === "material") ? 1 : undefined };
+                delete newItem.price;
+                delete newItem.world;
+                player.inventory.push(newItem);
+            }
+
+            updatePlayerStats();
+            updateInventory();
+            updateCrafting();
+            showNotification(`Kupiłeś ${item.name} za ${discountedPrice} złota`);
+        }
+
+        // Rekrutacja towarzysza
+        function recruitCompanion(companionName) {
+            const companion = companions.find(c => c.name === companionName);
+            if (!companion || player.gold < companion.cost || player.reputation < companion.repReq) {
+                showNotification("Nie spełniasz wymagań lub nie masz dość złota!");
+                return;
+            }
+            player.gold -= companion.cost;
+            player.companion = { ...companion };
+            updateCompanion();
+            updatePlayerStats();
+            showNotification(`Zrekrutowano towarzysza: ${companion.name}`);
+        }
+
+        // Aktualizacja towarzysza
+        function updateCompanion() {
+            const companionInfo = document.getElementById("companion-info");
+            const companionSkillBtn = document.getElementById("companion-skill-btn");
+            if (player.companion) {
+                companionInfo.style.display = "block";
+                document.getElementById("companion-name").textContent = player.companion.name;
+                document.getElementById("companion-health").textContent = player.companion.health;
+                document.getElementById("companion-max-health").textContent = player.companion.maxHealth;
+                document.getElementById("companion-health-bar").style.width = (player.companion.health / player.companion.maxHealth * 100) + "%";
+                document.getElementById("companion-health-text").textContent = `${player.companion.health}/${player.companion.maxHealth}`;
+                document.getElementById("companion-skill").textContent = player.companion.skill;
+                companionSkillBtn.style.display = "inline-block";
+            } else {
+                companionInfo.style.display = "none";
+                companionSkillBtn.style.display = "none";
+            }
+        }
+
+        // Aktualizacja rzemiosła
+        function updateCrafting() {
+            const craftingList = document.getElementById("crafting-list");
+            craftingList.innerHTML = "";
+            craftingRecipes.forEach(recipe => {
+                const recipeDiv = document.createElement("div");
+                recipeDiv.className = "item";
+                let details = `<span style="color: ${getRarityColor(recipe.rarity)}">${recipe.name}</span>`;
+                if (recipe.type === "weapon") {
+                    details += ` (Siła: +${recipe.strength}, Slot: ${recipe.slot})`;
+                } else if (recipe.type === "armor") {
+                    details += ` (Zdrowie: +${recipe.health}${recipe.magic ? ', Magia: +' + recipe.magic : ''}, Slot: ${recipe.slot})`;
+                } else if (recipe.type === "accessory") {
+                    details += ` (Zdrowie: +${recipe.health}, Magia: +${recipe.magic}, Slot: ${recipe.slot})`;
+                }
+                details += `<br>Materiały: ${recipe.materials.map(m => {
+                    const item = shopItems.find(i => i.id === m.id);
+                    const hasEnough = player.inventory.find(i => i.id === m.id && i.quantity >= m.quantity);
+                    return `${item.name} x${m.quantity}${hasEnough ? '' : ' (brak)'}`;
+                }).join(", ")}`;
+                const canCraft = recipe.materials.every(m => {
+                    const invItem = player.inventory.find(i => i.id === m.id);
+                    return invItem && invItem.quantity >= m.quantity;
+                });
+                details += ` <button onclick="craftItem(${recipe.id})" ${canCraft ? '' : 'disabled'} data-tooltip="Wytwórz przedmiot\nCzas: ${recipe.craftTime/1000}s">Wytwórz</button>`;
+                recipeDiv.innerHTML = details;
+                craftingList.appendChild(recipeDiv);
+            });
+        }
+
+        // Tworzenie przedmiotu
+        function craftItem(recipeId) {
+            const recipe = craftingRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            const canCraft = recipe.materials.every(m => {
+                const invItem = player.inventory.find(i => i.id === m.id);
+                return invItem && invItem.quantity >= m.quantity;
+            });
+            if (!canCraft) {
+                showNotification("Brakuje materiałów!");
+                return;
+            }
+
+            recipe.materials.forEach(m => {
+                const invItem = player.inventory.find(i => i.id === m.id);
+                invItem.quantity -= m.quantity;
+                if (invItem.quantity <= 0) {
+                    player.inventory = player.inventory.filter(i => i.id !== invItem.id);
+                }
+            });
+
+            const craftButton = document.querySelector(`#crafting-list button[onclick="craftItem(${recipe.id})"]`);
+            craftButton.disabled = true;
+            craftButton.textContent = "Wytwarzanie...";
+            setTimeout(() => {
+                const newItem = { ...recipe, id: Math.max(...player.inventory.map(i => i.id), 0) + 1 };
+                delete newItem.materials;
+                delete newItem.craftTime;
+                player.inventory.push(newItem);
+                updateInventory();
+                updateCrafting();
+                const quest = player.quests.find(q => q.id === 3);
+                if (quest) {
+                    quest.progress++;
+                    updateQuests();
+                    updateQuestLog();
+                }
+                showNotification(`Wytworzono: ${recipe.name}`);
+                craftButton.disabled = false;
+                craftButton.textContent = `Wytwórz (${recipe.craftTime/1000}s)`;
+            }, recipe.craftTime);
+        }
+
+        // Aktualizacja zadań
+        function updateQuests() {
+            const questsList = document.getElementById("quests-list");
+            questsList.innerHTML = "";
+            player.quests.forEach(quest => {
+                const questDiv = document.createElement("div");
+                questDiv.className = "quest";
+                questDiv.innerHTML = `<strong>${quest.name}</strong><br>${quest.description}<br>Postęp: ${quest.progress}/${quest.goal}<br>Nagroda: ${quest.reward.exp} EXP, ${quest.reward.gold} złota${quest.reward.itemId ? ', ' + (shopItems.find(i => i.id === quest.reward.itemId)?.name || 'Przedmiot') : ''}`;
+                if (quest.progress >= quest.goal) {
+                    questDiv.innerHTML += ` <button onclick="completeQuest(${quest.id})" data-tooltip="Odbierz nagrody za ukończone zadanie">Odbierz nagrodę</button>`;
+                }
+                questsList.appendChild(questDiv);
+            });
+        }
+
+        // Ukończenie zadania
+        function completeQuest(questId) {
+            const quest = player.quests.find(q => q.id === questId);
+            if (!quest || quest.progress < quest.goal) return;
+            player.exp += quest.reward.exp;
+            player.gold += quest.reward.gold;
+            player.reputation += 20;
+            if (quest.reward.itemId) {
+                const item = shopItems.find(i => i.id === quest.reward.itemId);
+                if (item) {
+                    let inventoryItem = player.inventory.find(i => i.name === item.name && (i.type === "potion" || i.type === "material"));
+                    if (inventoryItem) {
+                        inventoryItem.quantity = (inventoryItem.quantity || 1) + 1;
+                    } else {
+                        const newItem = { ...item, id: Math.max(...player.inventory.map(i => i.id), 0) + 1, quantity: (item.type === "potion" || item.type === "material") ? 1 : undefined };
+                        delete newItem.price;
+                        delete newItem.world;
+                        player.inventory.push(newItem);
+                    }
+                    showNotification(`Zdobyłeś nagrodę: ${item.name}`);
+                }
+            }
+            player.quests = player.quests.filter(q => q.id !== questId);
+            checkLevelUp();
+            updateQuests();
+            updateQuestLog();
+            updatePlayerStats();
+            updateInventory();
+            updateShop();
+            showNotification(`Ukończono zadanie: ${quest.name}`);
+        }
+
+        // Aktualizacja logu zadań
+        function updateQuestLog() {
+            const questLog = document.getElementById("quest-log");
+            questLog.innerHTML = "<h3>Aktywne zadania:</h3>";
+            player.quests.forEach(quest => {
+                const logEntry = document.createElement("div");
+                logEntry.innerHTML = `${quest.name}: ${quest.progress}/${quest.goal}`;
+                questLog.appendChild(logEntry);
+            });
+        }
+
+        // Aktualizacja umiejętności
+        function updateSkills() {
+            const skillsList = document.getElementById("skills-list");
+            skillsList.innerHTML = "<h3>Twoje umiejętności:</h3>";
+            player.skills.forEach(skill => {
+                const skillDiv = document.createElement("div");
+                skillDiv.className = "item";
+                let details = `${skill.name} (Poziom ${skill.level})`;
+                if (skill.type === "attack") {
+                    details += ` - Obrażenia: ${skill.damage}x`;
+                } else if (skill.type === "heal" || skill.type === "defense") {
+                    details += ` - Efekt: ${skill.value}`;
+                } else if (skill.type === "buff") {
+                    details += ` - Efekt: +${skill.value} ${skill.effect}, czas: ${skill.duration} tur`;
+                }
+                details += ` - Koszt: ${Object.entries(skill.cost).map(([k, v]) => `${k}: ${v}`).join(", ")}`;
+                if (!skill.unlocked) {
+                    details += ` <button onclick="unlockSkill(${skill.id})" data-tooltip="Odblokuj za ${availableSkills.find(s => s.id === skill.id)?.costGold} złota">Odblokuj</button>`;
+                } else if (skill.level < 5) {
+                    details += ` <button onclick="upgradeSkill(${skill.id})" data-tooltip="Ulepsz za ${skill.level * 50} złota">Ulepsz</button>`;
+                }
+                skillDiv.innerHTML = details;
+                skillsList.appendChild(skillDiv);
+            });
+            availableSkills.forEach(skill => {
+                if (!player.skills.find(s => s.id === skill.id)) {
+                    const skillDiv = document.createElement("div");
+                    skillDiv.className = "item";
+                    let details = `${skill.name} (Wymagany poziom: ${skill.levelReq})`;
+                    details += ` <button onclick="unlockSkill(${skill.id})" data-tooltip="Odblokuj za ${skill.costGold} złota">Odblokuj</button>`;
+                    skillDiv.innerHTML = details;
+                    skillsList.appendChild(skillDiv);
+                }
+            });
+        }
+
+        // Odblokowanie umiejętności
+        function unlockSkill(skillId) {
+            const skill = availableSkills.find(s => s.id === skillId);
+            if (!skill || player.gold < skill.costGold || player.level < skill.levelReq) {
+                showNotification("Nie spełniasz wymagań lub nie masz dość złota!");
+                return;
+            }
+            player.gold -= skill.costGold;
+            player.skills.push({ ...skill, level: 1, unlocked: true });
+            updateSkills();
+            updatePlayerStats();
+            showNotification(`Odblokowano umiejętność: ${skill.name}`);
+        }
+
+        // Ulepszenie umiejętności
+        function upgradeSkill(skillId) {
+            const skill = player.skills.find(s => s.id === skillId);
+            const cost = skill.level * 50;
+            if (!skill || player.gold < cost) {
+                showNotification("Nie masz dość złota!");
+                return;
+            }
+            player.gold -= cost;
+            skill.level++;
+            if (skill.type === "attack") {
+                skill.damage += 0.5;
+            } else if (skill.type === "heal" || skill.type === "defense") {
+                skill.value += 20;
+            } else if (skill.type === "buff") {
+                skill.value += 5;
+                skill.duration += 1;
+            }
+            updateSkills();
+            updatePlayerStats();
+            showNotification(`Ulepszono umiejętność: ${skill.name} do poziomu ${skill.level}`);
+        }
+
+        // Aktualizacja mapy światów
+        function updateWorldMap() {
+            const worldMap = document.getElementById("world-map");
+            worldMap.innerHTML = "";
+            worlds.forEach(world => {
+                const worldDiv = document.createElement("div");
+                worldDiv.className = `world ${player.worldsUnlocked.includes(world.id) ? '' : 'locked'}`;
+                worldDiv.innerHTML = `${world.name}<br>(Wymagany poziom: ${world.levelReq})`;
+                if (player.worldsUnlocked.includes(world.id)) {
+                    worldDiv.onclick = () => switchWorld(world.id);
+                    worldDiv.dataset.tooltip = `Eksploruj ${world.name}`;
+                } else {
+                    worldDiv.dataset.tooltip = `Wymagany poziom: ${world.levelReq}`;
+                }
+                worldMap.appendChild(worldDiv);
+            });
+        }
+
+        // Zmiana świata
+        function switchWorld(worldId) {
+            if (!player.worldsUnlocked.includes(worldId)) return;
+            player.currentWorld = worldId;
+            updateShop();
+            updateWorldMap();
+            closeModal("world-modal");
+            showNotification(`Wchodzisz do ${worlds.find(w => w.id === worldId).name}`);
+            logEvent(`Wchodzisz do ${worlds.find(w => w.id === worldId).name}!`);
+        }
+
+        // Eksploracja świata
+        // Eksploracja świata
+        function exploreWorld() {
+            if (inBattle || currentEvent) return;
+            if (player.stamina < 10) {
+                showNotification("Nie masz dość wytrzymałości!");
+                return;
+            }
+            player.stamina -= 10;
+            updatePlayerStats();
+            const world = worlds.find(w => w.id === player.currentWorld);
+            const totalWeight = world.events.reduce((sum, e) => sum + e.weight, 0);
+            let random = Math.random() * totalWeight;
+            let eventType;
+            for (const event of world.events) {
+                random -= event.weight;
+                if (random <= 0) {
+                    eventType = event.type;
+                    break;
+                }
+            }
+            currentEvent = { type: eventType };
+            handleEvent(eventType);
+        }
+
+        // Obsługa wydarzeń
+        function handleEvent(eventType) {
+            const eventLog = document.getElementById("event-log");
+            eventLog.innerHTML = "";
+            
+            if (eventType === "battle") {
+                startBattle();
+            } else if (eventType === "treasure") {
+                const gold = Math.floor(50 + Math.random() * 100);
+                const exp = Math.floor(20 + Math.random() * 50);
+                const itemChance = Math.random();
+                let item = null;
+                if (itemChance < 0.3) {
+                    const worldItems = shopItems.filter(i => i.world === player.currentWorld && i.type !== "material");
+                    item = worldItems[Math.floor(Math.random() * worldItems.length)];
+                }
+                player.gold += gold;
+                player.exp += exp;
+                let message = `Znalazłeś skarb! Zdobywasz ${gold} złota i ${exp} doświadczenia`;
+                if (item) {
+                    let inventoryItem = player.inventory.find(i => i.name === item.name && (i.type === "potion" || i.type === "material"));
+                    if (inventoryItem) {
+                        inventoryItem.quantity = (inventoryItem.quantity || 1) + 1;
+                    } else {
+                        const newItem = { ...item, id: Math.max(...player.inventory.map(i => i.id), 0) + 1, quantity: (item.type === "potion" || item.type === "material") ? 1 : undefined };
+                        delete newItem.price;
+                        delete newItem.world;
+                        player.inventory.push(newItem);
+                    }
+                    message += ` oraz ${item.name}!`;
+                    updateInventory();
+                } else {
+                    message += ".";
+                }
+                logEvent(message);
+                showNotification("Znalazłeś skarb!");
+                const quest = player.quests.find(q => q.id === 2);
+                if (quest && player.currentWorld === 1) {
+                    quest.progress++;
+                    updateQuests();
+                    updateQuestLog();
+                }
+                checkLevelUp();
+                updatePlayerStats();
+                currentEvent = null;
+            } else if (eventType === "merchant") {
+                logEvent("Spotykasz wędrownego kupca z rzadkimi towarami. Co robisz?");
+                const choices = [
+                    { 
+                        text: "Handluj", 
+                        action: () => openModal("shop-modal"),
+                        tooltip: "Przeglądaj towary kupca i dokonuj zakupów" 
+                    },
+                    { 
+                        text: "Porozmawiaj", 
+                        action: () => {
+                            const repGain = Math.floor(5 + player.charisma / 5);
+                            player.reputation += repGain;
+                            logEvent(`Rozmowa z kupcem zwiększa twoją reputację o ${repGain}!`);
+                            showNotification(`Reputacja +${repGain}`);
+                            currentEvent = null;
+                            updatePlayerStats();
+                        },
+                        tooltip: "Zdobądź reputację przez rozmowę" 
+                    },
+                    { 
+                        text: "Odejdź", 
+                        action: () => {
+                            logEvent("Odchodzisz od kupca.");
+                            currentEvent = null;
+                        },
+                        tooltip: "Zakończ spotkanie bez zmian" 
+                    },
+                    { 
+                        text: "Okradnij", 
+                        action: () => {
+                            const successChance = player.dexterity / 100;
+                            if (Math.random() < successChance) {
+                                const gold = Math.floor(100 + Math.random() * 200);
+                                player.gold += gold;
+                                logEvent(`Udało ci się okraść kupca! Zdobywasz ${gold} złota.`);
+                                showNotification(`Skradziono ${gold} złota`);
+                            } else {
+                                player.reputation -= 20;
+                                player.health = Math.max(0, player.health - 30);
+                                logEvent("Próba kradzieży nie powiodła się! Tracisz 20 reputacji i 30 zdrowia.");
+                                showNotification("Nieudana kradzież!");
+                                updatePlayerStats();
+                                if (player.health <= 0) {
+                                    handlePlayerDeath("zostałeś pokonany przez straż kupca!");
+                                }
+                            }
+                            currentEvent = null;
+                        },
+                        tooltip: `Spróbuj okraść kupca\nSzansa: ${Math.floor(player.dexterity / 100 * 100)}%\nRyzyko: Utrata zdrowia i reputacji` 
+                    }
+                ];
+                displayEventChoices(choices);
+            } else if (eventType === "trap") {
+                const damage = Math.floor(20 + Math.random() * 40);
+                const avoidChance = player.dexterity / 100 + player.endurance / 200;
+                if (Math.random() < avoidChance) {
+                    logEvent("Unikasz pułapki dzięki swojej zręczności i wytrzymałości!");
+                    showNotification("Pułapka uniknięta!");
+                    currentEvent = null;
+                } else {
+                    player.health = Math.max(0, player.health - damage);
+                    if (player.companion) {
+                        player.companion.health = Math.max(0, player.companion.health - Math.floor(damage / 2));
+                    }
+                    logEvent(`Wpadasz w pułapkę i tracisz ${damage} zdrowia!`);
+                    showNotification(`Pułapka! -${damage} zdrowia`);
+                    updatePlayerStats();
+                    updateCompanion();
+                    if (player.health <= 0) {
+                        handlePlayerDeath("zostałeś pokonany przez pułapkę!");
+                    }
+                    currentEvent = null;
+                }
+            } else if (eventType === "npc") {
+                logEvent("Spotykasz wędrowca proszącego o pomoc w walce z bandytami. Co robisz?");
+                const choices = [
+                    { 
+                        text: "Pomóż", 
+                        action: () => {
+                            const reward = Math.random() < 0.7 ? { gold: 100, rep: 30 } : { exp: 80, rep: 20 };
+                            if (reward.gold) {
+                                player.gold += reward.gold;
+                                player.reputation += reward.rep;
+                                logEvent(`Pomogłeś wędrowcowi i otrzymujesz ${reward.gold} złota oraz ${reward.rep} reputacji!`);
+                                showNotification(`Nagroda: ${reward.gold} złota, +${reward.rep} reputacji`);
+                            } else {
+                                player.exp += reward.exp;
+                                player.reputation += reward.rep;
+                                logEvent(`Pomogłeś wędrowcowi i otrzymujesz ${reward.exp} doświadczenia oraz ${reward.rep} reputacji!`);
+                                showNotification(`Nagroda: ${reward.exp} EXP, +${reward.rep} reputacji`);
+                                checkLevelUp();
+                            }
+                            updatePlayerStats();
+                            currentEvent = null;
+                        },
+                        tooltip: "Pomóż wędrowcowi, zdobywając złoto lub doświadczenie" 
+                    },
+                    { 
+                        text: "Ignoruj", 
+                        action: () => {
+                            logEvent("Ignorujesz wędrowca i idziesz dalej.");
+                            currentEvent = null;
+                        },
+                        tooltip: "Uniknij interakcji bez konsekwencji" 
+                    },
+                    { 
+                        text: "Atakuj", 
+                        action: () => {
+                            logEvent("Decydujesz się zaatakować wędrowca!");
+                            startBattle(true);
+                        },
+                        tooltip: "Rozpocznij walkę z wędrowcem" 
+                    },
+                    { 
+                        text: "Przekonaj", 
+                        action: () => {
+                            const successChance = player.charisma / 100;
+                            if (Math.random() < successChance) {
+                                const item = shopItems.filter(i => i.world === player.currentWorld && i.type === "potion")[0];
+                                let inventoryItem = player.inventory.find(i => i.name === item.name && i.type === "potion");
+                                if (inventoryItem) {
+                                    inventoryItem.quantity = (inventoryItem.quantity || 1) + 1;
+                                } else {
+                                    const newItem = { ...item, id: Math.max(...player.inventory.map(i => i.id), 0) + 1, quantity: 1 };
+                                    delete newItem.price;
+                                    delete newItem.world;
+                                    player.inventory.push(newItem);
+                                }
+                                logEvent(`Przekonałeś wędrowca! Otrzymujesz ${item.name}.`);
+                                showNotification(`Otrzymano: ${item.name}`);
+                                updateInventory();
+                            } else {
+                                player.reputation -= 10;
+                                logEvent("Nie udało się przekonać wędrowca. Tracisz 10 reputacji.");
+                                showNotification("Nieudana perswazja! -10 reputacji");
+                                updatePlayerStats();
+                            }
+                            currentEvent = null;
+                        },
+                        tooltip: `Spróbuj przekonać wędrowca\nSzansa: ${Math.floor(player.charisma / 100 * 100)}%\nNagroda: Przedmiot` 
+                    }
+                ];
+                displayEventChoices(choices);
+            } else if (eventType === "companion") {
+                if (player.companion) {
+                    logEvent("Twój towarzysz wyczuwa zagrożenie w pobliżu...");
+                    startBattle();
+                } else {
+                    const availableCompanions = companions.filter(c => player.reputation >= c.repReq);
+                    if (availableCompanions.length === 0) {
+                        logEvent("Nie znajdujesz nikogo, kto chciałby do ciebie dołączyć.");
+                        currentEvent = null;
+                        return;
+                    }
+                    const companion = availableCompanions[Math.floor(Math.random() * availableCompanions.length)];
+                    logEvent(`Spotykasz ${companion.name}, który oferuje ci swoją pomoc. Czy chcesz go zrekrutować?`);
+                    const choices = [
+                        { 
+                            text: "Rekrutuj", 
+                            action: () => {
+                                if (player.gold < companion.cost) {
+                                    logEvent("Nie masz dość złota, by zrekrutować towarzysza!");
+                                    showNotification("Za mało złota!");
+                                    return;
+                                }
+                                player.gold -= companion.cost;
+                                player.companion = { ...companion };
+                                updateCompanion();
+                                updatePlayerStats();
+                                logEvent(`${companion.name} dołącza do ciebie!`);
+                                showNotification(`Zrekrutowano: ${companion.name}`);
+                                currentEvent = null;
+                            },
+                            tooltip: `Zrekrutuj ${companion.name}\nKoszt: ${companion.cost} złota` 
+                        },
+                        { 
+                            text: "Odmów", 
+                            action: () => {
+                                logEvent(`Odrzucasz ofertę ${companion.name}.`);
+                                currentEvent = null;
+                            },
+                            tooltip: "Odrzuć towarzysza bez kosztów" 
+                        }
+                    ];
+                    displayEventChoices(choices);
+                }
+            } else if (eventType === "resource") {
+                const materials = shopItems.filter(i => i.type === "material" && i.world <= player.currentWorld);
+                const material = materials[Math.floor(Math.random() * materials.length)];
+                const quantity = Math.floor(1 + Math.random() * 3);
+                let inventoryItem = player.inventory.find(i => i.name === material.name && i.type === "material");
+                if (inventoryItem) {
+                    inventoryItem.quantity = (inventoryItem.quantity || 1) + quantity;
+                } else {
+                    const newItem = { ...material, id: Math.max(...player.inventory.map(i => i.id), 0) + 1, quantity };
+                    delete newItem.price;
+                    delete newItem.world;
+                    player.inventory.push(newItem);
+                }
+                logEvent(`Znalazłeś zasoby! Zdobywasz ${material.name} x${quantity}.`);
+                showNotification(`Zdobyte: ${material.name} x${quantity}`);
+                updateInventory();
+                updateCrafting();
+                currentEvent = null;
+            }
+        }
+
+        // Wyświetlanie opcji wydarzeń
+        function displayEventChoices(choices) {
+            const eventLog = document.getElementById("event-log");
+            choices.forEach(choice => {
+                const choiceDiv = document.createElement("div");
+                choiceDiv.className = "event-choice";
+                choiceDiv.textContent = choice.text;
+                if (choice.tooltip) {
+                    choiceDiv.dataset.tooltip = choice.tooltip;
+                }
+                choiceDiv.onclick = () => {
+                    choice.action();
+                    if (choice.text !== "Handluj") eventLog.innerHTML = "";
+                    setupTooltips();
+                };
+                eventLog.appendChild(choiceDiv);
+            });
+        }
+        </script>
+</body>
+</html>
