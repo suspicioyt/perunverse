@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perunverse Account</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="perun2.png" type="image/x-icon">
 </head>
 <body>
@@ -34,6 +35,8 @@
             <input type="password" id="confirmPassword" placeholder="Potwierdź hasło" required>
             <input type="text" id="birthYearDisplay" placeholder="Wybierz rok urodzenia" readonly onclick="openYearModal()">
             <input type="hidden" id="birthYear" required>
+            <input type="text" id="genderDisplay" placeholder="Wybierz płeć" readonly onclick="openGenderModal()">
+            <input type="hidden" id="gender" required>
             <button onclick="register()">Zarejestruj</button>
             <p class="error" id="registerError"></p>
         </div>
@@ -48,6 +51,18 @@
             </select>
             <button onclick="selectYear()">Wybierz</button>
             <button onclick="closeYearModal()">Anuluj</button>
+        </div>
+    </div>
+    <div id="genderModal" class="modal">
+        <div class="modal-content">
+            <h3>Wybierz płeć</h3>
+            <select id="genderSelect" size="3">
+                <option value="M">Mężczyzna</option>
+                <option value="F">Kobieta</option>
+                <option value="O">Inna</option>
+            </select>
+            <button onclick="selectGender()">Wybierz</button>
+            <button onclick="closeGenderModal()">Anuluj</button>
         </div>
     </div>
 
