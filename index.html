@@ -3,48 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hub z kafelkami</title>
+  <title>Perunverse</title>
+  <link rel="icon" href="perun2.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #1f2937;
+      background: linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', Arial, sans-serif;
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 30px;
+      position: relative;
     }
     .grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 30px;
     }
     .tile {
-      background-color: #374151;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #2c2c2c 0%, #222222 100%);
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+      position: relative;
+      z-index: 1;
+    }
+    .tile:hover {
+      transform: scale(1.08) translateY(-10px);
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+    }
+    .tile:hover img {
+      transform: scale(1.1);
     }
     .tile img {
-      width: 100%;
-      height: 250px;
+      width: 100%-16px;
+      height: 280px;
       object-fit: cover;
+      border-bottom: 3px solid;
+      transition: transform 0.3s ease-in-out;
+      border-radius: 12px 12px 0 0;
+      margin: 8px;
     }
     .tile h2 {
       color: #ffffff;
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 28px;
+      font-weight: 600;
       text-align: center;
-      margin: 16px 0;
+      margin: 24px 0;
+      text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
     }
     @media (min-width: 768px) {
       .grid {
         grid-template-columns: repeat(2, 1fr);
+      }
+      .tile img {
+        height: 320px;
+      }
+    }
+    @media (max-width: 480px) {
+      .tile h2 {
+        font-size: 24px;
+      }
+      .container {
+        padding: 15px;
       }
     }
   </style>
@@ -52,22 +83,17 @@
 <body>
   <div class="container">
     <div class="grid">
-      <!-- Kaflik 1 -->
-      <div class="tile" onclick="open('')">
-        <img src="gameverse/img/perun2.1.png" alt="Grafika 1">
+
+      <div class="tile" onclick="window.location.href='https://suspicioyt.github.io/perunverse/gameverse'">
+        <img src="https://suspicioyt.github.io/perunverse/gameverse/img/perun2.1.png" alt="Grafika 1" style="border-color: green;">
         <h2>Perun Gameverse</h2>
       </div>
-      <!-- Kaflik 2 -->
-      <div class="tile">
-        <img src="filmverse/perun.png" alt="Grafika 2">
+
+      <div class="tile" onclick="window.location.href='https://suspicioyt.github.io/perunverse/filmverse'">
+        <img src="https://suspicioyt.github.io/perunverse/filmverse/perun.png" alt="Grafika 2" style="border-color: blue;">
         <h2>Perun Filmverse</h2>
       </div>
     </div>
   </div>
-  <script>
-    function open(url) {
-      window.location.href = url;
-    }
-  </script>
 </body>
 </html>
