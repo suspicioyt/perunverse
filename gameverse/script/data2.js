@@ -21,8 +21,6 @@ async function loadUserData() {
         });
         if (!response.ok) {
             console.error(`Błąd HTTP: ${response.status} ${response.statusText}`);
-            userDataCache = null;
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return false;
         }
         const data = await response.json();
@@ -34,14 +32,10 @@ async function loadUserData() {
             return true;
         } else {
             console.error('Błąd weryfikacji tokena:', data.message);
-            userDataCache = null;
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
             return false;
         }
     } catch (error) {
         console.error('Błąd podczas pobierania danych użytkownika:', error);
-        userDataCache = null;
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
         return false;
     }
 }
