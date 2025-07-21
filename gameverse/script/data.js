@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzGu4orOZhX9Cf0G1tR38dMGiTtYdLIejJSjPC6FOlkBnl2KCnP9ub31-OsamR87lJU/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsblqpKQJ4Y6kXHq2TIwSlz_--i84IKjCCthyaS7IkVeVUijsMywdaCi1snnrz4ESu/exec';
 const SYNC_INTERVAL = 5000; // Zwiększono do 10 sekund
 
 let userDataCache = null;
