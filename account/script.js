@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoNhmLopC-CbYq6_BNf8FFYIStc63FLS_pqrgTKyajiJ9Grlqzvinjfg3zDWDoTkZO/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuoaLUZTQ0-QiGdIKm_8yMsyBmczby1Wf69hoj7_KJzXivvaZhSg8pmvrMOz5_DSnu/exec';
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -62,9 +62,7 @@ function openGenderModal() {
   document.getElementById('genderModal').style.display = 'flex';
 }
 function closeGenderModal() {
-  document.get
-
-ElementById('genderModal').style.display = 'none';
+  document.getElementById('genderModal').style.display = 'none';
 }
 function selectGender() {
   const selectedGender = document.getElementById('genderSelect').value;
@@ -214,7 +212,6 @@ function loadUserData() {
   }
   return fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
     mode: 'cors',
     credentials: 'omit'
   })
