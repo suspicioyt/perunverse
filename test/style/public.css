@@ -1,0 +1,27 @@
+/* .add-button {
+  font-size: 20px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.add-button.hidden {
+  display: none;
+}
+
+#easterEvent .progress-container {
+  width: 100%;
+  max-width: 300px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  margin: 10px auto;
+  overflow: hidden;
+}
+
+#easterEvent .progress-bar {
+  height: 20px;
+  background-color: #4CAF50;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+  transition: width 0.3s ease-in-out;
+} */
