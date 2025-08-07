@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuoaLUZTQ0-QiGdIKm_8yMsyBmczby1Wf69hoj7_KJzXivvaZhSg8pmvrMOz5_DSnu/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy5GpGjAnA6fu-QT56yOBH-2fja2vHLPBFbBjp1Gg20OjbdunSS9hYtI7gwuQjMF4l/exec';
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -107,7 +107,7 @@ function login() {
     .then(data => {
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
         window.location.href = getRedirectUrl();
       } else {
         errorMessage.textContent = data.message || 'Błąd logowania';
@@ -164,8 +164,12 @@ function register() {
   }
 
   const appData = {
-    isPremium: false,
-    isVerified: false
+    profile: {
+      username: username,
+      email: email || '',
+      birthYear: parseInt(birthYear),
+      gender: gender
+    }
   };
 
   fetch(SCRIPT_URL, {
@@ -190,7 +194,7 @@ function register() {
     .then(data => {
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
         window.location.href = getRedirectUrl();
       } else {
         errorMessage.textContent = data.message || 'Błąd rejestracji';
@@ -221,7 +225,7 @@ function loadUserData() {
     })
     .then(data => {
       if (data.status === 'success') {
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
         window.location.href = getRedirectUrl();
         return true;
       } else {
