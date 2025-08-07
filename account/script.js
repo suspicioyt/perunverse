@@ -168,7 +168,8 @@ function register() {
       username: username,
       email: email || '',
       birthYear: parseInt(birthYear),
-      gender: gender
+      gender: gender,
+      joined: Date()
     }
   };
 
