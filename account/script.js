@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy5GpGjAnA6fu-QT56yOBH-2fja2vHLPBFbBjp1Gg20OjbdunSS9hYtI7gwuQjMF4l/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -107,7 +107,7 @@ function login() {
     .then(data => {
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
         window.location.href = getRedirectUrl();
       } else {
         errorMessage.textContent = data.message || 'Błąd logowania';
@@ -169,7 +169,11 @@ function register() {
       email: email || '',
       birthYear: parseInt(birthYear),
       gender: gender,
-      joined: Date()
+      money: null,
+      joined: new Date().toISOString()
+    },
+    app: {
+      opened: true
     }
   };
 
@@ -195,7 +199,7 @@ function register() {
     .then(data => {
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
         window.location.href = getRedirectUrl();
       } else {
         errorMessage.textContent = data.message || 'Błąd rejestracji';
@@ -226,7 +230,7 @@ function loadUserData() {
     })
     .then(data => {
       if (data.status === 'success') {
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || { profile: {} }));
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
         window.location.href = getRedirectUrl();
         return true;
       } else {
