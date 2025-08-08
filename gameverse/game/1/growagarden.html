@@ -259,7 +259,7 @@
             <button class="bg-gray-600 text-white px-4 py-2 rounded-lg mt-4" onclick="closeModal('tutorial')">Zamknij</button>
         </div>
     </div>
-    <script src="https://suspicioyt.github.io/perunverse/gameverse/script/data2.js"></script>
+    <script src="https://suspicioyt.github.io/perunverse/gameverse/script/data.js"></script>
     <script>
         const garden = document.getElementById('garden');
         const statsDisplay = document.getElementById('stats');
@@ -351,7 +351,7 @@
                 weather: 'sunny'
             };
             try {
-                const serverState = await getAppData('gameverse', 'state');
+                const serverState = await getData('gameverse', 'state');
                 if (serverState) {
                     gameState = serverState;
                     // Validate and clean up seeds
@@ -393,7 +393,7 @@
         // Save game state to Google Sheets
         async function saveGame() {
             try {
-                await addData('current', 'gameverse', 'growAGarden', { ...gameState, selectedSeed });
+                await setData('current', 'gameverse', 'growAGarden', { ...gameState, selectedSeed });
                 console.log('Game state saved to server');
             } catch (e) {
                 console.error('Error saving game state:', e);
