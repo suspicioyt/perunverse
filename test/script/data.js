@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy5GpGjAnA6fu-QT56yOBH-2fja2vHLPBFbBjp1Gg20OjbdunSS9hYtI7gwuQjMF4l/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
 function initializeUserData() {
@@ -45,7 +45,7 @@ function initializeUserData() {
     .then(data => {
       console.log('initializeUserData: Odpowiedź fetch:', data);
       if (data.status === 'success') {
-        const userData = data.appData || { profile: {} };
+        const userData = data.appData || {};
         sessionStorage.setItem('userData', JSON.stringify(userData));
         console.log('initializeUserData: userData zapisane w sessionStorage:', userData);
         return userData;
@@ -108,6 +108,7 @@ function saveUserDataToSheet() {
       if (data.status !== 'success') {
         throw new Error(data.message || 'Błąd zapisywania danych');
       }
+      sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
       return data;
     })
     .catch(error => {
@@ -124,7 +125,7 @@ function getData(section, key) {
   }
   try {
     const parsedData = JSON.parse(userData);
-    const value = parsedData.profile && parsedData.profile[key] !== undefined ? parsedData.profile[key] : null;
+    const value = parsedData[section] && parsedData[section][key] !== undefined ? parsedData[section][key] : null;
     console.log(`getData: section=${section}, key=${key}, value=`, value);
     return value;
   } catch (e) {
@@ -137,15 +138,15 @@ function setData(section, key, value) {
   const userData = sessionStorage.getItem('userData');
   let parsedData;
   try {
-    parsedData = userData ? JSON.parse(userData) : { profile: {} };
+    parsedData = userData ? JSON.parse(userData) : {};
   } catch (e) {
     console.error('setData: Błąd parsowania userData:', e);
-    parsedData = { profile: {} };
+    parsedData = {};
   }
-  if (!parsedData.profile) {
-    parsedData.profile = {};
+  if (!parsedData[section]) {
+    parsedData[section] = {};
   }
-  parsedData.profile[key] = value;
+  parsedData[section][key] = value;
   sessionStorage.setItem('userData', JSON.stringify(parsedData));
   console.log(`setData: Zaktualizowane userData:`, parsedData);
   
