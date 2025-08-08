@@ -169,11 +169,8 @@ function register() {
       email: email || '',
       birthYear: parseInt(birthYear),
       gender: gender,
-      money: null,
+      money: 0,
       joined: new Date().toISOString()
-    },
-    app: {
-      opened: true
     }
   };
 
