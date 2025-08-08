@@ -1,0 +1,11 @@
+{
+    "profile":{
+        "username":"test",
+        "email":"test@test.pl",
+        "birthYear":2000,
+        "gender":"M",
+        "money":0,
+        "joined":"2000-01-01T00:00:00.000Z",
+        "password":"l9Vt6w5kQX5KVoKkZKz2t4Mk0Zx30d3cx4DH9pr6Yqc="
+    }
+}
