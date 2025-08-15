@@ -261,39 +261,97 @@
     </div>
     <script src="https://suspicioyt.github.io/perunverse/gameverse/script/data.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            await window.userData.initializeUserData();
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Initialize userData if available, but don't rely on it
+        if (window.userData && typeof window.userData.initializeUserData === 'function') {
+            try {
+                await window.userData.initializeUserData();
+            } catch (e) {
+                console.error('Failed to initialize userData:', e);
+            }
+        }
+        initGame();
+    });
+
+    const garden = document.getElementById('garden');
+    const statsDisplay = document.getElementById('stats');
+    const inventoryTable = document.getElementById('inventory').querySelector('table');
+    const eventsDisplay = document.getElementById('events');
+    const buyerModal = document.getElementById('buyerModal');
+    const sellerModal = document.getElementById('sellerModal');
+    const tutorialModal = document.getElementById('tutorialModal');
+    const buyerCropSelect = document.getElementById('buyerCropSelect');
+    const buyerPrice = document.getElementById('buyerPrice');
+    const totalValue = document.getElementById('totalValue');
+    const deselectSeedButton = document.getElementById('deselectSeed');
+    const sellerSeedsContainer = document.getElementById('sellerSeeds');
+
+    // Define all plants in a single array
+    const plantData = [
+        { id: 'carrot', name: 'Marchewka', emoji: '🌱', growthTime: 60000, price: 2, weight: [5, 15], waterCost: 5, fertilityDrain: 10, seedCost: 15, witherChance: 0.05 },
+        { id: 'sunflower', name: 'Słonecznik', emoji: '🌻', growthTime: 300000, price: 3, weight: [10, 30], waterCost: 8, fertilityDrain: 15, seedCost: 40, witherChance: 0.05 },
+        { id: 'pumpkin', name: 'Dynia', emoji: '🎃', growthTime: 1000000, price: 5, weight: [20, 50], waterCost: 12, fertilityDrain: 20, seedCost: 90, witherChance: 0.05 },
+        { id: 'rose', name: 'Róża', emoji: '🌹', growthTime: 1800000, price: 8, weight: [10, 25], waterCost: 15, fertilityDrain: 25, seedCost: 130, witherChance: 0.05 },
+        { id: 'tulip', name: 'Tulipan', emoji: '🌷', growthTime: 4000000, price: 10, weight: [8, 20], waterCost: 10, fertilityDrain: 18, seedCost: 200, witherChance: 0.07 },
+        { id: 'moonflower', name: 'Księżycowy kwiat', emoji: '🌸🌙', growthTime: 6000000, price: 12, weight: [12, 30], waterCost: 18, fertilityDrain: 450, seedCost: 80, witherChance: 0.08 },
+        { id: 'starfruitvine', name: 'Winorośl gwiezdna', emoji: '🍇⭐', growthTime: 9000000, price: 20, weight: [20, 50], waterCost: 25, fertilityDrain: 1000, seedCost: 120, witherChance: 0.09 },
+        { id: 'crystalcactus', name: 'Kryształowy kaktus', emoji: '🌵✨', growthTime: 18000000, price: 45, weight: [15, 40], waterCost: 20, fertilityDrain: 2250, seedCost: 100, witherChance: 0.1 },
+        { id: 'lavender', name: 'Lawenda', emoji: '🌿', growthTime: 12000000, price: 35, weight: [10, 25], waterCost: 12, fertilityDrain: 20, seedCost: 5000, witherChance: 0.12 },
+        { id: 'dragonfruit', name: 'Smoczy owoc', emoji: '🐉🍎', growthTime: 3600000, price: 100, weight: [15, 35], waterCost: 22, fertilityDrain: 32, seedCost: 10000, witherChance: 0.15 }
+    ];
+
+    // Initialize game state
+    let gameState = {
+        money: 50,
+        water: 50,
+        inventory: {
+            seeds: Object.fromEntries(plantData.map(plant => [plant.id, 0])),
+            crops: [],
+            other: { fertilizer: 0 }
+        },
+        plots: Array(16).fill().map(() => ({ state: 'empty', type: '', fertility: 100 })),
+        weather: 'sunny'
+    };
+    let selectedSeed = null;
+    let isShiftHeld = false;
+
+    // Sound effects
+    const sounds = {
+        plant: new Audio('https://freesound.org/data/previews/171/171671_2435888-lq.mp3'),
+        harvest: new Audio('https://freesound.org/data/previews/345/345690_5938978-lq.mp3'),
+        buy: new Audio('https://freesound.org/data/previews/184/184438_2391165-lq.mp3')
+    };
+
+    // Translate seed IDs to localized names
+    function translateSeed(id) {
+        const plant = plantData.find(p => p.id === id);
+        return plant ? plant.name : 'Nieznany';
+    }
+    function getPlant(type) {
+        const plant = plantData.find(p => p.id === type);
+        if (!plant) {
+            console.error(`Invalid plant type: ${type}`);
+            return null;
+        }
+        return plant;
+    }
+
+    // Dynamically generate seller modal seed buttons
+    function renderSellerModal() {
+        sellerSeedsContainer.innerHTML = '<h4 class="text-lg font-medium">Nasiona</h4><div class="flex flex-wrap justify-center gap-2 mt-2"></div>';
+        const seedButtonsContainer = sellerSeedsContainer.querySelector('div');
+        plantData.forEach(plant => {
+            const button = document.createElement('button');
+            button.className = 'bg-green-600 text-white px-4 py-2 rounded-lg';
+            button.innerHTML = `${plant.emoji} ${plant.name} (${plant.seedCost} zł)`;
+            button.onclick = () => buySeed(plant.id, plant.seedCost);
+            seedButtonsContainer.appendChild(button);
         });
-        
-        const garden = document.getElementById('garden');
-        const statsDisplay = document.getElementById('stats');
-        const inventoryTable = document.getElementById('inventory').querySelector('table');
-        const eventsDisplay = document.getElementById('events');
-        const buyerModal = document.getElementById('buyerModal');
-        const sellerModal = document.getElementById('sellerModal');
-        const tutorialModal = document.getElementById('tutorialModal');
-        const buyerCropSelect = document.getElementById('buyerCropSelect');
-        const buyerPrice = document.getElementById('buyerPrice');
-        const totalValue = document.getElementById('totalValue');
-        const deselectSeedButton = document.getElementById('deselectSeed');
-        const sellerSeedsContainer = document.getElementById('sellerSeeds');
+    }
 
-        // Define all plants in a single array
-        const plantData = [
-            { id: 'carrot', name: 'Marchewka', emoji: '🌱', growthTime: 60000, price: 2, weight: [5, 15], waterCost: 5, fertilityDrain: 10, seedCost: 15, witherChance: 0.05 },
-            { id: 'sunflower', name: 'Słonecznik', emoji: '🌻', growthTime: 300000, price: 3, weight: [10, 30], waterCost: 8, fertilityDrain: 15, seedCost: 40, witherChance: 0.05 },
-            { id: 'pumpkin', name: 'Dynia', emoji: '🎃', growthTime: 1000000, price: 5, weight: [20, 50], waterCost: 12, fertilityDrain: 20, seedCost: 90, witherChance: 0.05 },
-            { id: 'rose', name: 'Róża', emoji: '🌹', growthTime: 1800000, price: 8, weight: [10, 25], waterCost: 15, fertilityDrain: 25, seedCost: 130, witherChance: 0.05 },
-            { id: 'tulip', name: 'Tulipan', emoji: '🌷', growthTime: 4000000, price: 10, weight: [8, 20], waterCost: 10, fertilityDrain: 18, seedCost: 200, witherChance: 0.07 },
-            { id: 'moonflower', name: 'Księżycowy kwiat', emoji: '🌸🌙', growthTime: 6000000, price: 12, weight: [12, 30], waterCost: 18, fertilityDrain: 450, seedCost: 80, witherChance: 0.08 },
-            { id: 'starfruitvine', name: 'Winorośl gwiezdna', emoji: '🍇⭐', growthTime: 9000000, price: 20, weight: [20, 50], waterCost: 25, fertilityDrain: 1000, seedCost: 120, witherChance: 0.09 },
-            { id: 'crystalcactus', name: 'Kryształowy kaktus', emoji: '🌵✨', growthTime: 18000000, price: 45, weight: [15, 40], waterCost: 20, fertilityDrain: 2250, seedCost: 100, witherChance: 0.1 },
-            { id: 'lavender', name: 'Lawenda', emoji: '🌿', growthTime: 12000000, price: 35, weight: [10, 25], waterCost: 12, fertilityDrain: 20, seedCost: 5000, witherChance: 0.12 },
-            { id: 'dragonfruit', name: 'Smoczy owoc', emoji: '🐉🍎', growthTime: 3600000, price: 100, weight: [15, 35], waterCost: 22, fertilityDrain: 32, seedCost: 10000, witherChance: 0.15 }
-        ];
-
-        // Initialize game state
-        let gameState = {
+    // Load game state from localStorage or userData
+    async function loadGame() {
+        const defaultState = {
             money: 50,
             water: 50,
             inventory: {
@@ -301,382 +359,327 @@
                 crops: [],
                 other: { fertilizer: 0 }
             },
-            plots: Array(16).fill().map(() => ({ state: 'empty', type: '', growthTime: 0, size: '', plantedTime: 0, fertility: 100, harvestDeadline: 0 })),
+            plots: Array(16).fill().map(() => ({ state: 'empty', type: '', fertility: 100 })),
             weather: 'sunny'
         };
-        let selectedSeed = null;
-        let isShiftHeld = false;
-
-        // Sound effects
-        const sounds = {
-            plant: new Audio('https://freesound.org/data/previews/171/171671_2435888-lq.mp3'),
-            harvest: new Audio('https://freesound.org/data/previews/345/345690_5938978-lq.mp3'),
-            buy: new Audio('https://freesound.org/data/previews/184/184438_2391165-lq.mp3')
-        };
-
-        // Translate seed IDs to localized names
-        function translateSeed(id) {
-            const plant = plantData.find(p => p.id === id);
-            return plant ? plant.name : 'Nieznany';
-        }
-        function getPlant(type) {
-            const plant = plantData.find(p => p.id === type);
-            if (!plant) {
-                console.error(`Invalid plant type: ${type}`);
-                return null;
+        try {
+            let serverState = null;
+            // Try to load from userData if available
+            if (window.userData && typeof window.userData.getData === 'function') {
+                serverState = await window.userData.getData('gameverse', 'growAGarden');
             }
-            return plant;
-        }
-
-        // Dynamically generate seller modal seed buttons
-        function renderSellerModal() {
-            sellerSeedsContainer.innerHTML = '<h4 class="text-lg font-medium">Nasiona</h4><div class="flex flex-wrap justify-center gap-2 mt-2"></div>';
-            const seedButtonsContainer = sellerSeedsContainer.querySelector('div');
-            plantData.forEach(plant => {
-                const button = document.createElement('button');
-                button.className = 'bg-green-600 text-white px-4 py-2 rounded-lg';
-                button.innerHTML = `${plant.emoji} ${plant.name} (${plant.seedCost} zł)`;
-                button.onclick = () => buySeed(plant.id, plant.seedCost);
-                seedButtonsContainer.appendChild(button);
-            });
-        }
-
-        // Load game state from Google Sheets
-        async function loadGame() {
-            const defaultState = {
-                money: 50,
-                water: 50,
-                inventory: {
-                    seeds: Object.fromEntries(plantData.map(plant => [plant.id, 0])),
-                    crops: [],
-                    other: { fertilizer: 0 }
-                },
-                plots: Array(16).fill().map(() => ({ state: 'empty', type: '', growthTime: 0, size: '', plantedTime: 0, fertility: 100, harvestDeadline: 0 })),
-                weather: 'sunny'
-            };
-            try {
-                const serverState = window.userData.getData('gameverse', 'growAGarden');
-                if (serverState) {
-                    gameState = serverState;
-                    // Validate and clean up seeds
-                    const validSeeds = plantData.map(plant => plant.id);
-                    gameState.inventory.seeds = Object.fromEntries(
-                        validSeeds.map(seed => [seed, gameState.inventory.seeds[seed] || 0])
-                    );
-                    // Ensure plots have valid properties
-                    gameState.plots = gameState.plots.map(plot => ({
-                        state: plot.state || 'empty',
-                        type: validSeeds.includes(plot.type) ? plot.type : '',
+            // Fallback to localStorage
+            if (!serverState) {
+                const localData = localStorage.getItem('growAGarden');
+                serverState = localData ? JSON.parse(localData) : null;
+            }
+            if (serverState) {
+                gameState = {
+                    ...defaultState,
+                    money: serverState.money || defaultState.money,
+                    water: serverState.water || defaultState.water,
+                    inventory: {
+                        seeds: Object.fromEntries(
+                            plantData.map(plant => [plant.id, serverState.inventory?.seeds?.[plant.id] || 0])
+                        ),
+                        crops: serverState.inventory?.crops?.filter(crop => plantData.some(p => p.id === crop.type)) || [],
+                        other: { fertilizer: serverState.inventory?.other?.fertilizer || 0 }
+                    },
+                    plots: serverState.plots?.map(plot => ({
+                        state: ['empty', 'planted', 'ready', 'withered'].includes(plot.state) ? plot.state : 'empty',
+                        type: plantData.some(p => p.id === plot.type) ? plot.type : '',
+                        fertility: Math.max(0, Math.min(100, plot.fertility || 100)),
                         growthTime: plot.growthTime || 0,
-                        size: plot.size || '',
+                        size: ['small', 'medium', 'large'].includes(plot.size) ? plot.size : '',
                         plantedTime: plot.plantedTime || 0,
-                        fertility: plot.fertility !== undefined ? plot.fertility : 100,
                         harvestDeadline: plot.harvestDeadline || 0
-                    }));
-                    // Ensure selectedSeed is valid
-                    selectedSeed = validSeeds.includes(serverState.selectedSeed) ? serverState.selectedSeed : null;
-                } else {
-                    gameState = defaultState;
-                    selectedSeed = null;
-                    tutorialModal.style.display = 'flex';
-                }
-            } catch (e) {
-                console.error('Error loading game state:', e);
+                    })) || defaultState.plots,
+                    weather: ['sunny', 'rainy', 'dry'].includes(serverState.weather) ? serverState.weather : 'sunny'
+                };
+                selectedSeed = plantData.some(p => p.id === serverState.selectedSeed) ? serverState.selectedSeed : null;
+            } else {
                 gameState = defaultState;
                 selectedSeed = null;
-                showEvent('Błąd wczytywania gry. Zresetowano stan.');
                 tutorialModal.style.display = 'flex';
             }
+        } catch (e) {
+            console.error('Error loading game state:', e);
+            gameState = defaultState;
+            selectedSeed = null;
+            showEvent('Błąd wczytywania gry. Zresetowano stan.');
+            tutorialModal.style.display = 'flex';
+        }
+        updateStats();
+        updateInventory();
+        renderGarden();
+        renderSellerModal();
+        if (selectedSeed) deselectSeedButton.classList.remove('hidden');
+    }
+
+    // Save game state to localStorage or userData
+    async function saveGame() {
+        // Create a minimal game state to save
+        const minimalState = {
+            money: gameState.money,
+            water: gameState.water,
+            inventory: {
+                seeds: gameState.inventory.seeds,
+                crops: gameState.inventory.crops,
+                other: gameState.inventory.other
+            },
+            plots: gameState.plots.map(plot => ({
+                state: plot.state,
+                type: plot.type,
+                fertility: plot.fertility,
+                growthTime: plot.growthTime || 0,
+                size: plot.size || '',
+                plantedTime: plot.plantedTime || 0,
+                harvestDeadline: plot.harvestDeadline || 0
+            })),
+            weather: gameState.weather,
+            selectedSeed: selectedSeed
+        };
+        try {
+            // Try to save to userData if available
+            if (window.userData && typeof window.userData.setData === 'function') {
+                await window.userData.setData('gameverse', 'growAGarden', minimalState);
+                console.log('Game state saved to server');
+            }
+            // Always save to localStorage as a fallback
+            localStorage.setItem('growAGarden', JSON.stringify(minimalState));
+            console.log('Game state saved to localStorage');
+        } catch (e) {
+            console.error('Error saving game state:', e);
+            showEvent('Błąd zapisywania gry.');
+            // Save to localStorage as a fallback
+            localStorage.setItem('growAGarden', JSON.stringify(minimalState));
+        }
+    }
+
+    // Update stats display
+    function updateStats() {
+        const fertilizer = gameState.inventory?.other?.fertilizer || 0;
+        const weatherText = gameState.weather === 'sunny' ? 'Słonecznie' : gameState.weather === 'rainy' ? 'Deszczowo' : 'Sucho';
+        statsDisplay.textContent = `Pieniądze: ${gameState.money} zł | Woda: ${gameState.water} | Nawóz: ${fertilizer} | Pogoda: ${weatherText}`;
+    }
+
+    // Update inventory display
+    function updateInventory() {
+        while (inventoryTable.rows.length > 1) inventoryTable.deleteRow(1);
+        if (gameState.inventory?.seeds) {
+            for (let [type, count] of Object.entries(gameState.inventory.seeds).sort()) {
+                const plant = plantData.find(p => p.id === type);
+                if (count > 0 && plant) {
+                    const row = inventoryTable.insertRow();
+                    row.classList.add('seed-row');
+                    if (selectedSeed === type) row.classList.add('selected');
+                    row.addEventListener('click', () => selectSeed(type));
+                    row.insertCell().textContent = 'Nasiona';
+                    row.insertCell().innerHTML = `${plant.emoji} ${plant.name}`;
+                    row.insertCell().textContent = count;
+                    row.insertCell().textContent = '-';
+                    const tooltip = document.createElement('span');
+                    tooltip.classList.add('tooltip');
+                    tooltip.textContent = `Koszt: ${plant.seedCost} zł, Czas wzrostu: ${(plant.growthTime / 1000)}s, Cena: ${plant.price} zł/g, Ryzyko uschnięcia: ${plant.witherChance * 100}%`;
+                    row.cells[1].appendChild(tooltip);
+                }
+            }
+        }
+        if (gameState.inventory?.crops) {
+            for (let crop of gameState.inventory.crops.sort((a, b) => a.type.localeCompare(b.type))) {
+                const plant = plantData.find(p => p.id === crop.type);
+                if (plant) {
+                    const row = inventoryTable.insertRow();
+                    row.insertCell().textContent = 'Plony';
+                    row.insertCell().innerHTML = `${plant.emoji} ${plant.name}`;
+                    row.insertCell().textContent = `${crop.weight}g`;
+                    row.insertCell().textContent = `${crop.weight * plant.price} zł`;
+                }
+            }
+        }
+        if (gameState.inventory?.other?.fertilizer > 0) {
+            const row = inventoryTable.insertRow();
+            row.insertCell().textContent = 'Inne';
+            row.insertCell().textContent = 'Nawóz';
+            row.insertCell().textContent = gameState.inventory.other.fertilizer;
+            row.insertCell().textContent = '-';
+        }
+    }
+
+    // Render garden plots
+    function renderGarden() {
+        garden.innerHTML = '';
+        gameState.plots.forEach((plot, index) => {
+            const plotElement = document.createElement('div');
+            plotElement.classList.add('plot');
+            if (plot.state === 'planted') plotElement.classList.add('planted', `plant-size-${plot.size}`);
+            if (plot.state === 'ready') plotElement.classList.add('ready', `plant-size-${plot.size}`);
+            if (plot.state === 'withered') plotElement.classList.add('withered');
+            if (plot.fertility < 50) plotElement.classList.add('low-fertility');
+            const plant = plantData.find(p => p.id === plot.type);
+            plotElement.textContent = plant ? plant.emoji : '';
+            if (plot.state === 'planted') {
+                const progress = Math.min(100, ((Date.now() - plot.plantedTime) / (plot.growthTime || 1)) * 100).toFixed(0);
+                const status = document.createElement('div');
+                status.classList.add('growth-status');
+                status.innerHTML = `${progress}% (Żyzność: ${plot.fertility}%)<div class="progress-bar"><div class="progress-bar-fill" style="width: ${progress}%"></div></div>`;
+                plotElement.appendChild(status);
+            }
+            plotElement.addEventListener('click', (e) => handlePlotClick(index, e));
+            garden.appendChild(plotElement);
+        });
+    }
+
+    // Select seed for planting
+    function selectSeed(type) {
+        const plant = plantData.find(p => p.id === type);
+        if (!plant) {
+            console.error(`Invalid seed type selected: ${type}`);
+            showEvent('Nieprawidłowy typ nasiona!');
+            return;
+        }
+        if (gameState.inventory?.seeds?.[type] > 0) {
+            selectedSeed = type;
+            deselectSeedButton.classList.remove('hidden');
+            updateInventory();
+            showEvent(`Wybrano nasiona: ${translateSeed(type)}`);
+            playSound(sounds.buy);
+        } else {
+            showEvent(`Brak nasion ${translateSeed(type)}!`);
+        }
+    }
+
+    // Deselect seed
+    function deselectSeed() {
+        selectedSeed = null;
+        deselectSeedButton.classList.add('hidden');
+        updateInventory();
+        showEvent('Odznaczono nasiona.');
+    }
+
+    // Buy seeds
+    async function buySeed(type, cost) {
+        if (gameState.money >= cost) {
+            gameState.money -= cost;
+            gameState.inventory.seeds[type]++;
             updateStats();
             updateInventory();
-            renderGarden();
-            renderSellerModal();
-            if (selectedSeed) deselectSeedButton.classList.remove('hidden');
+            await saveGame();
+            showEvent(`Kupiono nasiona ${translateSeed(type)}!`);
+            playSound(sounds.buy);
+        } else {
+            showEvent('Niewystarczająco pieniędzy!');
         }
+    }
 
-        // Save game state to Google Sheets
-        async function saveGame() {
-            try {
-                window.userData.setData('gameverse', 'growAGarden', { ...gameState, selectedSeed });
-                console.log('Game state saved to server');
-            } catch (e) {
-                console.error('Error saving game state:', e);
-                showEvent('Błąd zapisywania gry.');
-            }
+    // Buy fertilizer
+    async function buyFertilizer(cost) {
+        if (gameState.money >= cost) {
+            gameState.money -= cost;
+            if (!gameState.inventory.other) gameState.inventory.other = { fertilizer: 0 };
+            gameState.inventory.other.fertilizer++;
+            updateStats();
+            updateInventory();
+            await saveGame();
+            showEvent('Kupiono nawóz!');
+            playSound(sounds.buy);
+        } else {
+            showEvent('Niewystarczająco pieniędzy!');
         }
+    }
 
-        // Update stats display
-        function updateStats() {
-            const fertilizer = gameState.inventory?.other?.fertilizer || 0;
-            const weatherText = gameState.weather === 'sunny' ? 'Słonecznie' : gameState.weather === 'rainy' ? 'Deszczowo' : 'Sucho';
-            statsDisplay.textContent = `Pieniądze: ${gameState.money} zł | Woda: ${gameState.water} | Nawóz: ${fertilizer} | Pogoda: ${weatherText}`;
+    // Buy water
+    async function buyWater(cost) {
+        if (gameState.money >= cost) {
+            gameState.money -= cost;
+            gameState.water += 50;
+            updateStats();
+            await saveGame();
+            showEvent('Kupiono wodę (+50)!');
+            playSound(sounds.buy);
+        } else {
+            showEvent('Niewystarczająco pieniędzy!');
         }
+    }
 
-        // Update inventory display
-        function updateInventory() {
-            while (inventoryTable.rows.length > 1) inventoryTable.deleteRow(1);
-            if (gameState.inventory?.seeds) {
-                for (let [type, count] of Object.entries(gameState.inventory.seeds).sort()) {
-                    const plant = plantData.find(p => p.id === type);
-                    if (count > 0 && plant) {
-                        const row = inventoryTable.insertRow();
-                        row.classList.add('seed-row');
-                        if (selectedSeed === type) row.classList.add('selected');
-                        row.addEventListener('click', () => selectSeed(type));
-                        row.insertCell().textContent = 'Nasiona';
-                        row.insertCell().innerHTML = `${plant.emoji} ${plant.name}`;
-                        row.insertCell().textContent = count;
-                        row.insertCell().textContent = '-';
-                        const tooltip = document.createElement('span');
-                        tooltip.classList.add('tooltip');
-                        tooltip.textContent = `Koszt: ${plant.seedCost} zł, Czas wzrostu: ${(plant.growthTime / 1000)}s, Cena: ${plant.price} zł/g, Ryzyko uschnięcia: ${plant.witherChance * 100}%`;
-                        row.cells[1].appendChild(tooltip);
-                    }
-                }
-            }
-            if (gameState.inventory?.crops) {
-                for (let crop of gameState.inventory.crops.sort((a, b) => a.type.localeCompare(b.type))) {
-                    const plant = plantData.find(p => p.id === crop.type);
-                    if (plant) {
-                        const row = inventoryTable.insertRow();
-                        row.insertCell().textContent = 'Plony';
-                        row.insertCell().innerHTML = `${plant.emoji} ${plant.name}`;
-                        row.insertCell().textContent = `${crop.weight}g`;
-                        row.insertCell().textContent = `${crop.weight * plant.price} zł`;
-                    }
-                }
-            }
-            if (gameState.inventory?.other?.fertilizer > 0) {
-                const row = inventoryTable.insertRow();
-                row.insertCell().textContent = 'Inne';
-                row.insertCell().textContent = 'Nawóz';
-                row.insertCell().textContent = gameState.inventory.other.fertilizer;
-                row.insertCell().textContent = '-';
-            }
-        }
-
-        // Render garden plots
-        function renderGarden() {
-            garden.innerHTML = '';
-            gameState.plots.forEach((plot, index) => {
-                const plotElement = document.createElement('div');
-                plotElement.classList.add('plot');
-                if (plot.state === 'planted') plotElement.classList.add('planted', `plant-size-${plot.size}`);
-                if (plot.state === 'ready') plotElement.classList.add('ready', `plant-size-${plot.size}`);
-                if (plot.state === 'withered') plotElement.classList.add('withered');
-                if (plot.fertility < 50) plotElement.classList.add('low-fertility');
-                const plant = plantData.find(p => p.id === plot.type);
-                plotElement.textContent = plant ? plant.emoji : '';
+    // Apply fertilizer
+    async function applyFertilizer() {
+        if (gameState.inventory?.other?.fertilizer > 0) {
+            gameState.inventory.other.fertilizer--;
+            gameState.plots.forEach(plot => {
                 if (plot.state === 'planted') {
-                    const progress = Math.min(100, ((Date.now() - plot.plantedTime) / plot.growthTime) * 100).toFixed(0);
-                    const status = document.createElement('div');
-                    status.classList.add('growth-status');
-                    status.innerHTML = `${progress}% (Żyzność: ${plot.fertility}%)<div class="progress-bar"><div class="progress-bar-fill" style="width: ${progress}%"></div></div>`;
-                    plotElement.appendChild(status);
+                    plot.growthTime = Math.max(plot.growthTime - 3000, 1000);
                 }
-                plotElement.addEventListener('click', (e) => handlePlotClick(index, e));
-                garden.appendChild(plotElement);
+                plot.fertility = Math.min(plot.fertility + 20, 100);
             });
+            updateStats();
+            updateInventory();
+            await saveGame();
+            showEvent('Użyto nawozu! Rośliny rosną szybciej, żyzność wzrosła.');
+            playSound(sounds.plant);
+        } else {
+            showEvent('Brak nawozu!');
         }
+    }
 
-        // Select seed for planting
-        function selectSeed(type) {
-            const plant = plantData.find(p => p.id === type);
-            if (!plant) {
-                console.error(`Invalid seed type selected: ${type}`);
-                showEvent('Nieprawidłowy typ nasiona!');
+    // Handle plot click (planting, harvesting, clearing withered)
+    async function handlePlotClick(index, event) {
+        const plot = gameState.plots[index];
+        if (plot.state === 'empty') {
+            if (!selectedSeed) {
+                showEvent('Wybierz nasiona z ekwipunku!');
                 return;
             }
-            if (gameState.inventory?.seeds?.[type] > 0) {
-                selectedSeed = type;
-                deselectSeedButton.classList.remove('hidden');
+            const plant = plantData.find(p => p.id === selectedSeed);
+            if (!plant) {
+                console.error(`Invalid seed type: ${selectedSeed}`);
+                showEvent('Nieprawidłowy typ nasiona!');
+                selectedSeed = null;
+                deselectSeedButton.classList.add('hidden');
                 updateInventory();
-                showEvent(`Wybrano nasiona: ${translateSeed(type)}`);
-                playSound(sounds.buy);
-            } else {
-                showEvent(`Brak nasion ${translateSeed(type)}!`);
+                return;
             }
-        }
-
-        // Deselect seed
-        function deselectSeed() {
-            selectedSeed = null;
-            deselectSeedButton.classList.add('hidden');
-            updateInventory();
-            showEvent('Odznaczono nasiona.');
-        }
-
-        // Buy seeds
-        async function buySeed(type, cost) {
-            if (gameState.money >= cost) {
-                gameState.money -= cost;
-                gameState.inventory.seeds[type]++;
+            if (!gameState.inventory?.seeds?.[selectedSeed] || gameState.inventory.seeds[selectedSeed] <= 0) {
+                showEvent(`Brak nasion ${translateSeed(selectedSeed)}!`);
+                return;
+            }
+            if (gameState.water < plant.waterCost) {
+                showEvent('Za mało wody!');
+                return;
+            }
+            if (plot.fertility < 20) {
+                showEvent('Gleba jest za mało żyzna! Użyj nawozu.');
+                return;
+            }
+            const plotsToPlant = isShiftHeld ? gameState.plots.filter(p => p.state === 'empty') : [plot];
+            let plantedCount = 0;
+            plotsToPlant.forEach(p => {
+                if (gameState.inventory.seeds[selectedSeed] > 0 && gameState.water >= plant.waterCost && p.fertility >= 20) {
+                    gameState.inventory.seeds[selectedSeed]--;
+                    gameState.water -= plant.waterCost;
+                    p.state = 'planted';
+                    p.type = selectedSeed;
+                    p.growthTime = plant.growthTime;
+                    p.plantedTime = Date.now();
+                    p.size = ['small', 'medium', 'large'][Math.floor(Math.random() * 3)];
+                    p.fertility -= plant.fertilityDrain;
+                    p.harvestDeadline = 0;
+                    plantedCount++;
+                }
+            });
+            if (plantedCount > 0) {
                 updateStats();
                 updateInventory();
                 await saveGame();
-                showEvent(`Kupiono nasiona ${translateSeed(type)}!`);
-                playSound(sounds.buy);
-            } else {
-                showEvent('Niewystarczająco pieniędzy!');
-            }
-        }
-
-        // Buy fertilizer
-        async function buyFertilizer(cost) {
-            if (gameState.money >= cost) {
-                gameState.money -= cost;
-                if (!gameState.inventory.other) gameState.inventory.other = { fertilizer: 0 };
-                gameState.inventory.other.fertilizer++;
-                updateStats();
-                updateInventory();
-                await saveGame();
-                showEvent('Kupiono nawóz!');
-                playSound(sounds.buy);
-            } else {
-                showEvent('Niewystarczająco pieniędzy!');
-            }
-        }
-
-        // Buy water
-        async function buyWater(cost) {
-            if (gameState.money >= cost) {
-                gameState.money -= cost;
-                gameState.water += 50;
-                updateStats();
-                await saveGame();
-                showEvent('Kupiono wodę (+50)!');
-                playSound(sounds.buy);
-            } else {
-                showEvent('Niewystarczająco pieniędzy!');
-            }
-        }
-
-        // Apply fertilizer
-        async function applyFertilizer() {
-            if (gameState.inventory?.other?.fertilizer > 0) {
-                gameState.inventory.other.fertilizer--;
-                gameState.plots.forEach(plot => {
-                    if (plot.state === 'planted') {
-                        plot.growthTime = Math.max(plot.growthTime - 3000, 1000);
-                    }
-                    plot.fertility = Math.min(plot.fertility + 20, 100);
-                });
-                updateStats();
-                updateInventory();
-                await saveGame();
-                showEvent('Użyto nawozu! Rośliny rosną szybciej, żyzność wzrosła.');
+                renderGarden();
+                showEvent(`Zasadzono ${plantedCount} x ${translateSeed(selectedSeed)}!`);
                 playSound(sounds.plant);
             } else {
-                showEvent('Brak nawozu!');
+                showEvent('Nie można zasadzić: brak zasobów!');
             }
-        }
-
-        // Handle plot click (planting, harvesting, clearing withered)
-        async function handlePlotClick(index, event) {
-            const plot = gameState.plots[index];
-            if (plot.state === 'empty') {
-                if (!selectedSeed) {
-                    showEvent('Wybierz nasiona z ekwipunku!');
-                    return;
-                }
-                const plant = plantData.find(p => p.id === selectedSeed);
-                if (!plant) {
-                    console.error(`Invalid seed type: ${selectedSeed}`);
-                    showEvent('Nieprawidłowy typ nasiona!');
-                    selectedSeed = null;
-                    deselectSeedButton.classList.add('hidden');
-                    updateInventory();
-                    return;
-                }
-                if (!gameState.inventory?.seeds?.[selectedSeed] || gameState.inventory.seeds[selectedSeed] <= 0) {
-                    showEvent(`Brak nasion ${translateSeed(selectedSeed)}!`);
-                    return;
-                }
-                if (gameState.water < plant.waterCost) {
-                    showEvent('Za mało wody!');
-                    return;
-                }
-                if (plot.fertility < 20) {
-                    showEvent('Gleba jest za mało żyzna! Użyj nawozu.');
-                    return;
-                }
-                const plotsToPlant = isShiftHeld ? gameState.plots.filter(p => p.state === 'empty') : [plot];
-                let plantedCount = 0;
-                plotsToPlant.forEach(p => {
-                    if (gameState.inventory.seeds[selectedSeed] > 0 && gameState.water >= plant.waterCost && p.fertility >= 20) {
-                        gameState.inventory.seeds[selectedSeed]--;
-                        gameState.water -= plant.waterCost;
-                        p.state = 'planted';
-                        p.type = selectedSeed;
-                        p.growthTime = plant.growthTime;
-                        p.plantedTime = Date.now();
-                        p.size = ['small', 'medium', 'large'][Math.floor(Math.random() * 3)];
-                        p.fertility -= plant.fertilityDrain;
-                        plantedCount++;
-                    }
-                });
-                if (plantedCount > 0) {
-                    updateStats();
-                    updateInventory();
-                    await saveGame();
-                    renderGarden();
-                    showEvent(`Zasadzono ${plantedCount} x ${translateSeed(selectedSeed)}!`);
-                    playSound(sounds.plant);
-                } else {
-                    showEvent('Nie można zasadzić: brak zasobów!');
-                }
-            } else if (plot.state === 'ready') {
-                await harvest(index);
-            } else if (plot.state === 'withered') {
-                plot.state = 'empty';
-                plot.type = '';
-                plot.size = '';
-                plot.growthTime = 0;
-                plot.plantedTime = 0;
-                plot.harvestDeadline = 0;
-                renderGarden();
-                await saveGame();
-                showEvent('Usunięto uschniętą roślinę.');
-            }
-        }
-
-        // Check plant growth
-        async function checkGrowth() {
-            const now = Date.now();
-            let changed = false;
-            gameState.plots.forEach((plot, index) => {
-                if (plot.state === 'planted' && now - plot.plantedTime >= plot.growthTime) {
-                    const plant = plantData.find(p => p.id === plot.type);
-                    const witherChance = plant ? plant.witherChance * (gameState.weather === 'dry' ? 1.5 : gameState.weather === 'rainy' ? 0.5 : 1) : 0.1;
-                    plot.state = Math.random() < witherChance ? 'withered' : 'ready';
-                    if (plot.state === 'ready') {
-                        plot.harvestDeadline = now + 10000;
-                    }
-                    changed = true;
-                } else if (plot.state === 'ready' && plot.harvestDeadline && now > plot.harvestDeadline) {
-                    plot.state = 'withered';
-                    plot.harvestDeadline = 0;
-                    showEvent(`${translateSeed(plot.type)} uschła z powodu opóźnienia w zbiorze!`);
-                    changed = true;
-                }
-            });
-            if (changed) {
-                await saveGame();
-                renderGarden();
-            }
-        }
-
-        // Harvest crops
-        async function harvest(index) {
-            const plot = gameState.plots[index];
-            const plant = plantData.find(p => p.id === plot.type);
-            if (!plant) {
-                console.error(`Invalid plant type in harvest: ${plot.type}`);
-                return;
-            }
-            const weightRange = plant.weight;
-            const weight = Math.floor(Math.random() * (weightRange[1] - weightRange[0] + 1)) + weightRange[0];
-            gameState.inventory.crops.push({ type: plot.type, weight });
+        } else if (plot.state === 'ready') {
+            await harvest(index);
+        } else if (plot.state === 'withered') {
             plot.state = 'empty';
             plot.type = '';
             plot.size = '';
@@ -684,242 +687,285 @@
             plot.plantedTime = 0;
             plot.harvestDeadline = 0;
             renderGarden();
-            updateInventory();
             await saveGame();
-            showEvent(`Zebrano ${translateSeed(plot.type)} o wadze ${weight}g!`);
-            playSound(sounds.harvest);
+            showEvent('Usunięto uschniętą roślinę.');
         }
+    }
 
-        // Sell all crops
-        async function sellCrops() {
-            let totalMoney = 0;
-            if (gameState.inventory?.crops) {
-                gameState.inventory.crops.forEach(crop => {
-                    const plant = plantData.find(p => p.id === crop.type);
-                    totalMoney += crop.weight * (plant ? plant.price : 0);
-                });
-                gameState.money += totalMoney;
-                gameState.inventory.crops = [];
-                updateStats();
-                updateInventory();
-                await saveGame();
-                showEvent(`Sprzedano wszystkie plony za ${totalMoney} zł!`);
-                playSound(sounds.buy);
-            } else {
-                showEvent('Brak plonów do sprzedaży!');
-            }
-        }
-
-        // Open modal
-        function openModal(type) {
-            if (type === 'buyer') {
-                buyerCropSelect.innerHTML = '';
-                if (!gameState.inventory?.crops || gameState.inventory.crops.length === 0) {
-                    buyerCropSelect.innerHTML = '<option>Brak plonów</option>';
-                    buyerPrice.textContent = '';
-                    totalValue.textContent = '';
-                } else {
-                    gameState.inventory.crops.forEach((crop, index) => {
-                        const plant = plantData.find(p => p.id === crop.type);
-                        if (plant) {
-                            const option = document.createElement('option');
-                            option.value = index;
-                            option.innerHTML = `${plant.emoji} ${translateSeed(crop.type)} (${crop.weight}g)`;
-                            buyerCropSelect.appendChild(option);
-                        }
-                    });
-                    updateBuyerPrice();
-                    const total = gameState.inventory.crops.reduce((sum, crop) => {
-                        const plant = plantData.find(p => p.id === crop.type);
-                        return sum + crop.weight * (plant ? plant.price : 0);
-                    }, 0);
-                    totalValue.textContent = `Całkowita wartość plonów: ${total} zł`;
+    // Check plant growth
+    async function checkGrowth() {
+        const now = Date.now();
+        let changed = false;
+        gameState.plots.forEach((plot, index) => {
+            if (plot.state === 'planted' && now - plot.plantedTime >= plot.growthTime) {
+                const plant = plantData.find(p => p.id === plot.type);
+                const witherChance = plant ? plant.witherChance * (gameState.weather === 'dry' ? 1.5 : gameState.weather === 'rainy' ? 0.5 : 1) : 0.1;
+                plot.state = Math.random() < witherChance ? 'withered' : 'ready';
+                if (plot.state === 'ready') {
+                    plot.harvestDeadline = now + 10000;
                 }
-                buyerModal.style.display = 'flex';
-            } else if (type === 'seller') {
-                sellerModal.style.display = 'flex';
-            } else if (type === 'tutorial') {
-                tutorialModal.style.display = 'flex';
+                changed = true;
+            } else if (plot.state === 'ready' && plot.harvestDeadline && now > plot.harvestDeadline) {
+                plot.state = 'withered';
+                plot.harvestDeadline = 0;
+                showEvent(`${translateSeed(plot.type)} uschła z powodu opóźnienia w zbiorze!`);
+                changed = true;
             }
+        });
+        if (changed) {
+            await saveGame();
+            renderGarden();
         }
+    }
 
-        // Close modal
-        function closeModal(type) {
-            if (type === 'buyer') {
-                buyerModal.style.display = 'none';
-            } else if (type === 'seller') {
-                sellerModal.style.display = 'none';
-            } else if (type === 'tutorial') {
-                tutorialModal.style.display = 'none';
-            }
+    // Harvest crops
+    async function harvest(index) {
+        const plot = gameState.plots[index];
+        const plant = plantData.find(p => p.id === plot.type);
+        if (!plant) {
+            console.error(`Invalid plant type in harvest: ${plot.type}`);
+            return;
         }
+        const weightRange = plant.weight;
+        const weight = Math.floor(Math.random() * (weightRange[1] - weightRange[0] + 1)) + weightRange[0];
+        gameState.inventory.crops.push({ type: plot.type, weight });
+        plot.state = 'empty';
+        plot.type = '';
+        plot.size = '';
+        plot.growthTime = 0;
+        plot.plantedTime = 0;
+        plot.harvestDeadline = 0;
+        renderGarden();
+        updateInventory();
+        await saveGame();
+        showEvent(`Zebrano ${translateSeed(plot.type)} o wadze ${weight}g!`);
+        playSound(sounds.harvest);
+    }
 
-        // Update buyer modal price
-        function updateBuyerPrice() {
-            const index = buyerCropSelect.value;
-            if (index && gameState.inventory?.crops?.[index]) {
-                const crop = gameState.inventory.crops[index];
+    // Sell all crops
+    async function sellCrops() {
+        let totalMoney = 0;
+        if (gameState.inventory?.crops) {
+            gameState.inventory.crops.forEach(crop => {
                 const plant = plantData.find(p => p.id === crop.type);
-                const price = crop.weight * (plant ? plant.price : 0);
-                buyerPrice.textContent = `Cena sprzedaży: ${price} zł`;
-            } else {
-                buyerPrice.textContent = '';
-            }
-        }
-
-        // Sell selected crop
-        async function sellSelectedCrop() {
-            const index = buyerCropSelect.value;
-            if (index && gameState.inventory?.crops?.[index]) {
-                const crop = gameState.inventory.crops[index];
-                const plant = plantData.find(p => p.id === crop.type);
-                const price = crop.weight * (plant ? plant.price : 0);
-                gameState.money += price;
-                gameState.inventory.crops.splice(index, 1);
-                updateStats();
-                updateInventory();
-                await saveGame();
-                showEvent(`Sprzedano ${translateSeed(crop.type)} za ${price} zł!`);
-                playSound(sounds.buy);
-                openModal('buyer');
-            }
-        }
-
-        // Sell all crops in buyer modal
-        async function sellAllCrops() {
-            let totalMoney = 0;
-            if (gameState.inventory?.crops) {
-                gameState.inventory.crops.forEach(crop => {
-                    const plant = plantData.find(p => p.id === crop.type);
-                    totalMoney += crop.weight * (plant ? plant.price : 0);
-                });
-                gameState.money += totalMoney;
-                gameState.inventory.crops = [];
-                updateStats();
-                updateInventory();
-                await saveGame();
-                showEvent(`Sprzedano wszystkie plony za ${totalMoney} zł!`);
-                playSound(sounds.buy);
-                closeModal('buyer');
-            } else {
-                showEvent('Brak plonów do sprzedaży!');
-            }
-        }
-
-        // Random events and weather
-        async function randomEvent() {
-            // Update weather every 30 seconds
-            if (Math.random() < 0.02) { // ~2% chance per second (~1 in 30s)
-                const weathers = ['sunny', 'rainy', 'dry'];
-                gameState.weather = weathers[Math.floor(Math.random() * weathers.length)];
-                updateStats();
-                showEvent(`Pogoda zmieniła się na ${gameState.weather === 'sunny' ? 'słoneczną' : gameState.weather === 'rainy' ? 'deszczową' : 'suchą'}!`);
-                if (gameState.weather === 'rainy') {
-                    gameState.plots.forEach(plot => {
-                        if (plot.state === 'planted') plot.growthTime = Math.max(plot.growthTime - 4000, 1000);
-                    });
-                    showEvent('Deszcz przyspiesza wzrost roślin!');
-                }
-                await saveGame();
-            }
-            // Random events (10% chance per second)
-            if (Math.random() < 0.01) {
-                const events = [
-                    () => {
-                        gameState.plots.forEach(plot => {
-                            if (plot.state === 'planted' && Math.random() < 0.3) plot.state = 'withered';
-                        });
-                        showEvent('Susza! Niektóre rośliny uschły.');
-                        renderGarden();
-                    },
-                    () => {
-                        gameState.plots.forEach(plot => {
-                            if (plot.state === 'planted' && Math.random() < 0.2) plot.state = 'withered';
-                        });
-                        showEvent('Szkodniki zaatakowały! Niektóre rośliny uschły.');
-                        renderGarden();
-                    },
-                    () => {
-                        if (gameState.inventory?.crops?.length > 0) {
-                            const stolen = gameState.inventory.crops.splice(0, Math.floor(gameState.inventory.crops.length / 2));
-                            showEvent(`Złodzieje ukradli ${stolen.length} plonów!`);
-                            updateInventory();
-                        } else {
-                            showEvent('Złodzieje przyszli, ale nie mieli co ukraść.');
-                        }
-                    },
-                    () => {
-                        gameState.money += 10;
-                        showEvent('Znalazłeś 10 zł w ogrodzie!');
-                    }
-                ];
-                events[Math.floor(Math.random() * events.length)]();
-                await saveGame();
-            }
-        }
-
-        // Display events
-        function showEvent(message) {
-            eventsDisplay.textContent = message;
-            setTimeout(() => { eventsDisplay.textContent = ''; }, 4000);
-        }
-
-        // Reset game
-        async function resetGame() {
-            gameState = {
-                money: 50,
-                water: 50,
-                inventory: {
-                    seeds: Object.fromEntries(plantData.map(plant => [plant.id, 0])),
-                    crops: [],
-                    other: { fertilizer: 0 }
-                },
-                plots: Array(16).fill().map(() => ({ state: 'empty', type: '', growthTime: 0, size: '', plantedTime: 0, fertility: 100, harvestDeadline: 0 })),
-                weather: 'sunny'
-            };
-            selectedSeed = null;
-            deselectSeedButton.classList.add('hidden');
+                totalMoney += crop.weight * (plant ? plant.price : 0);
+            });
+            gameState.money += totalMoney;
+            gameState.inventory.crops = [];
             updateStats();
             updateInventory();
-            renderGarden();
-            renderSellerModal();
             await saveGame();
-            showEvent('Gra zresetowana!');
+            showEvent(`Sprzedano wszystkie plony za ${totalMoney} zł!`);
+            playSound(sounds.buy);
+        } else {
+            showEvent('Brak plonów do sprzedaży!');
+        }
+    }
+
+    // Open modal
+    function openModal(type) {
+        if (type === 'buyer') {
+            buyerCropSelect.innerHTML = '';
+            if (!gameState.inventory?.crops || gameState.inventory.crops.length === 0) {
+                buyerCropSelect.innerHTML = '<option>Brak plonów</option>';
+                buyerPrice.textContent = '';
+                totalValue.textContent = '';
+            } else {
+                gameState.inventory.crops.forEach((crop, index) => {
+                    const plant = plantData.find(p => p.id === crop.type);
+                    if (plant) {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.innerHTML = `${plant.emoji} ${translateSeed(crop.type)} (${crop.weight}g)`;
+                        buyerCropSelect.appendChild(option);
+                    }
+                });
+                updateBuyerPrice();
+                const total = gameState.inventory.crops.reduce((sum, crop) => {
+                    const plant = plantData.find(p => p.id === crop.type);
+                    return sum + crop.weight * (plant ? plant.price : 0);
+                }, 0);
+                totalValue.textContent = `Całkowita wartość plonów: ${total} zł`;
+            }
+            buyerModal.style.display = 'flex';
+        } else if (type === 'seller') {
+            sellerModal.style.display = 'flex';
+        } else if (type === 'tutorial') {
             tutorialModal.style.display = 'flex';
         }
+    }
 
-        // Handle Shift key for batch planting
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Shift') isShiftHeld = true;
-        });
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') isShiftHeld = false;
-        });
+    // Close modal
+    function closeModal(type) {
+        if (type === 'buyer') {
+            buyerModal.style.display = 'none';
+        } else if (type === 'seller') {
+            sellerModal.style.display = 'none';
+        } else if (type === 'tutorial') {
+            tutorialModal.style.display = 'none';
+        }
+    }
 
-        // Sound control
-        let isSoundEnabled = false;
-        document.addEventListener('click', () => {
-            isSoundEnabled = true;
-        }, { once: true });
-        function playSound(sound) {
-            if (isSoundEnabled) {
-                sound.play().catch(() => {});
+    // Update buyer modal price
+    function updateBuyerPrice() {
+        const index = buyerCropSelect.value;
+        if (index && gameState.inventory?.crops?.[index]) {
+            const crop = gameState.inventory.crops[index];
+            const plant = plantData.find(p => p.id === crop.type);
+            const price = crop.weight * (plant ? plant.price : 0);
+            buyerPrice.textContent = `Cena sprzedaży: ${price} zł`;
+        } else {
+            buyerPrice.textContent = '';
+        }
+    }
+
+    // Sell selected crop
+    async function sellSelectedCrop() {
+        const index = buyerCropSelect.value;
+        if (index && gameState.inventory?.crops?.[index]) {
+            const crop = gameState.inventory.crops[index];
+            const plant = plantData.find(p => p.id === crop.type);
+            const price = crop.weight * (plant ? plant.price : 0);
+            gameState.money += price;
+            gameState.inventory.crops.splice(index, 1);
+            updateStats();
+            updateInventory();
+            await saveGame();
+            showEvent(`Sprzedano ${translateSeed(crop.type)} za ${price} zł!`);
+            playSound(sounds.buy);
+            openModal('buyer');
+        }
+    }
+
+    // Sell all crops in buyer modal
+    async function sellAllCrops() {
+        let totalMoney = 0;
+        if (gameState.inventory?.crops) {
+            gameState.inventory.crops.forEach(crop => {
+                const plant = plantData.find(p => p.id === crop.type);
+                totalMoney += crop.weight * (plant ? plant.price : 0);
+            });
+            gameState.money += totalMoney;
+            gameState.inventory.crops = [];
+            updateStats();
+            updateInventory();
+            await saveGame();
+            showEvent(`Sprzedano wszystkie plony za ${totalMoney} zł!`);
+            playSound(sounds.buy);
+            closeModal('buyer');
+        } else {
+            showEvent('Brak plonów do sprzedaży!');
+        }
+    }
+
+    // Random events and weather
+    async function randomEvent() {
+        if (Math.random() < 0.02) {
+            const weathers = ['sunny', 'rainy', 'dry'];
+            gameState.weather = weathers[Math.floor(Math.random() * weathers.length)];
+            updateStats();
+            showEvent(`Pogoda zmieniła się na ${gameState.weather === 'sunny' ? 'słoneczną' : gameState.weather === 'rainy' ? 'deszczową' : 'suchą'}!`);
+            if (gameState.weather === 'rainy') {
+                gameState.plots.forEach(plot => {
+                    if (plot.state === 'planted') plot.growthTime = Math.max(plot.growthTime - 4000, 1000);
+                });
+                showEvent('Deszcz przyspiesza wzrost roślin!');
             }
+            await saveGame();
         }
-
-        // Initialize game
-        async function initGame() {
-            const success = window.userData.getData('gameverse', 'growAGarden');
-            if (!success) console.log("blad");
-            await loadGame();
-            buyerCropSelect.addEventListener('change', updateBuyerPrice);
-            setInterval(async () => {
-                await checkGrowth();
-                await randomEvent();
-            }, 1000);
+        if (Math.random() < 0.01) {
+            const events = [
+                () => {
+                    gameState.plots.forEach(plot => {
+                        if (plot.state === 'planted' && Math.random() < 0.3) plot.state = 'withered';
+                    });
+                    showEvent('Susza! Niektóre rośliny uschły.');
+                    renderGarden();
+                },
+                () => {
+                    gameState.plots.forEach(plot => {
+                        if (plot.state === 'planted' && Math.random() < 0.2) plot.state = 'withered';
+                    });
+                    showEvent('Szkodniki zaatakowały! Niektóre rośliny uschły.');
+                    renderGarden();
+                },
+                () => {
+                    if (gameState.inventory?.crops?.length > 0) {
+                        const stolen = gameState.inventory.crops.splice(0, Math.floor(gameState.inventory.crops.length / 2));
+                        showEvent(`Złodzieje ukradli ${stolen.length} plonów!`);
+                        updateInventory();
+                    } else {
+                        showEvent('Złodzieje przyszli, ale nie mieli co ukraść.');
+                    }
+                },
+                () => {
+                    gameState.money += 10;
+                    showEvent('Znalazłeś 10 zł w ogrodzie!');
+                }
+            ];
+            events[Math.floor(Math.random() * events.length)]();
+            await saveGame();
         }
+    }
 
-        initGame();
-    </script>
+    // Display events
+    function showEvent(message) {
+        eventsDisplay.textContent = message;
+        setTimeout(() => { eventsDisplay.textContent = ''; }, 4000);
+    }
+
+    // Reset game
+    async function resetGame() {
+        gameState = {
+            money: 50,
+            water: 50,
+            inventory: {
+                seeds: Object.fromEntries(plantData.map(plant => [plant.id, 0])),
+                crops: [],
+                other: { fertilizer: 0 }
+            },
+            plots: Array(16).fill().map(() => ({ state: 'empty', type: '', fertility: 100 })),
+            weather: 'sunny'
+        };
+        selectedSeed = null;
+        deselectSeedButton.classList.add('hidden');
+        updateStats();
+        updateInventory();
+        renderGarden();
+        renderSellerModal();
+        await saveGame();
+        showEvent('Gra zresetowana!');
+        tutorialModal.style.display = 'flex';
+    }
+
+    // Handle Shift key for batch planting
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Shift') isShiftHeld = true;
+    });
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'Shift') isShiftHeld = false;
+    });
+
+    // Sound control
+    let isSoundEnabled = false;
+    document.addEventListener('click', () => {
+        isSoundEnabled = true;
+    }, { once: true });
+    function playSound(sound) {
+        if (isSoundEnabled) {
+            sound.play().catch(() => {});
+        }
+    }
+
+    // Initialize game
+    async function initGame() {
+        await loadGame();
+        buyerCropSelect.addEventListener('change', updateBuyerPrice);
+        setInterval(async () => {
+            await checkGrowth();
+            await randomEvent();
+        }, 1000);
+    }
+</script>
 </body>
 </html>
