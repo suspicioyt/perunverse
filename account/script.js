@@ -7,7 +7,11 @@ function showTab(tabName) {
   document.getElementById(tabName + 'Tab').classList.add('active');
   document.querySelectorAll('.error').forEach(error => error.classList.remove('show'));
 }
-
+function uuidv4() {
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+  );
+}
 function getRedirectUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('redirect') || '../index.html';
@@ -166,6 +170,8 @@ function register() {
   const appData = {
     profile: {
       username: username,
+      badges: {},
+      uuid: uuidv4(),
       email: email || '',
       birthYear: parseInt(birthYear),
       gender: gender,
