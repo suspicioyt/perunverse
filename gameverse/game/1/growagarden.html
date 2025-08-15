@@ -187,6 +187,7 @@
         }
     </style>
 </head>
+
 <body class="flex flex-col items-center">
     <h1 class="text-4xl font-bold text-green-700 mb-6">Grow a Garden</h1>
     <div id="stats" class="section">Pieniądze: 50 zł | Woda: 50 | Nawóz: 0 | Pogoda: Słonecznie</div>
@@ -197,7 +198,6 @@
             <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg" onclick="applyFertilizer()">Użyj nawozu</button>
             <button class="bg-gray-600 text-white px-4 py-2 rounded-lg" onclick="resetGame()">Resetuj grę</button>
             <button class="bg-purple-600 text-white px-4 py-2 rounded-lg" onclick="openModal('tutorial')">Poradnik</button>
-            <button class="bg-red-700 text-white px-4 py-2 rounded-lg" onclick="logout()">Wyloguj</button>
         </div>
     </div>
     <div id="inventory" class="section">
@@ -261,6 +261,10 @@
     </div>
     <script src="https://suspicioyt.github.io/perunverse/gameverse/script/data.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await window.userData.initializeUserData();
+        });
+        
         const garden = document.getElementById('garden');
         const statsDisplay = document.getElementById('stats');
         const inventoryTable = document.getElementById('inventory').querySelector('table');
@@ -351,7 +355,7 @@
                 weather: 'sunny'
             };
             try {
-                const serverState = await getData('gameverse', 'state');
+                const serverState = window.userData.getData('gameverse', 'growAGarden');
                 if (serverState) {
                     gameState = serverState;
                     // Validate and clean up seeds
@@ -393,7 +397,7 @@
         // Save game state to Google Sheets
         async function saveGame() {
             try {
-                await setData('current', 'gameverse', 'growAGarden', { ...gameState, selectedSeed });
+                window.userData.setData('gameverse', 'growAGarden', { ...gameState, selectedSeed });
                 console.log('Game state saved to server');
             } catch (e) {
                 console.error('Error saving game state:', e);
@@ -905,8 +909,8 @@
 
         // Initialize game
         async function initGame() {
-            const success = await loadUserData();
-            if (!success) return;
+            const success = window.userData.getData('gameverse', 'growAGarden');
+            if (!success) console.log("blad");
             await loadGame();
             buyerCropSelect.addEventListener('change', updateBuyerPrice);
             setInterval(async () => {
