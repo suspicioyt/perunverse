@@ -315,13 +315,13 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
         favoriteButton.style.zIndex = "10";
         favoriteButton.innerHTML = createFavoriteButton(game.id, game.ulubione);
         gameBox.appendChild(favoriteButton);
-        if (loadVotedGame() !== game.id) {
-            const voteButton = document.createElement("div");
-            voteButton.classList.add("vote-button");
-            voteButton.style.zIndex = "10";
-            voteButton.innerHTML = createVoteButton(game.id, votedGame === game.id);
-            gameBox.appendChild(voteButton);
-        }
+        // if (loadVotedGame() !== game.id) {
+        //     const voteButton = document.createElement("div");
+        //     voteButton.classList.add("vote-button");
+        //     voteButton.style.zIndex = "10";
+        //     voteButton.innerHTML = createVoteButton(game.id, votedGame === game.id);
+        //     gameBox.appendChild(voteButton);
+        // }
     }
 
     if (loadVotedGame() === game.id) {
@@ -664,7 +664,7 @@ async function initialize() {
                 const key = element.getAttribute('data-key');
                 insertData(element, appId, key);
             });
-            await updatePlayerBadges();
+            // await updatePlayerBadges();
         } else {
             console.warn('Funkcje insertData lub updatePlayerBadges nie są zdefiniowane');
             const elements = document.querySelectorAll('[data-app-id][data-key]');
@@ -672,7 +672,7 @@ async function initialize() {
                 element.innerHTML = '???';
             });
             const badgesElement = document.getElementById('playerBadges');
-            if (badgesElement) badgesElement.innerHTML = '???';
+            // if (badgesElement) badgesElement.innerHTML = '???';
         }
     } catch (e) {
         console.error('Błąd inicjalizacji:', e);

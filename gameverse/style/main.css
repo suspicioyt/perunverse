@@ -10,15 +10,15 @@
 
 :root {
     --border-radius: 20px;
-    --primary-color: #F03747;
+    --primary-color: #00ca00;
     --button-disabled-color: #3b3b3b;
     --button-color: #0a7900;
     --button-active-color: #113f00;
     --button-hover-color: #3bde00;
-    --highlight-bg-color: rgba(220, 0, 128, 0.2);
-    --shadow-color: rgba(255, 0, 85, 0.177);
-    --border-color: #F03747;
-    --background-image: url('https://onclusive.com/wp-content/uploads/2024/06/voting.png');
+    --highlight-bg-color: rgba(0, 220, 7, 0.2);
+    --shadow-color: rgba(30, 255, 0, 0.177);
+    --border-color: #53f037;
+    --background-image: url('https://i.pinimg.com/736x/c6/d2/11/c6d211d6f9b3724a215f59b863ea2e9f.jpg');
     --parallax-image: url('../img/perun4.png');
 }
 
@@ -1007,8 +1007,8 @@ a {
     opacity: 1;
     will-change: opacity;
     transition: opacity 0.8s ease-out;
-    background: linear-gradient(135deg, var(--primary-background-color), var(--border-color));
-    color: var(--text-color);
+    background: linear-gradient(135deg, black, var(--border-color));
+    color: white;
 }
 .text {
     font-size: 48px;
@@ -1036,8 +1036,8 @@ a {
     opacity: 0;
     will-change: opacity;
     animation: fadeIn 0.4s ease-out 2s forwards, spin 1s linear infinite;
-    border: 6px solid var(--secondary-background-color);
-    border-top: 6px solid var(--border-color);
+    border: 6px solid transparent;
+    border-top: 6px solid white;
 }
 /* Updated class name for tip */
 .loading-tip {
@@ -1070,7 +1070,7 @@ a {
     font-weight: bold;
 }
 
-#personalizationModal select, #personalizationModal input[type="color"] {
+#settingsModal select, #settingsModal input[type="color"] {
     padding: 10px;
     margin-bottom: 15px;
     border-radius: var(--border-radius);
@@ -1078,7 +1078,7 @@ a {
     border: 1px solid var(--border-color);
 }
 
-#personalizationModal button {
+#settingsModal button {
     display: block;
     width: 100%;
     padding: 10px;
@@ -1090,7 +1090,7 @@ a {
     color: var(--text-color);
 }
 
-#personalizationModal button:hover {
+#settingsModal button:hover {
     background: var(--button-hover-color);
 }
 

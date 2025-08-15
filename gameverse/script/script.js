@@ -1,6 +1,3 @@
-// await getData(['sessionStorage'], 'perunVerified');
-// await getData(['localStorage'], 'perunVerified');
-// await getData(['dataBase'], 'perunVerified');
 const STORAGE_KEYS = {
   USERNAME: 'perunUsername',
   ISFIRSTVISIT: 'isFirstVisit',
@@ -18,11 +15,11 @@ const STORAGE_KEYS = {
   OPEN_MODALS: 'openModals',
   CHAT_FONT_SIZE: 'chatMessageFontSize',
   PAGE_BUILDER_PAGES: 'pageBuilder_pages',
-  VOTING_HISTORY: 'votingHistory' // New key for voting history
+  VOTING_HISTORY: 'votingHistory'
 };
 
 const UPDATE_DATE = 'Apr 27, 2025 20:00:00';
-  
+
 const API_FIELD_MAP = {
   [STORAGE_KEYS.USERNAME]: 'username',
   [STORAGE_KEYS.UUID]: 'uuid',
@@ -33,24 +30,24 @@ const API_FIELD_MAP = {
 };
 
 window.API_URL = 'https://script.google.com/macros/s/AKfycbzLuqmfiDBw9QVDFuPuWmef1n0_mb6JDF8hy0PwAA8cshdgYeFLqL_n_LzuAVwrcXVpGQ/exec';
-  
+
 window.settingSwitches = [
-  { switchId: '01', value: false },//tryb dev
-  { switchId: '02', value: false },//zapis modali
-  { switchId: '03', value: true },//obrazy na chacie
-  { switchId: '04', value: true },//zbanowane słowa
-  { switchId: '05', value: false },//???
-  { switchId: '06', value: true },//ostatnio grana gra
-  { switchId: '07', value: true },//powiadomienia
-  { switchId: '08', value: true },//grane gry
-  { switchId: '09', value: false },//tryb kompaktowy
+  { switchId: '01', value: false }, // tryb dev
+  { switchId: '02', value: false }, // zapis modali
+  { switchId: '03', value: true },  // obrazy na chacie
+  { switchId: '04', value: true },  // zbanowane słowa
+  { switchId: '05', value: false }, // ???
+  { switchId: '06', value: true },  // ostatnio grana gra
+  { switchId: '07', value: true },  // powiadomienia
+  { switchId: '08', value: true },  // grane gry
+  { switchId: '09', value: false }, // tryb kompaktowy
   { switchId: '10', value: false }
 ];
-  
+
 const heartLikeInner1 = '<label for="heart';
 const heartLikeInner2 = '"><i class="fas fa-heart"></i></label><input type="checkbox" id="heart';
 const heartLikeInner3 = '" />';
-  
+
 const API = {
   async post(url, data) {
     try {
@@ -60,6 +57,7 @@ const API = {
         body: JSON.stringify(data),
         mode: 'no-cors'
       });
+      console.log('API POST response:', response);
       return response;
     } catch (error) {
       console.error('API POST error:', error);
@@ -70,64 +68,16 @@ const API = {
     try {
       const response = await fetch(url, { method: 'GET' });
       if (!response.ok) throw new Error(`GET failed: ${response.status}`);
-      return await response.json();
+      const data = await response.json();
+      console.log('API GET response:', data);
+      return data;
     } catch (error) {
       console.error('API GET error:', error);
       throw error;
     }
   }
 };
-  
-async function getData(storages, key) {
-  try {
-    for (const storage of storages) {
-      if (storage === 'sessionStorage') {
-        const value = sessionStorage.getItem(key);
-        if (value !== null) {
-          try {
-            return JSON.parse(value);
-          } catch {
-            return value;
-          }
-        }
-      } else if (storage === 'localStorage') {
-        const value = localStorage.getItem(key);
-        if (value !== null) {
-          try {
-            return JSON.parse(value);
-          } catch {
-            return value;
-          }
-        }
-      } else if (storage === 'dataBase') {
-        try {
-          const uuid = localStorage.getItem(STORAGE_KEYS.UUID);
-          if (!uuid) throw new Error('No UUID found for database fetch');
 
-          const response = await API.get(`${window.API_URL}?action=getRankingData`);
-          const rankingData = response;
-
-          const userData = rankingData.find(user => user.uuid === uuid);
-          if (!userData) throw new Error(`User with UUID ${uuid} not found in ranking data`);
-
-          const apiField = API_FIELD_MAP[key] || key;
-          if (userData[apiField] !== undefined) {
-            return userData[apiField];
-          }
-          return null;
-        } catch (error) {
-          console.error(`Error fetching database data for key ${key}:`, error);
-          return null;
-        }
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error(`Error retrieving data for key ${key}:`, error);
-    return null;
-  }
-}
-  
 const Modal = {
   open(id) {
     const modal = document.getElementById(id);
@@ -157,23 +107,31 @@ const Modal = {
 };
 
 async function saveModalState() {
-  const switches = await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  }
   const autoOpenSwitch = switches.find(s => s.switchId === '02');
 
   if (autoOpenSwitch && autoOpenSwitch.value) {
     const openModals = Array.from(document.querySelectorAll('.modal.show'))
       .map(modal => modal.id)
       .filter(id => id);
-    sessionStorage.setItem(STORAGE_KEYS.OPEN_MODALS, JSON.stringify(openModals));
+    await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, JSON.stringify(openModals));
   } else {
-    sessionStorage.removeItem(STORAGE_KEYS.OPEN_MODALS);
+    await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, null);
   }
 }
 
 async function updateGameContainers(filteredGames) {
   const containers = document.querySelectorAll('.game-container');
-  const lastPlayedGameId = await getData(['localStorage'], STORAGE_KEYS.LAST_PLAYED_GAME);
-  const switches = await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  const lastPlayedGameId = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME);
+  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  }
   const lastPlayedSwitch = switches.find(s => s.switchId === '06');
 
   const sortedGames = filteredGames.sort((a, b) => {
@@ -232,7 +190,7 @@ async function updateGameContainers(filteredGames) {
         gameBox.appendChild(statusEnd);
       }
 
-      const devSettings = getData(['localStorage'], STORAGE_KEYS.DEV_SETTINGS);
+      const devSettings = 'true';
       if (devSettings === 'true') {
         const devContent = document.createElement('div');
         devContent.classList.add('DEVgame-content');
@@ -248,9 +206,9 @@ async function updateGameContainers(filteredGames) {
       link.href = game.link;
       link.textContent = 'Zagraj';
       link.classList.add('game-link');
-      link.addEventListener('click', () => {
+      link.addEventListener('click', async () => {
         addPlayedGamesToStorage(game.id);
-        localStorage.setItem(STORAGE_KEYS.LAST_PLAYED_GAME, game.id);
+        await window.userData.setData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME, game.id);
       });
       link.target = '_blank';
 
@@ -299,13 +257,14 @@ document.getElementById('searchInput')?.addEventListener('keyup', async () => {
   let filteredGames = games.filter(game => game.name.toUpperCase().includes(filter));
   
   // Filter out premium games for non-premium users
+  const perunPremium = await window.userData.getData('gameverse', 'premium');
   if (!perunPremium) {
     filteredGames = filteredGames.filter(game => !game.premium);
   }
   
   await updateGameContainers(filteredGames);
 });
-  
+
 window.addEventListener('click', event => {
   const dropdown = document.getElementById('dropdownFiltres');
   if (
@@ -318,7 +277,7 @@ window.addEventListener('click', event => {
     }
   }
 });
-  
+
 async function filterSelection(category) {
   const filteredGames = category === 'all' ? games : games.filter(game => game.classes.includes(category));
   await updateGameContainers(filteredGames);
@@ -341,11 +300,15 @@ window.addEventListener('scroll', progressBar);
 
 // Restore Modal State
 async function restoreModalState() {
-  const switches = await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  }
   const autoOpenSwitch = switches.find(s => s.switchId === '02');
 
   if (autoOpenSwitch && autoOpenSwitch.value) {
-    const openModals = await getData(['sessionStorage'], STORAGE_KEYS.OPEN_MODALS) || [];
+    const openModals = await window.userData.getData('gameverse', STORAGE_KEYS.OPEN_MODALS) || [];
     openModals.forEach(modalId => {
       const modalElement = document.getElementById(modalId);
       if (modalElement && !modalElement.classList.contains('show')) {
@@ -373,17 +336,18 @@ document.addEventListener('click', event => {
 });
 
 // User Initialization
-function initializeUser() {
-  if (!getAppData('gameverse', 'opened')||getAppData('gameverse', 'opened')==false) {
-    document.getElementById('welcomeModal').style.display="block";
+async function initializeUser() {
+  const opened = await window.userData.getData('gameverse', 'opened');
+  if ((!opened || opened === false) && sessionStorage.getItem("authToken") != "test") {
+    document.getElementById('welcomeModal').style.display = 'block';
     loadFireworksStyles();
   } else {
-    document.getElementById('welcomeModal').style.display="none";
+    document.getElementById('welcomeModal').style.display = 'none';
   }
   document.getElementById('saveUsernameBtn')?.addEventListener('click', async () => {
-      document.getElementById('fireworksStyles')?.remove();
-      document.getElementById('welcomeModal').style.display="none";
-      setAppData('gameverse', 'opened', true)
+    document.getElementById('fireworksStyles')?.remove();
+    document.getElementById('welcomeModal').style.display = 'none';
+    await window.userData.setData('gameverse', 'opened', true);
   });
 }
 
@@ -413,118 +377,129 @@ const timer = setInterval(() => {
     document.getElementById('demo').textContent = 'Kliknij CTRL i przycisk odświeżenia strony, aby wymusić odświeżenie';
   }
 }, 1000);
-  
-  // Slideshow
-  let slideIndex = 0;
-  function showSlides(n) {
-    const slides = document.querySelectorAll('.slides');
-    const dots = document.querySelectorAll('.dot');
-  
-    if (n >= slides.length) slideIndex = 0;
-    if (n < 0) slideIndex = slides.length - 1;
-  
-    slides.forEach(slide => (slide.style.display = 'none'));
-    dots.forEach(dot => dot.classList.remove('active'));
-  
-    slides[slideIndex].style.display = 'block';
-    dots[slideIndex].classList.add('active');
-  }
-  
-  function changeSlide(n) {
-    showSlides((slideIndex += n));
-  }
-  
-  function currentSlide(n) {
-    showSlides((slideIndex = n - 1));
-  }
-  
-  let autoSlide = setInterval(() => changeSlide(1), 3000);
-  
-  function resetAutoSlide() {
-    clearInterval(autoSlide);
-    autoSlide = setInterval(() => changeSlide(1), 3000);
-  }
-  
-  document.querySelector('.prev')?.addEventListener('click', () => {
-    changeSlide(-1);
-    resetAutoSlide();
-  });
-  
-  document.querySelector('.next')?.addEventListener('click', () => {
-    changeSlide(1);
-    resetAutoSlide();
-  });
-  
-  document.querySelectorAll('.dot').forEach((dot, index) => {
-    dot.addEventListener('click', () => {
-      currentSlide(index + 1);
-      resetAutoSlide();
-    });
-  });
-  
-  document.querySelectorAll('.slides').forEach(slide => {
-    slide.addEventListener('mouseover', () => clearInterval(autoSlide));
-    slide.addEventListener('mouseleave', () => {
-      autoSlide = setInterval(() => changeSlide(1), 2000);
-    });
-  });
-  
-  // Loader
- async function initializeLoader() {
-    const loader = document.getElementById('loader');
-    const tipElement = document.getElementById('loading-tip'); // Updated ID // Fetch tips from JSON file
-    async function fetchTips() {
-        try {
-            const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/tips.json'); // Updated file name
-            const data = await response.json();
-            return data.tips || []; // Updated key
-        } catch (error) {
-            console.error('Error fetching tips:', error);
-            return ['Loading...']; // Fallback tip
-        }
-    }
-    // Select a random tip
-    function getRandomTip(tips) {
-        if (!tips.length) return 'Loading...';
-        const randomIndex = Math.floor(Math.random() * tips.length);
-        return tips[randomIndex];
-    }
-    const hasLoaded = await getData(['sessionStorage'], STORAGE_KEYS.HAS_LOADED);
-    if (hasLoaded) {
-        loader.classList.add('hidden');
-    } else {
-        // Fetch and display random tip
-        const tips = await fetchTips();
-        const randomTip = getRandomTip(tips);
-        tipElement.textContent = randomTip;
-        setTimeout(() => {
-            loader.classList.add('hidden');
-            sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
-        }, 7000);
-    }
-}
-  
-  // Player Data Updates
-function updatePlayerBadges() {
-  // Check verification status (convert string to boolean if necessary)
-  const isVerified = getSheetData('isVerified')===true||getSheetData('isVerified')==='true';
-  const isPremium = getSheetData('isPremium')===true||getSheetData('isPremium')==='true';
 
-  // Build the HTML with badges
-  let badges = '';
-  if (isVerified) {
+// Slideshow
+let slideIndex = 0;
+function showSlides(n) {
+  const slides = document.querySelectorAll('.slides');
+  const dots = document.querySelectorAll('.dot');
+
+  if (n >= slides.length) slideIndex = 0;
+  if (n < 0) slideIndex = slides.length - 1;
+
+  slides.forEach(slide => (slide.style.display = 'none'));
+  dots.forEach(dot => dot.classList.remove('active'));
+
+  slides[slideIndex].style.display = 'block';
+  dots[slideIndex].classList.add('active');
+}
+
+function changeSlide(n) {
+  showSlides((slideIndex += n));
+}
+
+function currentSlide(n) {
+  showSlides((slideIndex = n - 1));
+}
+
+let autoSlide = setInterval(() => changeSlide(1), 3000);
+
+function resetAutoSlide() {
+  clearInterval(autoSlide);
+  autoSlide = setInterval(() => changeSlide(1), 3000);
+}
+
+document.querySelector('.prev')?.addEventListener('click', () => {
+  changeSlide(-1);
+  resetAutoSlide();
+});
+
+document.querySelector('.next')?.addEventListener('click', () => {
+  changeSlide(1);
+  resetAutoSlide();
+});
+
+document.querySelectorAll('.dot').forEach((dot, index) => {
+  dot.addEventListener('click', () => {
+    currentSlide(index + 1);
+    resetAutoSlide();
+  });
+});
+
+document.querySelectorAll('.slides').forEach(slide => {
+  slide.addEventListener('mouseover', () => clearInterval(autoSlide));
+  slide.addEventListener('mouseleave', () => {
+    autoSlide = setInterval(() => changeSlide(1), 2000);
+  });
+});
+
+// Loader
+async function initializeLoader() {
+  const loader = document.getElementById('loader');
+  const tipElement = document.getElementById('loading-tip');
+  async function fetchTips() {
+    try {
+      const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/tips.json');
+      const data = await response.json();
+      return data.tips || [];
+    } catch (error) {
+      console.error('Error fetching tips:', error);
+      return ['Loading...'];
+    }
+  }
+  function getRandomTip(tips) {
+    if (!tips.length) return 'Loading...';
+    const randomIndex = Math.floor(Math.random() * tips.length);
+    return tips[randomIndex];
+  }
+  const hasLoaded = await window.userData.getData('gameverse', STORAGE_KEYS.HAS_LOADED);
+  if (hasLoaded) {
+    loader.classList.add('hidden');
+  } else {
+    const tips = await fetchTips();
+    const randomTip = getRandomTip(tips);
+    tipElement.textContent = randomTip;
+    setTimeout(async () => {
+      loader.classList.add('hidden');
+      await window.userData.setData('gameverse', STORAGE_KEYS.HAS_LOADED, 'true');
+    }, 7000);
+  }
+}
+
+// Player Data Updates
+async function updatePlayerBadges() {
+  try {
+    const isVerified = await window.userData.getData('gameverse', 'isVerified');
+    const isPremium = await window.userData.getData('gameverse', 'isPremium');
+
+    const verified = isVerified === true || isVerified === 'true';
+    const premium = isPremium === true || isPremium === 'true';
+
+    let badges = '';
+    if (verified) {
       badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-  }
-  if (isPremium) {
+    }
+    if (premium) {
       badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-  }
+    }
 
-  // Update the element
-  document.getElementById('playerBadges').innerHTML = `${badges}`;
+    const badgesElement = document.getElementById('playerBadges');
+    if (badgesElement) {
+      badgesElement.innerHTML = badges || '???';
+    } else {
+      console.warn('Element #playerBadges not found');
+    }
+  } catch (error) {
+    console.error('Error updating badges:', error);
+    const badgesElement = document.getElementById('playerBadges');
+    if (badgesElement) {
+      badgesElement.innerHTML = '???';
+    }
+  }
 }
-  
+
 async function updatePlayerPLN() {
-  const pln = await getData(['localStorage'], STORAGE_KEYS.PLN);
+  const pln = await window.userData.getData('gameverse', STORAGE_KEYS.PLN);
   const dynamicTextElement = document.getElementById('playerPLN');
   if (dynamicTextElement) {
     dynamicTextElement.textContent = pln && !isNaN(pln) ? `${parseFloat(pln).toFixed(2)} zł` : '0.00 zł';
@@ -532,7 +507,7 @@ async function updatePlayerPLN() {
 }
 
 async function updatePlayerRank() {
-  const rank = await getData(['localStorage'], STORAGE_KEYS.RANK);
+  const rank = await window.userData.getData('gameverse', STORAGE_KEYS.RANK);
   const dynamicTextElement = document.getElementById('playerRank');
   if (dynamicTextElement) {
     dynamicTextElement.innerHTML = rank && !isNaN(rank) ? `${parseInt(rank)} <i class="fas fa-star"></i>` : '0 <i class="fas fa-star"></i>';
@@ -546,8 +521,8 @@ window.addEventListener('storage', async event => {
 });
 
 // Theme Management
-function changeTheme(theme) {
-  localStorage.setItem(STORAGE_KEYS.THEME, theme);
+async function changeTheme(theme) {
+  await window.userData.setData('gameverse', STORAGE_KEYS.THEME, theme);
   document.body.setAttribute('data-theme', theme);
   document.getElementById('themeSelect').value = theme;
 }
@@ -618,15 +593,15 @@ async function getAIResponse() {
 
 // Username Change
 async function isUsernameDemoTimeExpired() {
-  const lastChange = await getData(['localStorage'], STORAGE_KEYS.LAST_CHANGE_TIME);
+  const lastChange = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME);
   const now = Date.now();
   const lockTime = 24 * 60 * 60 * 1000;
   return !lastChange || now > parseInt(lastChange) + lockTime;
 }
-  
+
 async function handleUsernameChange() {
   const input = document.getElementById('usernameSettingsInput');
-  const lastChange = await getData(['localStorage'], STORAGE_KEYS.LAST_CHANGE_TIME);
+  const lastChange = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME);
   const now = Date.now();
   const lockTime = 24 * 60 * 60 * 1000;
 
@@ -642,8 +617,8 @@ async function handleUsernameChange() {
     const userCode = prompt(`Aby potwierdzić, wpisz kod: ${randomCode}`);
 
     if (userCode === randomCode) {
-      localStorage.setItem(STORAGE_KEYS.USERNAME, input.value);
-      localStorage.setItem(STORAGE_KEYS.LAST_CHANGE_TIME, now.toString());
+      await window.userData.setData('gameverse', STORAGE_KEYS.USERNAME, input.value);
+      await window.userData.setData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME, now.toString());
       alert('Nazwa użytkownika została zmieniona.');
       document.getElementById('usernameChangeButton').disabled = true;
       document.getElementById('usernameChangeButton').textContent = 'Zmiana nazwy zablokowana na 24h';
@@ -654,7 +629,7 @@ async function handleUsernameChange() {
     }
   }
 }
-  
+
 function startCountdown(remainingTime) {
   const countdownDisplay = document.getElementById('usernameDemoContainer');
   countdownDisplay.style.display = 'block';
@@ -679,46 +654,29 @@ function startCountdown(remainingTime) {
   const countdownInterval = setInterval(updateCountdown, 1000);
 }
 
-async function initializeUsernameChange() {
-  const input = document.getElementById('usernameSettingsInput');
-  input.value = (await getData(['localStorage'], STORAGE_KEYS.USERNAME)) || '';
-  const lastChange = await getData(['localStorage'], STORAGE_KEYS.LAST_CHANGE_TIME);
-  const now = Date.now();
-  const lockTime = 24 * 60 * 60 * 1000;
-
-  if (lastChange && now - parseInt(lastChange) < lockTime) {
-    document.getElementById('usernameChangeButton').disabled = true;
-    document.getElementById('usernameChangeButton').textContent = 'Zmiana nazwy zablokowana na 24h';
-    startCountdown(lockTime - (now - parseInt(lastChange)));
-  }
-
-  if (!(await isUsernameDemoTimeExpired())) {
-    document.getElementById('sendButton').disabled = true;
-    document.getElementById('sendButton').textContent = 'Zablokowane';
-    document.getElementById('chatMessage').disabled = true;
-  }
-}
-  
 async function initializeSwitches() {
-  let switches = await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES);
+  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
   
-  // Ensure switches is an array, fallback to window.settingSwitches if invalid
   if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    switches = window.settingSwitches || [];
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
   document.querySelectorAll('input[type="checkbox"][switchId]').forEach(checkbox => {
-      const switchId = checkbox.getAttribute('switchId');
-      const switchData = switches.find(s => s.switchId === switchId);
-      if (switchData) {
-          checkbox.checked = switchData.value;
-          checkbox.addEventListener('change', () => toggleSwitch(switchId));
-      }
+    const switchId = checkbox.getAttribute('switchId');
+    const switchData = switches.find(s => s.switchId === switchId);
+    if (switchData) {
+      checkbox.checked = switchData.value;
+      checkbox.addEventListener('change', () => toggleSwitch(switchId));
+    }
   });
 }
-  
+
 async function toggleSwitch(switchId) {
-  let switches = await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES);
+  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  }
   const switchIndex = switches.findIndex(s => s.switchId === switchId);
 
   notification('Zmiana ustawień wymaga odświeżenia strony', 'reload', {
@@ -727,33 +685,33 @@ async function toggleSwitch(switchId) {
 
   if (switchIndex !== -1) {
     switches[switchIndex].value = !switches[switchIndex].value;
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
 
     if (switchId === '01') {
-      localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
+      await window.userData.setData('gameverse', STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
     }
     if (switchId === '02' && !switches[switchIndex].value) {
-      sessionStorage.removeItem(STORAGE_KEYS.OPEN_MODALS);
+      await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, null);
     }
   }
 }
 
-function resetSwitches() {
-  localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(window.settingSwitches));
-  localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, 'false');
+async function resetSwitches() {
+  await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(window.settingSwitches));
+  await window.userData.setData('gameverse', STORAGE_KEYS.DEV_SETTINGS, 'false');
 }
 
 // Font Size Slider
-function initializeFontSizeSlider() {
+async function initializeFontSizeSlider() {
   const slider = document.getElementById('chatFontSizeSlider');
-  const savedFontSize = localStorage.getItem(STORAGE_KEYS.CHAT_FONT_SIZE) || '16';
+  const savedFontSize = await window.userData.getData('gameverse', STORAGE_KEYS.CHAT_FONT_SIZE) || '16';
   slider.value = savedFontSize;
   document.documentElement.style.setProperty('--chatMessageFontSize', `${savedFontSize}px`);
 
-  slider.addEventListener('input', () => {
+  slider.addEventListener('input', async () => {
     const newSize = slider.value;
     document.documentElement.style.setProperty('--chatMessageFontSize', `${newSize}px`);
-    localStorage.setItem(STORAGE_KEYS.CHAT_FONT_SIZE, newSize);
+    await window.userData.setData('gameverse', STORAGE_KEYS.CHAT_FONT_SIZE, newSize);
   });
 }
 
@@ -765,7 +723,7 @@ document.getElementById('ratingForm')?.addEventListener('submit', async e => {
 
   const rating = document.querySelector('input[name="rating"]:checked');
   const whattodo = document.getElementById('whattodoratingform').value;
-  const username = await getData(['localStorage'], STORAGE_KEYS.USERNAME);
+  const username = await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME);
 
   if (!username || !rating) {
     document.getElementById('ratingFormErrorMessage').style.display = 'block';
@@ -775,7 +733,7 @@ document.getElementById('ratingForm')?.addEventListener('submit', async e => {
 
   const formData = {
     action: 'addRating',
-    sessionId: (await getData(['localStorage'], STORAGE_KEYS.UUID)) || '',
+    sessionId: (await window.userData.getData('gameverse', STORAGE_KEYS.UUID)) || '',
     username,
     rating: rating.value,
     whattodo,
@@ -854,7 +812,7 @@ function scrollToSection(sectionId, gameContainerId) {
     Modal.close('navigationModal');
   }
 }
-  
+
 document.querySelectorAll('.game-container').forEach((container, index) => {
   container.id = `game-container-${index}`;
 });
@@ -874,18 +832,18 @@ async function updateRanking() {
     const tbody = document.getElementById('rankingBody');
     tbody.innerHTML = '';
     ranking.forEach(async (user, index) => {
-      if(user.rank!=0||user.points!=0||user.pln!=0||user.achievements!=0) {
-        if (user.uuid === (await getData(['localStorage'], STORAGE_KEYS.UUID))) {
-          sessionStorage.setItem('perunPremium', user.premium);
-          sessionStorage.setItem('perunVerified', user.verified);
+      if (user.rank != 0 || user.points != 0 || user.pln != 0 || user.achievements != 0) {
+        if (user.uuid === (await window.userData.getData('gameverse', STORAGE_KEYS.UUID))) {
+          await window.userData.setData('gameverse', 'perunPremium', user.premium);
+          await window.userData.setData('gameverse', 'perunVerified', user.verified);
         }
 
         let badges = '';
         if (user.verified) {
-            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
+          badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
         }
         if (user.premium) {
-            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
+          badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
         }
 
         const row = document.createElement('tr');
@@ -909,12 +867,12 @@ async function updateRanking() {
 async function sendLocalData() {
   const payload = {
     action: 'updateRankingFromLocal',
-    perunUUID: (await getData(['localStorage'], STORAGE_KEYS.UUID)) || '',
-    perunUsername: (await getData(['localStorage'], STORAGE_KEYS.USERNAME)) || 'Anonim',
-    perunPoints: (await getData(['localStorage'], STORAGE_KEYS.POINTS)) || '0',
-    perunRank: (await getData(['localStorage'], STORAGE_KEYS.RANK)) || '0',
-    perunPLN: (await getData(['localStorage'], STORAGE_KEYS.PLN)) || '0',
-    doneAchievements: ((await getData(['localStorage'], STORAGE_KEYS.COMPLETED_ACHIEVEMENTS)) || []).length,
+    perunUUID: (await window.userData.getData('gameverse', STORAGE_KEYS.UUID)) || '',
+    perunUsername: (await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME)) || 'Anonim',
+    perunPoints: (await window.userData.getData('gameverse', STORAGE_KEYS.POINTS)) || '0',
+    perunRank: (await window.userData.getData('gameverse', STORAGE_KEYS.RANK)) || '0',
+    perunPLN: (await window.userData.getData('gameverse', STORAGE_KEYS.PLN)) || '0',
+    doneAchievements: ((await window.userData.getData('gameverse', STORAGE_KEYS.COMPLETED_ACHIEVEMENTS)) || []).length,
     timestamp: new Date().toISOString()
   };
 
@@ -945,7 +903,7 @@ const pageBuilder = {
   },
 
   async loadPage() {
-    const savedPages = await getData(['localStorage'], this.storageKey);
+    const savedPages = await window.userData.getData('gameverse', this.storageKey);
     this.pages = Array.isArray(savedPages) && savedPages.length > 0 ? savedPages : [this.createEmptyPage()];
     this.loadCurrentData();
   },
@@ -1006,7 +964,7 @@ const pageBuilder = {
     }
   },
 
-  savePage() {
+  async savePage() {
     let page;
     if (this.currentSlide === 5) {
       const fullCode = document.getElementById('pageBuilderFullCode')?.value || '';
@@ -1023,10 +981,10 @@ const pageBuilder = {
     }
 
     this.pages[0] = page;
-    localStorage.setItem(this.storageKey, JSON.stringify(this.pages));
+    await window.userData.setData('gameverse', this.storageKey, JSON.stringify(this.pages));
     this.lastSaveTime = new Date();
     this.updateStatus();
-    this.loadCurrentData(); // Sync all fields
+    this.loadCurrentData();
   },
 
   addInputListeners() {
@@ -1066,14 +1024,14 @@ function pageBuilderShowSlide(slideNum) {
 
 function pageBuilderNextSlide() {
   if (pageBuilder.currentSlide < pageBuilder.totalSlides) {
-    pageBuilder.savePage(); // Save before switching
+    pageBuilder.savePage();
     pageBuilderShowSlide(pageBuilder.currentSlide + 1);
   }
 }
 
 function pageBuilderPrevSlide() {
   if (pageBuilder.currentSlide > 1) {
-    pageBuilder.savePage(); // Save before switching
+    pageBuilder.savePage();
     pageBuilderShowSlide(pageBuilder.currentSlide - 1);
   }
 }
@@ -1119,7 +1077,7 @@ function pageBuilderClear() {
   }
 }
 
-// Notifications (Placeholder)
+// Notifications
 function notification(message, type, options = {}) {
   console.log(`Notification: ${message}, Type: ${type}`, options);
 }
@@ -1135,6 +1093,12 @@ function copyToClipboard(text) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+  if(!await window.userData.getData('gameverse', STORAGE_KEYS.THEME)) {
+    await window.userData.setData('gameverse', STORAGE_KEYS.THEME,'dark');
+  }
+  savedTheme = await window.userData.getData('gameverse', STORAGE_KEYS.THEME);
+  changeTheme(savedTheme);
+
   const parallaxElement = document.querySelector('#parallaxEnd');
   const currentScrollY = window.scrollY;
   const elementHeight = parallaxElement?.offsetHeight || 0;
@@ -1147,7 +1111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initializeLoader();
   await initializeSwitches();
   await initializeFontSizeSlider();
-  await initializeUsernameChange();
   await restoreModalState();
   await updatePlayerPLN();
   await updatePlayerRank();
@@ -1157,182 +1120,155 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(updateRanking, 5000);
   setInterval(sendLocalData, 5000);
 
-  const developerSwitch = ((await getData(['localStorage'], STORAGE_KEYS.SETTING_SWITCHES)) || window.settingSwitches).find(
+  const developerSwitch = ((await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES)) || window.settingSwitches).find(
     s => s.switchId === '01'
   );
   document.getElementById('consoleButton').style.display = developerSwitch && developerSwitch.value ? 'block' : 'none';
 
   await pageBuilder.init();
 });
+
 let isScrolling = false;
 let lastScrollY = 0;
 const threshold = 1;
 const element = document.querySelector('#parallaxEnd');
 
 function getElementPosition() {
-    const rect = element.getBoundingClientRect();
-    return rect.top + window.scrollY - 150;
+  const rect = element.getBoundingClientRect();
+  return rect.top + window.scrollY - 150;
 }
 
 function smoothScrollTo(target) {
-    isScrolling = true;
-    window.scrollTo({
-        top: target,
-        behavior: 'smooth',
-    });
+  isScrolling = true;
+  window.scrollTo({
+    top: target,
+    behavior: 'smooth',
+  });
 
-    setTimeout(() => {
-        isScrolling = false;
-    }, 100);
+  setTimeout(() => {
+    isScrolling = false;
+  }, 100);
 }
 
 window.addEventListener('scroll', function () {
-    const currentScrollY = window.scrollY;
-    const elementHeight = element.offsetHeight;
+  const currentScrollY = window.scrollY;
+  const elementHeight = element.offsetHeight;
 
-    if (currentScrollY >= 0 && currentScrollY <= (getElementPosition() + elementHeight)) {
-        if (Math.abs(currentScrollY - lastScrollY) < threshold) {
-            return;
-        }
-
-        if (!isScrolling && currentScrollY > lastScrollY) {
-            smoothScrollTo(getElementPosition());
-            var header = document.querySelector('header');
-            header.classList.add('scrolled');
-            document.getElementById('sidenav').classList.add('scrolled');
-        }
-
-        if (!isScrolling && currentScrollY < lastScrollY && currentScrollY > 0) {
-            smoothScrollTo(0);
-            var header = document.querySelector('header');
-            header.classList.remove('scrolled');
-            document.getElementById('sidenav').classList.remove('scrolled');
-        }
-        lastScrollY = currentScrollY;
+  if (currentScrollY >= 0 && currentScrollY <= (getElementPosition() + elementHeight)) {
+    if (Math.abs(currentScrollY - lastScrollY) < threshold) {
+      return;
     }
+
+    if (!isScrolling && currentScrollY > lastScrollY) {
+      smoothScrollTo(getElementPosition());
+      var header = document.querySelector('header');
+      header.classList.add('scrolled');
+      document.getElementById('sidenav').classList.add('scrolled');
+    }
+
+    if (!isScrolling && currentScrollY < lastScrollY && currentScrollY > 0) {
+      smoothScrollTo(0);
+      var header = document.querySelector('header');
+      header.classList.remove('scrolled');
+      document.getElementById('sidenav').classList.remove('scrolled');
+    }
+    lastScrollY = currentScrollY;
+  }
 });
+
 document.addEventListener('DOMContentLoaded', function () {
-  const parallax = document.getElementById("parallax");
+  const parallax = document.getElementById('parallax');
   if (parallax) {
-      parallax.style.height = `${window.innerWidth * 0.34 + 75}px`;
+    parallax.style.height = `${window.innerWidth * 0.34 + 75}px`;
   }
   updatePlayerBadges();
 });
-document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem("gameVote1")) {
-    document.getElementById("sendVoteButton").disabled = true;
-    document.getElementById("sendVoteButton").setAttribute('aria-busy', 'false');
-  }
-  const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
-  changeTheme(savedTheme);
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // if (localStorage.getItem('gameVote1')) {
+  //   document.getElementById('sendVoteButton').disabled = true;
+  //   document.getElementById('sendVoteButton').setAttribute('aria-busy', 'false');
+  // }
 });
 
-async function sendGameVote() {
-  const button = document.querySelector('#sendVoteButton');
-  if (button) {
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
+// async function sendGameVote() {
+//   const button = document.querySelector('#sendVoteButton');
+//   if (button) {
+//     button.disabled = true;
+//     button.setAttribute('aria-busy', 'true');
+//   }
+
+//   const votedGameId = await window.userData.getData('gameverse', 'votedGame');
+//   if (!votedGameId) {
+//     alert('Nie wybrano gry do głosowania.');
+//     if (button) {
+//       button.disabled = false;
+//       button.setAttribute('aria-busy', 'false');
+//     }
+//     return;
+//   }
+//   if (await window.userData.getData('gameverse', 'gameVote1')) {
+//     alert('Już zagłosowano.');
+//     if (button) {
+//       button.disabled = false;
+//       button.setAttribute('aria-busy', 'false');
+//     }
+//     return;
+//   }
+
+//   let parsedGameId;
+//   try {
+//     parsedGameId = JSON.parse(votedGameId);
+//     if (parsedGameId === '999') {
+//       alert('Nie można głosować na tę grę.');
+//       if (button) {
+//         button.disabled = false;
+//         button.setAttribute('aria-busy', 'false');
+//       }
+//       return;
+//     }
+//   } catch {
+//     alert('Nieprawidłowy identyfikator gry.');
+//     if (button) {
+//       button.disabled = false;
+//       button.setAttribute('aria-busy', 'false');
+//     }
+//     return;
+//   }
+
+//   const username = await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME) || 'anonymous';
+//   const sessionId = await window.userData.getData('gameverse', STORAGE_KEYS.UUID) || '';
+
+//   const formData = {
+//     action: 'addRating',
+//     sessionId,
+//     username,
+//     rating: '',
+//     whattodo: `vote:${parsedGameId}`,
+//     timestamp: new Date().toISOString()
+//   };
+
+//   try {
+//     await API.post(window.API_URL, formData);
+//     await window.userData.setData('gameverse', 'gameVote1', await window.userData.getData('gameverse', 'votedGame'));
+//     notification('Wysłano głos!', 'success', {
+//       duration: 3000,
+//       title: 'Operacja zakończona',
+//       sound: false
+//     });
+//   } catch {
+//     alert('Wystąpił błąd podczas wysyłania głosu. Spróbuj ponownie później.');
+//   } finally {
+//     if (button) {
+//       button.disabled = true;
+//       button.setAttribute('aria-busy', 'false');
+//     }
+//   }
+// }
+
+async function checkLoadedGameverse() {
+  const opened = await window.userData.getData('gameverse', 'opened');
+  if (!opened) {
+    await window.userData.setData('gameverse', 'opened', new Date().toString());
   }
-
-  const votedGameId = localStorage.getItem("votedGame");
-  if (!votedGameId) {
-    alert('Nie wybrano gry do głosowania.');
-    if (button) {
-      button.disabled = false;
-      button.setAttribute('aria-busy', 'false');
-    }
-    return;
-  }
-  if (localStorage.getItem("gameVote1")) {
-    alert('Już zagłosowano.');
-    if (button) {
-      button.disabled = false;
-      button.setAttribute('aria-busy', 'false');
-    }
-    return;
-  }
-
-  let parsedGameId;
-  try {
-    parsedGameId = JSON.parse(votedGameId);
-    if (parsedGameId === "999") {
-      alert('Nie można głosować na tę grę.');
-      if (button) {
-        button.disabled = false;
-        button.setAttribute('aria-busy', 'false');
-      }
-      return;
-    }
-  } catch {
-    alert('Nieprawidłowy identyfikator gry.');
-    if (button) {
-      button.disabled = false;
-      button.setAttribute('aria-busy', 'false');
-    }
-    return;
-  }
-
-  const username = await getData(['localStorage'], STORAGE_KEYS.USERNAME) || 'anonymous';
-  const sessionId = await getData(['localStorage'], STORAGE_KEYS.UUID) || '';
-
-  const formData = {
-    action: 'addRating',
-    sessionId,
-    username,
-    rating: "",
-    whattodo: `vote:${parsedGameId}`,
-    timestamp: new Date().toISOString()
-  };
-
-  try {
-    await API.post(window.API_URL, formData);
-    localStorage.setItem("gameVote1",localStorage.getItem("votedGame"))
-    notification("Wysłano głos!", "success", {
-      duration: 3000,
-      title: "Operacja zakończona",
-      sound: false
-    });
-  } catch {
-    alert('Wystąpił błąd podczas wysyłania głosu. Spróbuj ponownie później.');
-  } finally {
-    if (button) {
-      button.disabled = true;
-      button.setAttribute('aria-busy', 'false');
-    }
-  }
-}
-
-async function updatePlayerBadges() {
-    try {
-        // Czekaj na wyniki asynchroniczne
-        const isVerified = await getSheetData('isVerified');
-        const isPremium = await getSheetData('isPremium');
-
-        // Konwertuj wartości na boolean
-        const verified = isVerified === true || isVerified === 'true';
-        const premium = isPremium === true || isPremium === 'true';
-
-        // Buduj HTML z odznakami
-        let badges = '';
-        if (verified) {
-            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-        }
-        if (premium) {
-            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-        }
-
-        // Aktualizuj element, jeśli istnieje
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = badges || '???';
-        } else {
-            console.warn('Element #playerBadges nie istnieje');
-        }
-    } catch (error) {
-        console.error('Błąd podczas aktualizacji odznak:', error);
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = '???';
-        }
-    }
 }

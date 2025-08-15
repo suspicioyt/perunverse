@@ -1,6 +1,29 @@
 {
   "tabsData": [
     {
+      "name": "🪴 Garden Update",
+      "version": "1.2.1.0",
+      "date": "27.07.2025r.",
+      "quote": "Grow a Garden",
+      "backgroundImage": "https://i.pinimg.com/736x/c6/d2/11/c6d211d6f9b3724a215f59b863ea2e9f.jpg",
+      "paragraphs": [
+        {
+          "title": "Gry",
+          "content": [
+            "🔥 Automat nową HOT grą (niedługo dostanie aktualizację)",
+            "🪴 Dodano grę Grow a Garden"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "🗳️ Zakończono głosowanie na nową HOT grę",
+            "🎨 Połączono Ustawienia i Personalizację"
+          ]
+        }
+      ]
+    },
+    {
       "name": "🗳️ Vote Update part 2",
       "version": "1.2.0.3",
       "date": "18.07.2025r.",

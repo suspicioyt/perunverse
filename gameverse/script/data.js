@@ -1,299 +1,225 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsblqpKQJ4Y6kXHq2TIwSlz_--i84IKjCCthyaS7IkVeVUijsMywdaCi1snnrz4ESu/exec';
-const SYNC_INTERVAL = 5000; // Zwiększono do 10 sekund
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
+const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
+const TEST_DATA_URL = 'https://suspicioyt.github.io/perunverse/gameverse/data/testData.json';
 
-let userDataCache = null;
-let gamesCache = null;
-let isSyncing = false;
+async function initializeUserData() {
+  console.log('initializeUserData: Starting...', { url: window.location.href });
 
-async function loadUserData() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        console.error('Brak tokena uwierzytelnienia w localStorage');
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        return false;
-    }
-
+  // Non-production environment (test mode)
+  if (!window.location.href.startsWith('https://suspicioyt.github.io/')) {
+    console.log('initializeUserData: Running in non-production environment');
     try {
-        console.log('Wysyłanie żądania weryfikacji z tokenem:', token);
-        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            console.error(`Błąd HTTP: ${response.status} ${response.statusText}`);
-            userDataCache = null;
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-            return false;
-        }
-        const data = await response.json();
-        console.log('Odpowiedź z serwera:', data);
+      console.log('initializeUserData: Fetching test data from', TEST_DATA_URL);
+      const response = await fetch(TEST_DATA_URL);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      console.log('initializeUserData: Test data fetched:', data);
 
-        if (data.status === 'success') {
-            userDataCache = { ...data, token };
-            console.log('Dane użytkownika załadowane:', userDataCache);
-            return true;
-        } else {
-            console.error('Błąd weryfikacji tokena:', data.message);
-            userDataCache = null;
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-            return false;
-        }
+      // Save to sessionStorage with error handling
+      try {
+        sessionStorage.setItem('authToken', 'test');
+        sessionStorage.setItem('userData', JSON.stringify(data));
+        console.log('initializeUserData: sessionStorage updated', {
+          authToken: sessionStorage.getItem('authToken'),
+          userData: sessionStorage.getItem('userData'),
+        });
+      } catch (storageError) {
+        console.error('initializeUserData: Error writing to sessionStorage:', storageError);
+        return {};
+      }
+      return data;
     } catch (error) {
-        console.error('Błąd podczas pobierania danych użytkownika:', error);
-        userDataCache = null;
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        return false;
+      console.error('initializeUserData: Error fetching test data:', error);
+      return {};
     }
+  }
+
+  // Production environment
+  console.log('initializeUserData: Running in production environment');
+  const currentUrl = window.location.href;
+  const token = sessionStorage.getItem('authToken');
+  const userData = sessionStorage.getItem('userData');
+  console.log('initializeUserData: Current state', { token, userData });
+
+  // Skip if on login page
+  if (currentUrl.startsWith('https://suspicioyt.github.io/perunverse/account/index.html')) {
+    console.log('initializeUserData: On login page, skipping redirect');
+    return {};
+  }
+
+  // Return parsed userData if available
+  if (userData) {
+    try {
+      const parsedData = JSON.parse(userData);
+      console.log('initializeUserData: Returning parsed userData:', parsedData);
+      return parsedData;
+    } catch (error) {
+      console.error('initializeUserData: Error parsing userData:', error);
+      sessionStorage.removeItem('userData');
+    }
+  }
+
+  // Redirect to login if no token
+  if (!token) {
+    console.log('initializeUserData: No token, redirecting to login');
+    redirectToLogin(currentUrl);
+    return {};
+  }
+
+  // Verify token and fetch user data
+  try {
+    console.log('initializeUserData: Verifying token:', token);
+    const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+    });
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    const data = await response.json();
+    console.log('initializeUserData: Fetch response:', data);
+
+    if (data.status === 'success') {
+      const userData = data.appData || {};
+      sessionStorage.setItem('userData', JSON.stringify(userData));
+      console.log('initializeUserData: userData saved to sessionStorage:', userData);
+      return userData;
+    } else {
+      console.warn('initializeUserData: Invalid token, clearing sessionStorage');
+      clearSessionStorage();
+      redirectToLogin(currentUrl);
+      return {};
+    }
+  } catch (error) {
+    console.error('initializeUserData: Fetch error:', error);
+    clearSessionStorage();
+    redirectToLogin(currentUrl);
+    return {};
+  }
 }
 
-async function syncUserData() {
-    if (isSyncing) {
-        console.log('Synchronizacja w toku, pomijanie...');
-        return;
+async function saveUserDataToSheet() {
+  const token = sessionStorage.getItem('authToken');
+  const userData = sessionStorage.getItem('userData');
+  console.log('saveUserDataToSheet: Starting...', { token, userData });
+
+  if (!token || !userData) {
+    console.error('saveUserDataToSheet: Missing token or userData');
+    throw new Error('Missing token or userData in sessionStorage');
+  }
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'updateUserData',
+        token,
+        appData: userData,
+      }).toString(),
+      mode: 'cors',
+      credentials: 'omit',
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    const data = await response.json();
+    console.log('saveUserDataToSheet: Response:', data);
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Error saving user data');
     }
-    isSyncing = true;
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        console.log('Brak tokena, pomijanie synchronizacji');
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        isSyncing = false;
-        return;
-    }
 
-    try {
-        console.log('Synchronizacja - wysyłanie żądania z tokenem:', token);
-        const userResponse = await fetch(`${SCRIPT_URL}?action=verify&token=${token}`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        if (!userResponse.ok) {
-            console.error(`Błąd HTTP podczas synchronizacji użytkownika: ${userResponse.status} ${userResponse.statusText}`);
-            userDataCache = null;
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        } else {
-            const userData = await userResponse.json();
-            console.log('Synchronizacja - odpowiedź z serwera (użytkownik):', userData);
-            if (userData.status === 'success') {
-                userDataCache = { ...userData, token };
-                console.log('Dane użytkownika zsynchronizowane:', userDataCache);
-            } else {
-                console.error('Błąd weryfikacji tokena:', userData.message);
-                userDataCache = null;
-                window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-            }
-        }
-
-        const gamesData = await loadGamesData();
-        if (gamesData) {
-            console.log('Dane gier zsynchronizowane:', gamesData);
-        }
-
-        const elements = document.querySelectorAll('[data-app-id][data-key]');
-        elements.forEach(element => {
-            const appId = element.getAttribute('data-app-id');
-            const key = element.getAttribute('data-key');
-            insertData(element, appId, key);
-        });
-
-        await updatePlayerBadges();
-
-        if (typeof loadGames === 'function' && window.games) {
-            loadFavorites(window.games);
-            loadGames(window.games);
-        }
-    } catch (error) {
-        console.error('Błąd podczas synchronizacji danych:', error);
-        userDataCache = null;
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        await updatePlayerBadges();
-        if (typeof loadGames === 'function' && window.games) {
-            loadFavorites(window.games);
-            loadGames(window.games);
-        }
-    } finally {
-        isSyncing = false;
-    }
+    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+    console.log('saveUserDataToSheet: Data saved successfully');
+    return data;
+  } catch (error) {
+    console.error('saveUserDataToSheet: Error:', error);
+    throw error;
+  }
 }
 
-async function getSheetData(key) {
-    if (!userDataCache) {
-        const success = await loadUserData();
-        if (!success) return null;
-    }
-    if (userDataCache && userDataCache[key] !== undefined) {
-        return userDataCache[key];
-    }
-    console.error(`Klucz "${key}" nie istnieje w danych użytkownika`);
+function getData(section, key) {
+  const userData = sessionStorage.getItem('userData');
+  if (!userData) {
+    console.log('getData: No userData in sessionStorage');
     return null;
-}
+  }
 
-async function getAppData(appId, key) {
-    if (!userDataCache) {
-        const success = await loadUserData();
-        if (!success) return null;
-    }
-    if (userDataCache && userDataCache.appData && userDataCache.appData[appId]) {
-        const value = userDataCache.appData[appId][key] !== undefined ? userDataCache.appData[appId][key] : null;
-        console.log(`Pobrano ${appId}.${key} z bufora:`, value);
-        return value;
-    }
-    console.error(`Dane dla ${appId}.${key} nie istnieją`);
+  try {
+    const parsedData = JSON.parse(userData);
+    const value = parsedData[section]?.[key] ?? null;
+    console.log(`getData: section=${section}, key=${key}, value=`, value);
+    return value;
+  } catch (error) {
+    console.error('getData: Error parsing userData:', error);
     return null;
+  }
 }
 
-async function updateSheetData(key, value) {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        console.error('Brak tokena, nie można zapisać danych w arkuszu');
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        return;
-    }
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=update&key=${key}&token=${token}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(value)
-        });
-        if (!response.ok) {
-            console.error(`Błąd HTTP podczas aktualizacji ${key}: ${response.status} ${response.statusText}`);
-            return;
-        }
-        console.log(`Zaktualizowano ${key} w arkuszu`);
-        userDataCache = null; // Wymagaj ponownego załadowania danych
-    } catch (error) {
-        console.error(`Błąd aktualizacji ${key} w arkuszu:`, error);
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-    }
+async function setData(section, key, value) {
+  let parsedData = {};
+  const userData = sessionStorage.getItem('userData');
+
+  try {
+    parsedData = userData ? JSON.parse(userData) : {};
+  } catch (error) {
+    console.error('setData: Error parsing userData:', error);
+  }
+
+  parsedData[section] = parsedData[section] || {};
+  parsedData[section][key] = value;
+  try {
+    sessionStorage.setItem('userData', JSON.stringify(parsedData));
+    console.log('setData: Updated userData:', parsedData);
+  } catch (storageError) {
+    console.error('setData: Error writing to sessionStorage:', storageError);
+    throw storageError;
+  }
+
+  try {
+    await saveUserDataToSheet();
+    console.log('setData: Data saved to sheet');
+    return parsedData;
+  } catch (error) {
+    console.error('setData: Error saving data to sheet:', error);
+    throw error;
+  }
 }
 
-async function insertData(element, appId, key) {
-    try {
-        let value;
-        if (appId === 'sheet') {
-            value = await getSheetData(key);
-        } else {
-            value = await getAppData(appId, key);
-        }
-        element.innerHTML = value !== null && value !== undefined ? value : '???';
-        console.log(`Wstawiono ${value || '???'} do elementu dla ${appId}.${key}`);
-    } catch (error) {
-        console.error(`Błąd podczas wstawiania danych dla ${appId}.${key}:`, error);
-        element.innerHTML = '???';
-    }
+function insertData(element, appId, key) {
+  if (!element) {
+    console.error('insertData: Invalid element provided');
+    return;
+  }
+
+  const value = window.userData.getData(appId, key);
+  element.innerHTML = value !== null ? String(value) : '';
+  console.log(`insertData: Inserted value=${value} for appId=${appId}, key=${key}`);
 }
 
-async function updatePlayerBadges() {
-    try {
-        const isVerified = await getSheetData('isVerified');
-        const isPremium = await getSheetData('isPremium');
-
-        const verified = isVerified === true || isVerified === 'true';
-        const premium = isPremium === true || isPremium === 'true';
-
-        let badges = '';
-        if (verified) {
-            badges += '<i class="fas fa-check-circle verified-icon" title="Verified User"></i>';
-        }
-        if (premium) {
-            badges += '<i class="fas fa-crown premium-icon" title="Premium User"></i>';
-        }
-
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = badges || '???';
-        } else {
-            console.warn('Element #playerBadges nie istnieje');
-        }
-    } catch (error) {
-        console.error('Błąd podczas aktualizacji odznak:', error);
-        const badgesElement = document.getElementById('playerBadges');
-        if (badgesElement) {
-            badgesElement.innerHTML = '???';
-        }
-    }
+// Helper function to redirect to login page
+function redirectToLogin(currentUrl) {
+  if (!currentUrl.includes('/account/index.html')) {
+    const redirectUrl = encodeURIComponent(currentUrl);
+    const loginUrl = `${LOGIN_PAGE}${redirectUrl}`;
+    console.log('redirectToLogin: Redirecting to:', loginUrl);
+    window.location.href = loginUrl;
+  }
 }
 
-async function addData(token, appId, key, value) {
-    try {
-        const effectiveToken = token === 'current' ? localStorage.getItem('authToken') : token;
-        if (!effectiveToken) {
-            console.error('Brak tokena uwierzytelnienia');
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-            return { status: 'error', message: 'Brak tokena uwierzytelnienia' };
-        }
-
-        const response = await fetch(`${SCRIPT_URL}?action=verify_requestedUserData&token=${effectiveToken}`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        const userData = await response.json();
-
-        if (userData.status !== 'success') {
-            console.error('Błąd weryfikacji tokena:', userData.message);
-            window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-            return { status: 'error', message: userData.message };
-        }
-
-        if (appId === 'sheet') {
-            const columnMap = {
-                'username': 2,
-                'email': 3,
-                'birthYear': 5,
-                'isVerified': 6,
-                'isPremium': 7,
-                'token': 8
-            };
-            const columnIndex = columnMap[key];
-            if (!columnIndex) {
-                console.error(`Nieprawidłowy klucz dla appId='sheet': ${key}`);
-                return { status: 'error', message: `Nieprawidłowy klucz: ${key}` };
-            }
-
-            await updateSheetData(key, value);
-            userDataCache = { ...userData, [key]: value, token: effectiveToken };
-            return { status: 'success', message: `Zaktualizowano ${key} w arkuszu`, [key]: value };
-        } else {
-            let appData = userData.appData || {};
-            if (!appData[appId]) {
-                appData[appId] = {};
-            }
-            if (appData[appId][key] !== undefined && !Array.isArray(appData[appId][key])) {
-                console.error(`Klucz ${appId}.${key} istnieje i nie jest tablicą`);
-                return { status: 'error', message: `Klucz ${key} nie jest tablicą w ${appId}` };
-            }
-            if (!Array.isArray(appData[appId][key])) {
-                appData[appId][key] = [];
-            }
-            appData[appId][key].push(value);
-
-            const updateResponse = await fetch(`${SCRIPT_URL}?action=updateAppData&token=${effectiveToken}&appId=${appId}&data=${encodeURIComponent(JSON.stringify(appData[appId]))}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const updateResult = await updateResponse.json();
-
-            if (updateResult.status !== 'success') {
-                console.error('Błąd aktualizacji danych:', updateResult.message);
-                window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-                return { status: 'error', message: updateResult.message };
-            }
-
-            userDataCache = { ...userData, appData: updateResult.appData, token: effectiveToken };
-            return { status: 'success', message: `Dodano ${value} do ${appId}.${key}`, appData: updateResult.appData };
-        }
-    } catch (error) {
-        console.error('Błąd w addData:', error);
-        window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=' + encodeURIComponent(window.location.href);
-        return { status: 'error', message: 'Wystąpił błąd podczas dodawania danych' };
-    }
+// Helper function to clear session storage
+function clearSessionStorage() {
+  console.warn('clearSessionStorage: Clearing sessionStorage', {
+    authToken: sessionStorage.getItem('authToken'),
+    userData: sessionStorage.getItem('userData'),
+  });
+  sessionStorage.removeItem('authToken');
+  sessionStorage.removeItem('userData');
 }
 
-function logout() {
-    localStorage.removeItem('authToken');
-    userDataCache = null;
-    gamesCache = null;
-    window.games = null;
-    window.location.href = 'https://suspicioyt.github.io/perunverse/account/index.html';
-}
-
-setInterval(syncUserData, SYNC_INTERVAL);
+window.userData = {
+  initializeUserData,
+  saveUserDataToSheet,
+  getData,
+  setData,
+  insertData,
+};

@@ -114,9 +114,9 @@
       "id": "13",
       "name": "Bitcoin Miner",
       "link": "game/1/bitcoinminer.html",
-      "status": "HOT",
+      "status": "",
       "tooltip": "Klikaj i zdobywaj BitCoiny",
-      "classes": ["ukonczona", "money", "hot"],
+      "classes": ["ukonczona", "money"],
       "ulubione": false,
       "disabled":true
     },
@@ -199,9 +199,9 @@
       "id": "22",
       "name": "Automat",
       "link": "game/1/machine.html",
-      "status": "Beta",
+      "status": "HOT",
       "tooltip": "Wylosuj 3 takie same ikony",
-      "classes": ["beta", "money"],
+      "classes": ["beta", "money","hot"],
       "ulubione": false,
       "disabled":true
     },
@@ -256,7 +256,7 @@
       "id": "28",
       "name": "NBA 3K",
       "link": "game/1/nba3k.html",
-      "status": "Nowość",
+      "status": "Beta",
       "tooltip": "Symulator koszykówki",
       "classes": ["beta"],
       "ulubione": false
@@ -265,7 +265,7 @@
       "id": "29",
       "name": "Basketball Game",
       "link": "game/1/basketballgame.html",
-      "status": "Nowość",
+      "status": "Beta",
       "tooltip": "Rzucaj osobiste do kosza",
       "classes": ["beta"],
       "ulubione": false
@@ -276,7 +276,7 @@
       "link": "game/1/brainrotguesser.html",
       "status": "Chwilowo nie działa",
       "tooltip": "Zgaduj Italian Brainroty",
-      "classes": ["nowosc", "ukonczona"],
+      "classes": ["ukonczona"],
       "ulubione": false,
       "disabled":true
     },
@@ -284,9 +284,18 @@
       "id": "31",
       "name": "Saper",
       "link": "game/1/saper.html",
-      "status": "",
+      "status": "Konserwacje",
       "tooltip": "Znajdź wszystkie miny",
-      "classes": ["nowosc", "konserwacje"],
+      "classes": ["konserwacje"],
+      "ulubione": false
+    },
+    {
+      "id": "32",
+      "name": "Grow a Garden",
+      "link": "game/1/growagarden.html",
+      "status": "Beta",
+      "tooltip": "Znajdź wszystkie miny",
+      "classes": ["nowosc", "beta"],
       "ulubione": false
     },
     {
