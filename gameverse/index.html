@@ -38,18 +38,23 @@
     <div id="parallax"></div>
     <div id="parallaxEnd"></div>
     <main>
+        <div id="gameTooltipContainer">
+            <h3 id="gameTooltipTitle"></h3>
+            <div id="gameTooltipDescribe"></div>
+            <div id="gameTooltipBadges"></div>
+            [Kliknij w te okienko aby zamknąć]
+        </div>
         <div id="sidenav">
             <button onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></button>
             <button disabled onclick="Modal.open('achievementModal')" class="sidenavButton" title="Osiągnięcia"><i class="fa-solid fa-trophy"></i></button>
             <button onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></button>
             <button disabled onclick="Modal.open('chatModal');scrollToBottom()" class="sidenavButton" title="Chat"><i class="fa-solid fa-comments"></i></button>
             <button disabled onclick="Modal.open('rankingModal')" class="sidenavButton" title="Ranking"><i class="fa-solid fa-ranking-star"></i></button>
-            <button disabled onclick="Modal.open('aiModal')" class="sidenavButton" title="Perun AI"><i class="fa-solid fa-robot"></i></button>
             <button disabled onclick="Modal.open('challengesModal')" class="sidenavButton" title="Wyzwania"><i class="fa-solid fa-star"></i></button>
             <button disabled onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></button>
             <button onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></button>
             <button onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></button>
-          </div>
+        </div>
         <div id="mainwindow">
             <div class="search-filters-container borderColorChange">
                 <input disabled type="text" id="searchInput" placeholder="Szukaj">
@@ -242,10 +247,6 @@
     <div id="settingsModal" class="modal" style="overflow-y: auto;">
         <h1>Ustawienia</h1>
         <div class="modal-content">
-            <h2>Ustawienia</h2>
-            <label>Rozmiar czcionki wiadomości: </label>
-            <input type="range" id="chatFontSizeSlider" min="10" max="30" value="16"><button onclick='document.getElementById("chatFontSizeSlider").value=17;document.documentElement.style.setProperty("--chatMessageFontSize", `17px`);localStorage.setItem("chatMessageFontSize", 17)'>Reset</button>
-            <hr>
             <h2>Personalizacja</h2>
             <label>Motyw: </label>
             <select name="theme" id="themeSelect" onchange="changeTheme(this.value)">
@@ -256,8 +257,8 @@
             <h2>Eksperymenty</h2> <br>
             <label class="switch"><input type="checkbox" switchId="01"><span class="slider round"></span></label><label>Tryb developera</label><br>
             <label class="switch"><input type="checkbox" switchId="02"><span class="slider round"></span></label><label>Zapis modali</label><br>
-            <label class="switch"><input type="checkbox" switchId="03"><span class="slider round"></span></label><label>Ładowanie obrazów na Chacie</label><br>
-            <label class="switch"><input type="checkbox" switchId="04"><span class="slider round"></span></label><label>Ukrywanie zbanowanych słów na Chacie</label><br>
+            <label class="switch"><input disabled type="checkbox" switchId="03"><span class="slider round"></span></label><label>Ładowanie obrazów na Chacie</label><br>
+            <label class="switch"><input disabled type="checkbox" switchId="04"><span class="slider round"></span></label><label>Ukrywanie zbanowanych słów na Chacie</label><br>
             <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
             <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Powiadomienia</label><br>
             <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>Własna gra</label><br>
@@ -301,16 +302,6 @@
                     <span onclick="addEmoji('😢')">😢</span>
                     <span onclick="addEmoji('🔥')">🔥</span>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div id="aiModal" class="modal">
-        <h1>Perun AI</h1>
-        <div class="modal-content">
-              <div class="aiContainer">
-                <div class="chat-box" id="chatBox"></div>
-                <input type="text" id="userAiInput" placeholder="Zadaj pytanie..." />
-                <button onclick="getAIResponse()" style="border: none;">Wyślij</button>
             </div>
         </div>
     </div>
@@ -410,7 +401,7 @@
         <div class="siteLoadingSpinner"></div>
     </div>
     
-    <script src="script/data.js"></script>
+    <script src="../data/data.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             await window.userData.initializeUserData();
@@ -426,7 +417,7 @@
     <script src="script/achievements.js"></script>
     <script src="script/games.js"></script>
     <script src="script/changes.js"></script>
-    <script src="script/chat.js"></script>
+    <!-- <script src="script/chat.js"></script> -->
     <!-- <script src="script/console.js"></script> -->
     <script src="script/notifications.js"></script>
     <script src="script/script2.js"></script>

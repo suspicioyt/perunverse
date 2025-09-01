@@ -219,7 +219,7 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
         icons.push({
             html: '<i class="fas fa-sack-dollar"></i>',
             class: "game-status-money",
-            aria: "Game with in-game purchases"
+            aria: "Gra z pieniędzmi"
         });
     }
     if (game.classes.includes("internet") && game.internet) {
@@ -269,7 +269,7 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
     gameBox.appendChild(title);
 
     const link = document.createElement("a");
-    link.textContent = game.disabled === true ? "Niedostępne" : "Zagraj";
+    link.innerHTML = game.disabled === true ? "Niedostępne" : '<i class="fa-solid fa-play"></i>';
     link.classList.add("game-link");
     link.style.position = "relative";
     link.style.zIndex = "20";
@@ -294,19 +294,25 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
                     window.open(game.link, "_blank");
                 }
             });
+            link.addEventListener("contextmenu", e => {
+                e.preventDefault();
+                document.getElementById("gameTooltipTitle").innerHTML=game.name;
+                document.getElementById("gameTooltipDescribe").innerHTML=game.tooltip;
+                document.getElementById("gameTooltipContainer").classList.add("show");
+            });
             link.dataset.listenerAdded = "true";
         }
     }
 
-    if (game.tooltip) {
-        const tooltip = document.createElement("span");
-        tooltip.innerHTML = game.tooltip;
-        tooltip.classList.add("tooltiptext");
-        tooltip.id = `tooltip-${game.id}`;
-        tooltip.style.zIndex = "15";
-        link.setAttribute("aria-describedby", `tooltip-${game.id}`);
-        link.appendChild(tooltip);
-    }
+    // if (game.tooltip) {
+    //     const tooltip = document.createElement("span");
+    //     tooltip.innerHTML = game.tooltip;
+    //     tooltip.classList.add("tooltiptext");
+    //     tooltip.id = `tooltip-${game.id}`;
+    //     tooltip.style.zIndex = "15";
+    //     link.setAttribute("aria-describedby", `tooltip-${game.id}`);
+    //     link.appendChild(tooltip);
+    // }
     gameBox.appendChild(link);
 
     if (game.id !== "999") {
@@ -331,7 +337,7 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
         status.classList.add("voted-label");
         gameBox.appendChild(status);
     }
-
+    
     return gameBox;
 }
 

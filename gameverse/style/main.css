@@ -18,7 +18,7 @@
     --highlight-bg-color: rgba(0, 220, 7, 0.2);
     --shadow-color: rgba(30, 255, 0, 0.177);
     --border-color: #53f037;
-    --background-image: url('https://i.pinimg.com/736x/c6/d2/11/c6d211d6f9b3724a215f59b863ea2e9f.jpg');
+    --background-image: url('https://macniderart.org/wp-content/uploads/2023/10/Acrylic-Landscape-Painting.jpg');
     --parallax-image: url('../img/perun4.png');
 }
 
@@ -162,8 +162,8 @@ main {
     flex-wrap: wrap;
     gap: 20px;
     border-radius: var(--border-radius);
-    padding: 20px;
-    margin-bottom: 15px;
+    padding: 18px;
+    margin-bottom: 12px;
     position: relative;
     border: 2px solid var(--border-color);
     box-shadow: 0 4px 8px var(--shadow-color);
@@ -171,7 +171,7 @@ main {
 }
 
 .game-container:hover, .slideshow-container:hover {
-    box-shadow: 0 20px 35px var(--border-color);
+    box-shadow: 0 15px 25px var(--border-color);
 }
 
 .game-box {
@@ -181,7 +181,7 @@ main {
     border-radius: var(--border-radius);
     position: relative;
     background: var(--secondary-background-color);
-    box-shadow: 0 6px 16px var(--shadow-color);
+    box-shadow: 0 6px 12px var(--shadow-color);
 }
 
 .game-box.show {
@@ -205,7 +205,7 @@ main {
     margin-bottom: 10px;
 }
 
-button, .game-link {
+button {
     padding: 12px 24px;
     font-size: 18px;
     border: none;
@@ -221,7 +221,21 @@ button:hover {
     background: var(--button-hover-color);
     box-shadow: 0 8px 16px var(--button-hover-color);
 }
-
+.game-link {
+    padding: 12px 36px;
+    font-size: 18px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-decoration: none;
+    background: var(--button-color);
+    color: var(--secondary-text-color);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+.game-link:hover {
+    background: var(--button-hover-color);
+    box-shadow: 0 8px 16px var(--button-hover-color);
+}
 .game-short-link {
     padding: 4px 6px;
     font-size: 15px;
@@ -237,7 +251,6 @@ button:hover {
 .game-short-link:hover, .game-link:hover {
     background: var(--button-hover-color);
     box-shadow: 0 8px 16px var(--button-hover-color);
-    border: 3px solid var(--primary-background-color);
 }
 
 .game-label {
@@ -251,7 +264,41 @@ button:hover {
     z-index: 1;
     color: var(--secondary-text-color);
 }
-
+.gameTooltipButton {
+    position: absolute;
+    font-size: 20px;
+    border-radius: 50%;
+    bottom:-10px;
+    left: -10px;
+    background: none;
+    border: none;
+    padding: 0px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    padding: 5px;
+}
+#gameTooltipContainer {
+    user-select: none;
+    cursor: pointer;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    position:fixed;
+    bottom: 0;
+    padding: 20px;
+    min-width: 500px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    z-index: 1000;
+    overflow-x: hidden;
+    justify-content: center;
+    background: var(--primary-background-color);
+}
+#gameTooltipContainer.show {
+    display:flex;
+}
 .beta .game-label {
     background: #ff6422;
 }
@@ -745,10 +792,9 @@ a {
 
 .game-link .tooltiptext {
     display: none;
-    position: fixed;
-    position: absolute;
+    position:absolute;
     left: 50%;
-    bottom: -25px;
+    bottom: -50px;
     transform: translateX(-50%);
     padding: 8px 14px;
     border-radius: var(--border-radius);
@@ -1343,12 +1389,19 @@ input:checked + .slider {
     background-color: green;
 }
 
+input:disabled + .slider {
+    background-color: orange;
+}
 input:checked + .slider:before {
     -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
 }
-
+input:disabled + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+}
 .slider.round {
     border-radius: var(--border-radius);
 }

@@ -13,12 +13,11 @@ const STORAGE_KEYS = {
   LAST_CHANGE_TIME: 'lastChangeTime',
   HAS_LOADED: 'hasLoaded',
   OPEN_MODALS: 'openModals',
-  CHAT_FONT_SIZE: 'chatMessageFontSize',
   PAGE_BUILDER_PAGES: 'pageBuilder_pages',
   VOTING_HISTORY: 'votingHistory'
 };
 
-const UPDATE_DATE = 'Apr 27, 2025 20:00:00';
+const UPDATE_DATE = 'Sep 14, 2025 20:00:00';
 
 const API_FIELD_MAP = {
   [STORAGE_KEYS.USERNAME]: 'username',
@@ -107,30 +106,46 @@ const Modal = {
 };
 
 async function saveModalState() {
-  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
-  if (!Array.isArray(switches)) {
-    switches = window.settingSwitches;
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches;
+  try {
+    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
+    if (!Array.isArray(switches)) {
+      switches = window.settingSwitches || [];
+      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    }
+  } catch (error) {
+    console.error('Error parsing settingSwitches:', error);
+    switches = window.settingSwitches || [];
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
-  const autoOpenSwitch = switches.find(s => s.switchId === '02');
 
+  const autoOpenSwitch = switches.find(s => s.switchId === '02');
   if (autoOpenSwitch && autoOpenSwitch.value) {
     const openModals = Array.from(document.querySelectorAll('.modal.show'))
       .map(modal => modal.id)
       .filter(id => id);
-    await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, JSON.stringify(openModals));
+    sessionStorage.setItem(STORAGE_KEYS.OPEN_MODALS, JSON.stringify(openModals));
   } else {
-    await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, null);
+    sessionStorage.setItem(STORAGE_KEYS.OPEN_MODALS, null);
   }
 }
 
 async function updateGameContainers(filteredGames) {
   const containers = document.querySelectorAll('.game-container');
-  const lastPlayedGameId = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME);
-  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
-  if (!Array.isArray(switches)) {
-    switches = window.settingSwitches;
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  const lastPlayedGameId = localStorage.getItem(STORAGE_KEYS.LAST_PLAYED_GAME);
+  let switches;
+  try {
+    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
+    if (!Array.isArray(switches)) {
+      switches = window.settingSwitches || [];
+      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    }
+  } catch (error) {
+    console.error('Error parsing settingSwitches:', error);
+    switches = window.settingSwitches || [];
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
   const lastPlayedSwitch = switches.find(s => s.switchId === '06');
 
@@ -190,7 +205,7 @@ async function updateGameContainers(filteredGames) {
         gameBox.appendChild(statusEnd);
       }
 
-      const devSettings = 'true';
+      const devSettings = 'true'; // To powinno być dynamiczne, np. z localStorage
       if (devSettings === 'true') {
         const devContent = document.createElement('div');
         devContent.classList.add('DEVgame-content');
@@ -300,15 +315,15 @@ window.addEventListener('scroll', progressBar);
 
 // Restore Modal State
 async function restoreModalState() {
-  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
+  let switches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
   if (!Array.isArray(switches)) {
     switches = window.settingSwitches;
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
   const autoOpenSwitch = switches.find(s => s.switchId === '02');
 
   if (autoOpenSwitch && autoOpenSwitch.value) {
-    const openModals = await window.userData.getData('gameverse', STORAGE_KEYS.OPEN_MODALS) || [];
+    const openModals = sessionStorage.getItem(STORAGE_KEYS.OPEN_MODALS) || [];
     openModals.forEach(modalId => {
       const modalElement = document.getElementById(modalId);
       if (modalElement && !modalElement.classList.contains('show')) {
@@ -532,104 +547,6 @@ document.getElementById('sidenavOpenButton')?.addEventListener('click', () => {
   document.getElementById('sidenav').classList.toggle('show');
 });
 
-// AI Chat
-async function getAIResponse() {
-  const userInput = document.getElementById('userAiInput').value.trim();
-  if (!userInput) {
-    alert('Proszę wpisz pytanie!');
-    return;
-  }
-
-  const chatBox = document.getElementById('chatBox');
-  const userMessageDiv = document.createElement('div');
-  userMessageDiv.classList.add('message', 'user-message');
-  userMessageDiv.textContent = userInput;
-  chatBox.appendChild(userMessageDiv);
-
-  document.getElementById('userAiInput').value = '';
-
-  const loadingDiv = document.createElement('div');
-  loadingDiv.classList.add('message', 'loading-message');
-  loadingDiv.innerHTML = '<span class="spinner"></span> Oczekiwanie na odpowiedź...';
-  chatBox.appendChild(loadingDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  const apiKey = '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';
-  const data = {
-    inputs: userInput,
-    parameters: { max_length: 50, temperature: 0.7, top_p: 0.9, return_full_text: false }
-  };
-
-  try {
-    const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-3-27b-it', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    chatBox.removeChild(loadingDiv);
-
-    if (!response.ok) {
-      const errorDetails = await response.json();
-      alert(`Wystąpił błąd: ${errorDetails.error || 'Nieznany błąd'}`);
-      return;
-    }
-
-    const result = await response.json();
-    let aiResponse = result[0]?.generated_text?.trim() || 'Brak odpowiedzi od AI';
-    aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/'''/g, '<br>');
-
-    const aiMessageDiv = document.createElement('div');
-    aiMessageDiv.classList.add('message', 'ai-message');
-    aiMessageDiv.innerHTML = aiResponse;
-    chatBox.appendChild(aiMessageDiv);
-  } catch (error) {
-    chatBox.removeChild(loadingDiv);
-    alert(`Wystąpił błąd: ${error.message}`);
-  } finally {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-}
-
-// Username Change
-async function isUsernameDemoTimeExpired() {
-  const lastChange = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME);
-  const now = Date.now();
-  const lockTime = 24 * 60 * 60 * 1000;
-  return !lastChange || now > parseInt(lastChange) + lockTime;
-}
-
-async function handleUsernameChange() {
-  const input = document.getElementById('usernameSettingsInput');
-  const lastChange = await window.userData.getData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME);
-  const now = Date.now();
-  const lockTime = 24 * 60 * 60 * 1000;
-
-  if (input.value !== 'SUSpicio') {
-    if (lastChange && now - parseInt(lastChange) <= lockTime) {
-      alert('Nie możesz zmienić nazwy użytkownika przez 24 godziny.');
-      return;
-    }
-
-    if (!confirm('Czy na pewno chcesz zmienić nazwę użytkownika?')) return;
-
-    const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const userCode = prompt(`Aby potwierdzić, wpisz kod: ${randomCode}`);
-
-    if (userCode === randomCode) {
-      await window.userData.setData('gameverse', STORAGE_KEYS.USERNAME, input.value);
-      await window.userData.setData('gameverse', STORAGE_KEYS.LAST_CHANGE_TIME, now.toString());
-      alert('Nazwa użytkownika została zmieniona.');
-      document.getElementById('usernameChangeButton').disabled = true;
-      document.getElementById('usernameChangeButton').textContent = 'Zmiana nazwy zablokowana na 24h';
-      startCountdown(lockTime);
-      location.reload();
-    } else {
-      alert('Niepoprawny kod. Zmiana anulowana.');
-    }
-  }
-}
-
 function startCountdown(remainingTime) {
   const countdownDisplay = document.getElementById('usernameDemoContainer');
   countdownDisplay.style.display = 'block';
@@ -655,12 +572,20 @@ function startCountdown(remainingTime) {
 }
 
 async function initializeSwitches() {
-  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
-  
-  if (!Array.isArray(switches)) {
+  let switches;
+  try {
+    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
+    if (!Array.isArray(switches)) {
+      switches = window.settingSwitches || [];
+      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    }
+  } catch (error) {
+    console.error('Error parsing settingSwitches from localStorage:', error);
     switches = window.settingSwitches || [];
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
+
   document.querySelectorAll('input[type="checkbox"][switchId]').forEach(checkbox => {
     const switchId = checkbox.getAttribute('switchId');
     const switchData = switches.find(s => s.switchId === switchId);
@@ -672,11 +597,20 @@ async function initializeSwitches() {
 }
 
 async function toggleSwitch(switchId) {
-  let switches = await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES);
-  if (!Array.isArray(switches)) {
-    switches = window.settingSwitches;
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches;
+  try {
+    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
+    if (!Array.isArray(switches)) {
+      switches = window.settingSwitches || [];
+      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    }
+  } catch (error) {
+    console.error('Error parsing settingSwitches:', error);
+    switches = window.settingSwitches || [];
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
   }
+
   const switchIndex = switches.findIndex(s => s.switchId === switchId);
 
   notification('Zmiana ustawień wymaga odświeżenia strony', 'reload', {
@@ -685,35 +619,22 @@ async function toggleSwitch(switchId) {
 
   if (switchIndex !== -1) {
     switches[switchIndex].value = !switches[switchIndex].value;
-    await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
 
     if (switchId === '01') {
-      await window.userData.setData('gameverse', STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
+      localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
     }
     if (switchId === '02' && !switches[switchIndex].value) {
-      await window.userData.setData('gameverse', STORAGE_KEYS.OPEN_MODALS, null);
+      localStorage.setItem(STORAGE_KEYS.OPEN_MODALS, null);
     }
   }
 }
 
 async function resetSwitches() {
-  await window.userData.setData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(window.settingSwitches));
-  await window.userData.setData('gameverse', STORAGE_KEYS.DEV_SETTINGS, 'false');
+  localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(window.settingSwitches));
+  localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, 'false');
 }
 
-// Font Size Slider
-async function initializeFontSizeSlider() {
-  const slider = document.getElementById('chatFontSizeSlider');
-  const savedFontSize = await window.userData.getData('gameverse', STORAGE_KEYS.CHAT_FONT_SIZE) || '16';
-  slider.value = savedFontSize;
-  document.documentElement.style.setProperty('--chatMessageFontSize', `${savedFontSize}px`);
-
-  slider.addEventListener('input', async () => {
-    const newSize = slider.value;
-    document.documentElement.style.setProperty('--chatMessageFontSize', `${newSize}px`);
-    await window.userData.setData('gameverse', STORAGE_KEYS.CHAT_FONT_SIZE, newSize);
-  });
-}
 
 // Rating Form
 document.getElementById('ratingForm')?.addEventListener('submit', async e => {
@@ -1091,12 +1012,11 @@ function copyToClipboard(text) {
   quickNotification('Skopiowano do schowka!');
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  if(!await window.userData.getData('gameverse', STORAGE_KEYS.THEME)) {
-    await window.userData.setData('gameverse', STORAGE_KEYS.THEME,'dark');
+  if (!await window.userData.getData('gameverse', STORAGE_KEYS.THEME)) {
+    await window.userData.setData('gameverse', STORAGE_KEYS.THEME, 'dark');
   }
-  savedTheme = await window.userData.getData('gameverse', STORAGE_KEYS.THEME);
+  const savedTheme = await window.userData.getData('gameverse', STORAGE_KEYS.THEME);
   changeTheme(savedTheme);
 
   const parallaxElement = document.querySelector('#parallaxEnd');
@@ -1109,8 +1029,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await initializeUser();
   await initializeLoader();
-  await initializeSwitches();
-  await initializeFontSizeSlider();
+  await initializeSwitches(); // Używa poprawionej wersji
   await restoreModalState();
   await updatePlayerPLN();
   await updatePlayerRank();
@@ -1120,9 +1039,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(updateRanking, 5000);
   setInterval(sendLocalData, 5000);
 
-  const developerSwitch = ((await window.userData.getData('gameverse', STORAGE_KEYS.SETTING_SWITCHES)) || window.settingSwitches).find(
-    s => s.switchId === '01'
-  );
+  let switches;
+  try {
+    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
+    if (!Array.isArray(switches)) {
+      switches = window.settingSwitches || [];
+      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    }
+  } catch (error) {
+    console.error('Error parsing settingSwitches:', error);
+    switches = window.settingSwitches || [];
+    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  }
+  const developerSwitch = switches.find(s => s.switchId === '01');
   document.getElementById('consoleButton').style.display = developerSwitch && developerSwitch.value ? 'block' : 'none';
 
   await pageBuilder.init();
@@ -1272,3 +1202,9 @@ async function checkLoadedGameverse() {
     await window.userData.setData('gameverse', 'opened', new Date().toString());
   }
 }
+document.addEventListener('click', event => {
+  const gameTooltipContainer = document.querySelector('#gameTooltipContainer');
+  if (gameTooltipContainer && event.target === gameTooltipContainer && gameTooltipContainer.classList.contains("show")) {
+    gameTooltipContainer.classList.remove("show");
+  }
+});

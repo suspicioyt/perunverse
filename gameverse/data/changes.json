@@ -1,6 +1,38 @@
 {
   "tabsData": [
     {
+      "name": " Paint Update",
+      "version": "1.2.1.1",
+      "date": "01.09.2025r.",
+      "quote": "Brush brush po płótnie",
+      "backgroundImage": "https://macniderart.org/wp-content/uploads/2023/10/Acrylic-Landscape-Painting.jpg",
+      "paragraphs": [
+        {
+          "title": "Nowości",
+          "content": [
+            "📃 Dodano okno opisów gier"
+          ]
+        },
+        {
+          "title": "Gry",
+          "content": [
+            "ℹ️ Odświeżono informacje o grach",
+            "🎨 Dodano Paint",
+            "⛏️ Odblokowano Bitcoin Clicker"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "🗳️ Zmieniono wygląd kafelków gier",
+            "Zmieniono ustawienia",
+            "Usunięto tooltip gier",
+            "Usunięto Perun AI"
+          ]
+        }
+      ]
+    },
+    {
       "name": "🪴 Garden Update",
       "version": "1.2.1.0",
       "date": "27.07.2025r.",

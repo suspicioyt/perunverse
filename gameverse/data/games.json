@@ -23,7 +23,7 @@
       "name": "RPG",
       "link": "game/1/rpg.html",
       "status": "Testy",
-      "tooltip": "Gra RPG w której wcielasz się w bohatera",
+      "tooltip": "Eksploruj świat",
       "classes": ["testy"],
       "ulubione": true
     },
@@ -32,7 +32,7 @@
       "name": "Bloki 1",
       "link": "game/1/bloki1.html",
       "status": "",
-      "tooltip": "Strzelaj w bloki lub uciekaj przed nimi",
+      "tooltip": "Niszcz bloki lub uciekaj",
       "classes": ["ukonczona"],
       "ulubione": false
     },
@@ -41,7 +41,7 @@
       "name": "Dino Game",
       "link": "game/1/dino.html",
       "status": "Konserwacje",
-      "tooltip": "Klasyczna gra Dino",
+      "tooltip": "Skacz nad przeszkodami",
       "classes": ["konserwacje"],
       "ulubione": false,
       "disabled":true
@@ -60,7 +60,7 @@
       "name": "Snake",
       "link": "game/1/snake.html",
       "status": "Konserwacje",
-      "tooltip": "Klasyczny Snake",
+      "tooltip": "Zjadaj owoce, aby rosnąć",
       "classes": ["konserwacje"],
       "ulubione": false
     },
@@ -69,7 +69,7 @@
       "name": "Zgadywanie Liczb",
       "link": "game/1/zgadywanieliczb.html",
       "status": "",
-      "tooltip": "Zgaduj liczby z zakresu 1-100",
+      "tooltip": "Zgaduj liczby",
       "classes": ["ukonczona"],
       "ulubione": false,
       "disabled":true
@@ -88,7 +88,7 @@
       "name": "Kółko-Krzyżyk",
       "link": "game/1/kolkokrzyzyk.html",
       "status": "",
-      "tooltip": "Rywalizuj z innym graczem lub botem w tej klasycznej grze",
+      "tooltip": "Stawiaj kółka i krzyżyki, aby wygrać",
       "classes": ["ukonczona"],
       "ulubione": false
     },
@@ -97,7 +97,7 @@
       "name": "Tetris",
       "link": "game/1/tetris.html",
       "status": "",
-      "tooltip": "Klasyczny Tetris",
+      "tooltip": "Układaj bloki",
       "classes": ["ukonczona"],
       "ulubione": false
     },
@@ -112,13 +112,12 @@
     },
     {
       "id": "13",
-      "name": "Bitcoin Miner",
+      "name": "Bitcoin Clicker",
       "link": "game/1/bitcoinminer.html",
       "status": "",
-      "tooltip": "Klikaj i zdobywaj BitCoiny",
+      "tooltip": "Klikaj i zdobywaj Bitcoiny",
       "classes": ["ukonczona", "money"],
-      "ulubione": false,
-      "disabled":true
+      "ulubione": false
     },
     {
       "id": "14",
@@ -134,7 +133,7 @@
       "name": "Nonogram",
       "link": "game/1/nonogram.html",
       "status": "Konserwacje",
-      "tooltip": "Rozwiąż te puzzle",
+      "tooltip": "Rozwiąż puzzle",
       "classes": ["konserwacje"],
       "ulubione": false
     },
@@ -153,7 +152,7 @@
       "name": "Flappy Bird",
       "link": "game/1/flappybird.html",
       "status": "Beta",
-      "tooltip": "Skacz, aby przejść przez dziury",
+      "tooltip": "Wlatuj w dziury w ścianach",
       "classes": ["beta"],
       "ulubione": false,
       "disabled":true
@@ -163,7 +162,7 @@
       "name": "Solitaire",
       "link": "game/1/solitaire.html",
       "status": "",
-      "tooltip": "Układaj karty w pasjansa",
+      "tooltip": "Układaj karty w Pasjansa",
       "classes": ["ukonczona", "internet"],
       "internet": "https://codepen.io/bfa/pen/ggGYeE",
       "ulubione": false
@@ -248,7 +247,7 @@
       "name": "Wieża Hanoi",
       "link": "game/1/hanoitower.html",
       "status": "Konserwacje",
-      "tooltip": "Przełóż dyski wieży",
+      "tooltip": "Przełóż dyski do wieży",
       "classes": ["konserwacje"],
       "ulubione": false
     },
@@ -272,10 +271,10 @@
     },
     {
       "id": "30",
-      "name": "Italian Brainrot Guesser",
+      "name": "Brainrot Guesser",
       "link": "game/1/brainrotguesser.html",
-      "status": "Chwilowo nie działa",
-      "tooltip": "Zgaduj Italian Brainroty",
+      "status": "",
+      "tooltip": "Odgadnij Brainroty",
       "classes": ["ukonczona"],
       "ulubione": false,
       "disabled":true
@@ -294,8 +293,18 @@
       "name": "Grow a Garden",
       "link": "game/1/growagarden.html",
       "status": "Beta",
-      "tooltip": "Znajdź wszystkie miny",
+      "tooltip": "Wychoduj ogrodowe imperium",
       "classes": ["nowosc", "beta"],
+      "ulubione": false
+    },
+    {
+      "id": "33",
+      "name": "Paint",
+      "link": "game/1/paint.html",
+      "status": "Konserwacje",
+      "tooltip": "Maluj cokolwiek chcesz",
+      "internet": "https://www.youtube.com/watch?v=y84tBZo8GFo",
+      "classes": ["nowosc", "beta","internet"],
       "ulubione": false
     },
     {
