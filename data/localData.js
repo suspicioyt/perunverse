@@ -46,5 +46,3 @@ async function setLocalData(section, key, value) {
     throw error;
   }
 }
-
-const { getLocalData, setLocalData } = window.userLocalData;
