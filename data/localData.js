@@ -47,8 +47,4 @@ async function setLocalData(section, key, value) {
   }
 }
 
-// Add functions to the window.userData object
-window.userData = {
-  getLocalData,
-  setLocalData,
-};
+const { getLocalData, setLocalData } = window.userLocalData;
