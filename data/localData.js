@@ -36,13 +36,4 @@ async function setLocalData(section, key, value) {
     console.error('setLocalData: Error writing to localStorage:', storageError);
     throw storageError;
   }
-
-  try {
-    await saveUserDataToSheet(); // Assuming you want to sync with the server
-    console.log('setLocalData: Data saved to sheet');
-    return parsedData;
-  } catch (error) {
-    console.error('setLocalData: Error saving data to sheet:', error);
-    throw error;
-  }
 }
