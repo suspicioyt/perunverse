@@ -1,7 +1,31 @@
 {
   "tabsData": [
     {
-      "name": " Paint Update",
+      "name": "🧠 Brainrot Update",
+      "version": "1.2.2.0",
+      "date": "16.09.2025r.",
+      "quote": "Brush brush po płótnie",
+      "backgroundImage": "https://imgv3.fotor.com/images/blog-richtext-image/Tralalero-Tralala-banner-image-featuring-a-shark-with-three-legs-wearing-blue-Nike-sneakers.jpg",
+      "paragraphs": [
+        {
+          "title": "Gry",
+          "content": [
+            "🧠 Odblokowano i zaaktualizowano Brainrot Guesser ( Czy zgadniesz wszystkie? )",
+            "👺 Dodano Steal a Brainrot",
+            "🪙 Zaktualizowano Bitcoin Clicker"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "🔒 Zmieniono wygląd kafelków gier",
+            "🛠️ Poprawa optymalizacji"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🎨 Paint Update",
       "version": "1.2.1.1",
       "date": "01.09.2025r.",
       "quote": "Brush brush po płótnie",
@@ -24,10 +48,10 @@
         {
           "title": "Zmiany",
           "content": [
-            "🗳️ Zmieniono wygląd kafelków gier",
-            "Zmieniono ustawienia",
-            "Usunięto tooltip gier",
-            "Usunięto Perun AI"
+            "🛠️ Zmieniono wygląd kafelków gier",
+            "🛠️ Zmieniono ustawienia",
+            "✂️ Usunięto tooltip gier",
+            "✂️ Usunięto Perun AI"
           ]
         }
       ]

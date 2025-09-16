@@ -113,7 +113,7 @@
     {
       "id": "13",
       "name": "Bitcoin Clicker",
-      "link": "game/1/bitcoinminer.html",
+      "link": "game/1/bitcoinclicker.html",
       "status": "",
       "tooltip": "Klikaj i zdobywaj Bitcoiny",
       "classes": ["ukonczona", "money"],
@@ -276,8 +276,7 @@
       "status": "",
       "tooltip": "Odgadnij Brainroty",
       "classes": ["ukonczona"],
-      "ulubione": false,
-      "disabled":true
+      "ulubione": false
     },
     {
       "id": "31",
@@ -304,7 +303,16 @@
       "status": "Konserwacje",
       "tooltip": "Maluj cokolwiek chcesz",
       "internet": "https://www.youtube.com/watch?v=y84tBZo8GFo",
-      "classes": ["nowosc", "beta","internet"],
+      "classes": ["nowosc", "konserwacje","internet"],
+      "ulubione": false
+    },
+    {
+      "id": "34",
+      "name": "Steal a Brainrot",
+      "link": "game/1/stealabrainrot.html",
+      "status": "Konserwacje",
+      "tooltip": "Kradnij coraz lepsze brainroty",
+      "classes": ["nowosc", "kenserwacje"],
       "ulubione": false
     },
     {

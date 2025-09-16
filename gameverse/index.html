@@ -400,11 +400,8 @@
         <div class="loading-tip" id="loading-tip"></div>
         <div class="siteLoadingSpinner"></div>
     </div>
-    
-    <script src="../data/data.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
-            await window.userData.initializeUserData();
             const elements = document.querySelectorAll('[data-app-id][data-key]');
             elements.forEach(element => {
                 const appId = element.getAttribute('data-app-id');
@@ -413,6 +410,8 @@
             });
         });
     </script>
+    <script src="../data/data.js"></script>
+    <script src="../data/localData.js"></script>
     <script src="script/script.js"></script>
     <script src="script/achievements.js"></script>
     <script src="script/games.js"></script>

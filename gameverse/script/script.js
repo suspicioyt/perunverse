@@ -52,12 +52,15 @@ const API = {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        mode: 'no-cors'
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(data).toString(),
+        mode: 'cors',
+        credentials: 'omit'
       });
-      console.log('API POST response:', response);
-      return response;
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const result = await response.json();
+      console.log('API POST response:', result);
+      return result;
     } catch (error) {
       console.error('API POST error:', error);
       throw error;
@@ -65,7 +68,7 @@ const API = {
   },
   async get(url) {
     try {
-      const response = await fetch(url, { method: 'GET' });
+      const response = await fetch(url, { method: 'GET', mode: 'cors', credentials: 'omit' });
       if (!response.ok) throw new Error(`GET failed: ${response.status}`);
       const data = await response.json();
       console.log('API GET response:', data);
@@ -106,18 +109,10 @@ const Modal = {
 };
 
 async function saveModalState() {
-  let switches;
-  try {
-    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
-    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
-    if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
-    }
-  } catch (error) {
-    console.error('Error parsing settingSwitches:', error);
-    switches = window.settingSwitches || [];
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
 
   const autoOpenSwitch = switches.find(s => s.switchId === '02');
@@ -133,19 +128,11 @@ async function saveModalState() {
 
 async function updateGameContainers(filteredGames) {
   const containers = document.querySelectorAll('.game-container');
-  const lastPlayedGameId = localStorage.getItem(STORAGE_KEYS.LAST_PLAYED_GAME);
-  let switches;
-  try {
-    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
-    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
-    if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
-    }
-  } catch (error) {
-    console.error('Error parsing settingSwitches:', error);
-    switches = window.settingSwitches || [];
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  const lastPlayedGameId = getLocalData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME);
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
   const lastPlayedSwitch = switches.find(s => s.switchId === '06');
 
@@ -205,7 +192,7 @@ async function updateGameContainers(filteredGames) {
         gameBox.appendChild(statusEnd);
       }
 
-      const devSettings = 'true'; // To powinno być dynamiczne, np. z localStorage
+      const devSettings = getLocalData('gameverse', STORAGE_KEYS.DEV_SETTINGS) || 'false';
       if (devSettings === 'true') {
         const devContent = document.createElement('div');
         devContent.classList.add('DEVgame-content');
@@ -223,7 +210,7 @@ async function updateGameContainers(filteredGames) {
       link.classList.add('game-link');
       link.addEventListener('click', async () => {
         addPlayedGamesToStorage(game.id);
-        await window.userData.setData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME, game.id);
+        setLocalData('gameverse', STORAGE_KEYS.LAST_PLAYED_GAME, game.id);
       });
       link.target = '_blank';
 
@@ -271,8 +258,7 @@ document.getElementById('searchInput')?.addEventListener('keyup', async () => {
   const filter = document.getElementById('searchInput').value.toUpperCase();
   let filteredGames = games.filter(game => game.name.toUpperCase().includes(filter));
   
-  // Filter out premium games for non-premium users
-  const perunPremium = await window.userData.getData('gameverse', 'premium');
+  const perunPremium = window.userData.getData('profile', 'premium');
   if (!perunPremium) {
     filteredGames = filteredGames.filter(game => !game.premium);
   }
@@ -303,7 +289,6 @@ function changeClass(element) {
   if (!element.classList.contains('active')) element.classList.add('active');
 }
 
-// Progress Bar
 function progressBar() {
   const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
   const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -313,17 +298,16 @@ function progressBar() {
 
 window.addEventListener('scroll', progressBar);
 
-// Restore Modal State
 async function restoreModalState() {
-  let switches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
   if (!Array.isArray(switches)) {
     switches = window.settingSwitches;
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
-  const autoOpenSwitch = switches.find(s => s.switchId === '02');
 
+  const autoOpenSwitch = switches.find(s => s.switchId === '02');
   if (autoOpenSwitch && autoOpenSwitch.value) {
-    const openModals = sessionStorage.getItem(STORAGE_KEYS.OPEN_MODALS) || [];
+    const openModals = JSON.parse(sessionStorage.getItem(STORAGE_KEYS.OPEN_MODALS) || '[]');
     openModals.forEach(modalId => {
       const modalElement = document.getElementById(modalId);
       if (modalElement && !modalElement.classList.contains('show')) {
@@ -333,7 +317,6 @@ async function restoreModalState() {
   }
 }
 
-// Modal Event Listeners
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     const modal = document.querySelector('.modal.show');
@@ -350,10 +333,9 @@ document.addEventListener('click', event => {
   }
 });
 
-// User Initialization
 async function initializeUser() {
-  const opened = await window.userData.getData('gameverse', 'opened');
-  if ((!opened || opened === false) && sessionStorage.getItem("authToken") != "test") {
+  const opened = window.userData.getData('gameverse', 'opened');
+  if (!opened || opened === 'false') {
     document.getElementById('welcomeModal').style.display = 'block';
     loadFireworksStyles();
   } else {
@@ -362,7 +344,7 @@ async function initializeUser() {
   document.getElementById('saveUsernameBtn')?.addEventListener('click', async () => {
     document.getElementById('fireworksStyles')?.remove();
     document.getElementById('welcomeModal').style.display = 'none';
-    await window.userData.setData('gameverse', 'opened', true);
+    await window.userData.setData('gameverse', 'opened', 'true');
   });
 }
 
@@ -374,7 +356,6 @@ function loadFireworksStyles() {
   document.head.appendChild(link);
 }
 
-// Countdown Timer
 const countDownDate = new Date(UPDATE_DATE).getTime();
 const timer = setInterval(() => {
   const now = new Date().getTime();
@@ -393,7 +374,6 @@ const timer = setInterval(() => {
   }
 }, 1000);
 
-// Slideshow
 let slideIndex = 0;
 function showSlides(n) {
   const slides = document.querySelectorAll('.slides');
@@ -448,7 +428,6 @@ document.querySelectorAll('.slides').forEach(slide => {
   });
 });
 
-// Loader
 async function initializeLoader() {
   const loader = document.getElementById('loader');
   const tipElement = document.getElementById('loading-tip');
@@ -467,7 +446,7 @@ async function initializeLoader() {
     const randomIndex = Math.floor(Math.random() * tips.length);
     return tips[randomIndex];
   }
-  const hasLoaded = await window.userData.getData('gameverse', STORAGE_KEYS.HAS_LOADED);
+  const hasLoaded = sessionStorage.getItem(STORAGE_KEYS.HAS_LOADED);
   if (hasLoaded) {
     loader.classList.add('hidden');
   } else {
@@ -476,19 +455,18 @@ async function initializeLoader() {
     tipElement.textContent = randomTip;
     setTimeout(async () => {
       loader.classList.add('hidden');
-      await window.userData.setData('gameverse', STORAGE_KEYS.HAS_LOADED, 'true');
+      sessionStorage.setItem(STORAGE_KEYS.HAS_LOADED, 'true');
     }, 7000);
   }
 }
 
-// Player Data Updates
 async function updatePlayerBadges() {
   try {
-    const isVerified = await window.userData.getData('gameverse', 'isVerified');
-    const isPremium = await window.userData.getData('gameverse', 'isPremium');
+    const isVerified = window.userData.getData('profile', 'isVerified');
+    const isPremium = window.userData.getData('profile', 'isPremium');
 
-    const verified = isVerified === true || isVerified === 'true';
-    const premium = isPremium === true || isPremium === 'true';
+    const verified = isVerified === 'true' || isVerified === true;
+    const premium = isPremium === 'true' || isPremium === true;
 
     let badges = '';
     if (verified) {
@@ -514,7 +492,7 @@ async function updatePlayerBadges() {
 }
 
 async function updatePlayerPLN() {
-  const pln = await window.userData.getData('gameverse', STORAGE_KEYS.PLN);
+  const pln = window.userData.getData('profile', 'money');
   const dynamicTextElement = document.getElementById('playerPLN');
   if (dynamicTextElement) {
     dynamicTextElement.textContent = pln && !isNaN(pln) ? `${parseFloat(pln).toFixed(2)} zł` : '0.00 zł';
@@ -522,27 +500,35 @@ async function updatePlayerPLN() {
 }
 
 async function updatePlayerRank() {
-  const rank = await window.userData.getData('gameverse', STORAGE_KEYS.RANK);
+  const rank = window.userData.getData('profile', STORAGE_KEYS.RANK);
   const dynamicTextElement = document.getElementById('playerRank');
   if (dynamicTextElement) {
     dynamicTextElement.innerHTML = rank && !isNaN(rank) ? `${parseInt(rank)} <i class="fas fa-star"></i>` : '0 <i class="fas fa-star"></i>';
   }
 }
 
+async function updatePlayerName() {
+  const username = window.userData.getData('profile', 'username');
+  const dynamicTextElement = document.getElementById('playerName');
+  if (dynamicTextElement) {
+    dynamicTextElement.textContent = username || 'Anonim';
+  }
+}
+
 window.addEventListener('storage', async event => {
-  if (event.key === STORAGE_KEYS.USERNAME) await updatePlayerName();
-  if (event.key === STORAGE_KEYS.RANK) await updatePlayerRank();
-  if (event.key === STORAGE_KEYS.PLN) await updatePlayerPLN();
+  if (event.key === 'userData') {
+    await updatePlayerName();
+    await updatePlayerRank();
+    await updatePlayerPLN();
+  }
 });
 
-// Theme Management
 async function changeTheme(theme) {
-  await window.userData.setData('gameverse', STORAGE_KEYS.THEME, theme);
+  setLocalData('gameverse', STORAGE_KEYS.THEME, theme);
   document.body.setAttribute('data-theme', theme);
   document.getElementById('themeSelect').value = theme;
 }
 
-// Sidenav Toggle
 document.getElementById('sidenavOpenButton')?.addEventListener('click', () => {
   document.getElementById('sidenav').classList.toggle('show');
 });
@@ -572,18 +558,10 @@ function startCountdown(remainingTime) {
 }
 
 async function initializeSwitches() {
-  let switches;
-  try {
-    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
-    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
-    if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
-    }
-  } catch (error) {
-    console.error('Error parsing settingSwitches from localStorage:', error);
-    switches = window.settingSwitches || [];
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
 
   document.querySelectorAll('input[type="checkbox"][switchId]').forEach(checkbox => {
@@ -597,18 +575,10 @@ async function initializeSwitches() {
 }
 
 async function toggleSwitch(switchId) {
-  let switches;
-  try {
-    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
-    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
-    if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
-    }
-  } catch (error) {
-    console.error('Error parsing settingSwitches:', error);
-    switches = window.settingSwitches || [];
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
 
   const switchIndex = switches.findIndex(s => s.switchId === switchId);
@@ -619,24 +589,22 @@ async function toggleSwitch(switchId) {
 
   if (switchIndex !== -1) {
     switches[switchIndex].value = !switches[switchIndex].value;
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
 
     if (switchId === '01') {
-      localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
+      setLocalData('gameverse', STORAGE_KEYS.DEV_SETTINGS, switches[switchIndex].value.toString());
     }
     if (switchId === '02' && !switches[switchIndex].value) {
-      localStorage.setItem(STORAGE_KEYS.OPEN_MODALS, null);
+      sessionStorage.setItem(STORAGE_KEYS.OPEN_MODALS, null);
     }
   }
 }
 
 async function resetSwitches() {
-  localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(window.settingSwitches));
-  localStorage.setItem(STORAGE_KEYS.DEV_SETTINGS, 'false');
+  setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, window.settingSwitches);
+  setLocalData('gameverse', STORAGE_KEYS.DEV_SETTINGS, 'false');
 }
 
-
-// Rating Form
 document.getElementById('ratingForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const submitButton = document.getElementById('opinionSubmit');
@@ -644,7 +612,7 @@ document.getElementById('ratingForm')?.addEventListener('submit', async e => {
 
   const rating = document.querySelector('input[name="rating"]:checked');
   const whattodo = document.getElementById('whattodoratingform').value;
-  const username = await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME);
+  const username = window.userData.getData('profile', STORAGE_KEYS.USERNAME);
 
   if (!username || !rating) {
     document.getElementById('ratingFormErrorMessage').style.display = 'block';
@@ -654,7 +622,7 @@ document.getElementById('ratingForm')?.addEventListener('submit', async e => {
 
   const formData = {
     action: 'addRating',
-    sessionId: (await window.userData.getData('gameverse', STORAGE_KEYS.UUID)) || '',
+    sessionId: window.userData.getData('profile', STORAGE_KEYS.UUID) || '',
     username,
     rating: rating.value,
     whattodo,
@@ -695,7 +663,6 @@ document.querySelectorAll('.rating label').forEach(label => {
   });
 });
 
-// Dropdown Toggle
 function toggleDropdown(dropdownId) {
   document.getElementById(dropdownId).classList.toggle('show');
 }
@@ -706,7 +673,6 @@ window.addEventListener('click', event => {
   }
 });
 
-// Scroll to Section
 function scrollToSection(sectionId, gameContainerId) {
   if (sectionId === 0) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -738,7 +704,6 @@ document.querySelectorAll('.game-container').forEach((container, index) => {
   container.id = `game-container-${index}`;
 });
 
-// Ranking
 async function updateRanking() {
   try {
     const ranking = await API.get(`${window.API_URL}?action=getRankingData`);
@@ -754,9 +719,9 @@ async function updateRanking() {
     tbody.innerHTML = '';
     ranking.forEach(async (user, index) => {
       if (user.rank != 0 || user.points != 0 || user.pln != 0 || user.achievements != 0) {
-        if (user.uuid === (await window.userData.getData('gameverse', STORAGE_KEYS.UUID))) {
-          await window.userData.setData('gameverse', 'perunPremium', user.premium);
-          await window.userData.setData('gameverse', 'perunVerified', user.verified);
+        if (user.uuid === window.userData.getData('profile', STORAGE_KEYS.UUID)) {
+          await window.userData.setData('profile', 'perunPremium', user.premium ? 'true' : 'false');
+          await window.userData.setData('profile', 'perunVerified', user.verified ? 'true' : 'false');
         }
 
         let badges = '';
@@ -788,12 +753,12 @@ async function updateRanking() {
 async function sendLocalData() {
   const payload = {
     action: 'updateRankingFromLocal',
-    perunUUID: (await window.userData.getData('gameverse', STORAGE_KEYS.UUID)) || '',
-    perunUsername: (await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME)) || 'Anonim',
-    perunPoints: (await window.userData.getData('gameverse', STORAGE_KEYS.POINTS)) || '0',
-    perunRank: (await window.userData.getData('gameverse', STORAGE_KEYS.RANK)) || '0',
-    perunPLN: (await window.userData.getData('gameverse', STORAGE_KEYS.PLN)) || '0',
-    doneAchievements: ((await window.userData.getData('gameverse', STORAGE_KEYS.COMPLETED_ACHIEVEMENTS)) || []).length,
+    perunUUID: window.userData.getData('profile', STORAGE_KEYS.UUID) || '',
+    perunUsername: window.userData.getData('profile', STORAGE_KEYS.USERNAME) || 'Anonim',
+    perunPoints: window.userData.getData('gameverse', STORAGE_KEYS.POINTS) || '0',
+    perunRank: window.userData.getData('gameverse', STORAGE_KEYS.RANK) || '0',
+    perunPLN: window.userData.getData('gameverse', STORAGE_KEYS.PLN) || '0',
+    doneAchievements: (getLocalData('gameverse', STORAGE_KEYS.COMPLETED_ACHIEVEMENTS) || []).length,
     timestamp: new Date().toISOString()
   };
 
@@ -824,7 +789,7 @@ const pageBuilder = {
   },
 
   async loadPage() {
-    const savedPages = await window.userData.getData('gameverse', this.storageKey);
+    const savedPages = getLocalData('gameverse', this.storageKey);
     this.pages = Array.isArray(savedPages) && savedPages.length > 0 ? savedPages : [this.createEmptyPage()];
     this.loadCurrentData();
   },
@@ -902,7 +867,7 @@ const pageBuilder = {
     }
 
     this.pages[0] = page;
-    await window.userData.setData('gameverse', this.storageKey, JSON.stringify(this.pages));
+    setLocalData('gameverse', this.storageKey, this.pages);
     this.lastSaveTime = new Date();
     this.updateStatus();
     this.loadCurrentData();
@@ -998,7 +963,6 @@ function pageBuilderClear() {
   }
 }
 
-// Notifications
 function notification(message, type, options = {}) {
   console.log(`Notification: ${message}, Type: ${type}`, options);
 }
@@ -1013,11 +977,12 @@ function copyToClipboard(text) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!await window.userData.getData('gameverse', STORAGE_KEYS.THEME)) {
-    await window.userData.setData('gameverse', STORAGE_KEYS.THEME, 'dark');
+  await window.userData.initializeUserData();
+  const savedTheme = getLocalData('gameverse', STORAGE_KEYS.THEME);
+  if (!savedTheme) {
+    setLocalData('gameverse', STORAGE_KEYS.THEME, 'dark');
   }
-  const savedTheme = await window.userData.getData('gameverse', STORAGE_KEYS.THEME);
-  changeTheme(savedTheme);
+  await changeTheme(savedTheme || 'dark');
 
   const parallaxElement = document.querySelector('#parallaxEnd');
   const currentScrollY = window.scrollY;
@@ -1029,28 +994,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await initializeUser();
   await initializeLoader();
-  await initializeSwitches(); // Używa poprawionej wersji
+  await initializeSwitches();
   await restoreModalState();
   await updatePlayerPLN();
   await updatePlayerRank();
+  await updatePlayerName();
   await updateRanking();
   await sendLocalData();
 
   setInterval(updateRanking, 5000);
   setInterval(sendLocalData, 5000);
 
-  let switches;
-  try {
-    const storedSwitches = localStorage.getItem(STORAGE_KEYS.SETTING_SWITCHES);
-    switches = storedSwitches ? JSON.parse(storedSwitches) : window.settingSwitches || [];
-    if (!Array.isArray(switches)) {
-      switches = window.settingSwitches || [];
-      localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
-    }
-  } catch (error) {
-    console.error('Error parsing settingSwitches:', error);
-    switches = window.settingSwitches || [];
-    localStorage.setItem(STORAGE_KEYS.SETTING_SWITCHES, JSON.stringify(switches));
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
   }
   const developerSwitch = switches.find(s => s.switchId === '01');
   document.getElementById('consoleButton').style.display = developerSwitch && developerSwitch.value ? 'block' : 'none';
@@ -1100,7 +1058,7 @@ window.addEventListener('scroll', function () {
       smoothScrollTo(0);
       var header = document.querySelector('header');
       header.classList.remove('scrolled');
-      document.getElementById('sidenav').classList.remove('scrolled');
+      document.getElementById('sidenav').classList.add('scrolled');
     }
     lastScrollY = currentScrollY;
   }
@@ -1114,94 +1072,13 @@ document.addEventListener('DOMContentLoaded', function () {
   updatePlayerBadges();
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // if (localStorage.getItem('gameVote1')) {
-  //   document.getElementById('sendVoteButton').disabled = true;
-  //   document.getElementById('sendVoteButton').setAttribute('aria-busy', 'false');
-  // }
-});
-
-// async function sendGameVote() {
-//   const button = document.querySelector('#sendVoteButton');
-//   if (button) {
-//     button.disabled = true;
-//     button.setAttribute('aria-busy', 'true');
-//   }
-
-//   const votedGameId = await window.userData.getData('gameverse', 'votedGame');
-//   if (!votedGameId) {
-//     alert('Nie wybrano gry do głosowania.');
-//     if (button) {
-//       button.disabled = false;
-//       button.setAttribute('aria-busy', 'false');
-//     }
-//     return;
-//   }
-//   if (await window.userData.getData('gameverse', 'gameVote1')) {
-//     alert('Już zagłosowano.');
-//     if (button) {
-//       button.disabled = false;
-//       button.setAttribute('aria-busy', 'false');
-//     }
-//     return;
-//   }
-
-//   let parsedGameId;
-//   try {
-//     parsedGameId = JSON.parse(votedGameId);
-//     if (parsedGameId === '999') {
-//       alert('Nie można głosować na tę grę.');
-//       if (button) {
-//         button.disabled = false;
-//         button.setAttribute('aria-busy', 'false');
-//       }
-//       return;
-//     }
-//   } catch {
-//     alert('Nieprawidłowy identyfikator gry.');
-//     if (button) {
-//       button.disabled = false;
-//       button.setAttribute('aria-busy', 'false');
-//     }
-//     return;
-//   }
-
-//   const username = await window.userData.getData('gameverse', STORAGE_KEYS.USERNAME) || 'anonymous';
-//   const sessionId = await window.userData.getData('gameverse', STORAGE_KEYS.UUID) || '';
-
-//   const formData = {
-//     action: 'addRating',
-//     sessionId,
-//     username,
-//     rating: '',
-//     whattodo: `vote:${parsedGameId}`,
-//     timestamp: new Date().toISOString()
-//   };
-
-//   try {
-//     await API.post(window.API_URL, formData);
-//     await window.userData.setData('gameverse', 'gameVote1', await window.userData.getData('gameverse', 'votedGame'));
-//     notification('Wysłano głos!', 'success', {
-//       duration: 3000,
-//       title: 'Operacja zakończona',
-//       sound: false
-//     });
-//   } catch {
-//     alert('Wystąpił błąd podczas wysyłania głosu. Spróbuj ponownie później.');
-//   } finally {
-//     if (button) {
-//       button.disabled = true;
-//       button.setAttribute('aria-busy', 'false');
-//     }
-//   }
-// }
-
 async function checkLoadedGameverse() {
-  const opened = await window.userData.getData('gameverse', 'opened');
+  const opened = window.userData.getData('gameverse', 'opened');
   if (!opened) {
     await window.userData.setData('gameverse', 'opened', new Date().toString());
   }
 }
+
 document.addEventListener('click', event => {
   const gameTooltipContainer = document.querySelector('#gameTooltipContainer');
   if (gameTooltipContainer && event.target === gameTooltipContainer && gameTooltipContainer.classList.contains("show")) {

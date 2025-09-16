@@ -269,7 +269,7 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
     gameBox.appendChild(title);
 
     const link = document.createElement("a");
-    link.innerHTML = game.disabled === true ? "Niedostępne" : '<i class="fa-solid fa-play"></i>';
+    link.innerHTML = game.disabled === true ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-play"></i>';
     link.classList.add("game-link");
     link.style.position = "relative";
     link.style.zIndex = "20";
