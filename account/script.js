@@ -7,11 +7,13 @@ function showTab(tabName) {
   document.getElementById(tabName + 'Tab').classList.add('active');
   document.querySelectorAll('.error').forEach(error => error.classList.remove('show'));
 }
+
 function uuidv4() {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
     (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
   );
 }
+
 function getRedirectUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('redirect') || '../index.html';
@@ -53,26 +55,40 @@ function populateYearSelect() {
 function openYearModal() {
   document.getElementById('yearModal').style.display = 'flex';
 }
+
 function closeYearModal() {
   document.getElementById('yearModal').style.display = 'none';
 }
+
 function selectYear() {
   const selectedYear = document.getElementById('yearSelect').value;
   document.getElementById('birthYearDisplay').value = selectedYear;
   document.getElementById('birthYear').value = selectedYear;
   closeYearModal();
 }
+
 function openGenderModal() {
   document.getElementById('genderModal').style.display = 'flex';
 }
+
 function closeGenderModal() {
   document.getElementById('genderModal').style.display = 'none';
 }
+
 function selectGender() {
   const selectedGender = document.getElementById('genderSelect').value;
   document.getElementById('genderDisplay').value = selectedGender === 'M' ? 'Mężczyzna' : selectedGender === 'F' ? 'Kobieta' : 'Inna';
   document.getElementById('gender').value = selectedGender;
   closeGenderModal();
+}
+
+function toggleButtonLoading(buttonId, isLoading) {
+  const button = document.getElementById(buttonId);
+  const buttonText = button.querySelector('.button-text');
+  const spinner = button.querySelector('.spinner');
+  button.disabled = isLoading;
+  buttonText.style.display = isLoading ? 'none' : 'inline';
+  spinner.style.display = isLoading ? 'inline-block' : 'none';
 }
 
 function login() {
@@ -93,6 +109,8 @@ function login() {
     return;
   }
 
+  toggleButtonLoading('loginButton', true);
+
   fetch(SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -109,6 +127,7 @@ function login() {
       return response.json();
     })
     .then(data => {
+      toggleButtonLoading('loginButton', false);
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
@@ -119,6 +138,7 @@ function login() {
       }
     })
     .catch(error => {
+      toggleButtonLoading('loginButton', false);
       errorMessage.textContent = 'Błąd serwera: ' + error.message;
       errorMessage.classList.add('show');
       console.error('Błąd logowania:', error);
@@ -167,6 +187,8 @@ function register() {
     return;
   }
 
+  toggleButtonLoading('registerButton', true);
+
   const appData = {
     profile: {
       username: username,
@@ -200,6 +222,7 @@ function register() {
       return response.json();
     })
     .then(data => {
+      toggleButtonLoading('registerButton', false);
       if (data.status === 'success') {
         sessionStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
@@ -210,6 +233,7 @@ function register() {
       }
     })
     .catch(error => {
+      toggleButtonLoading('registerButton', false);
       errorMessage.textContent = 'Błąd serwera: ' + error.message;
       errorMessage.classList.add('show');
       console.error('Błąd rejestracji:', error);

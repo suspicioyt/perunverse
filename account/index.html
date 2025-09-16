@@ -6,7 +6,7 @@
     <title>Perunverse Account</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="icon" href="perun2.png" type="image/x-icon">
+    <link rel="icon" href="https://suspicioyt.github.io/perunverse/logo/perun.png" type="image/x-icon">
 </head>
 <body>
     <div id="loginModal">
@@ -24,7 +24,10 @@
             <div id="login" class="tab-content active">
                 <input type="text" id="loginIdentifier" placeholder="Nazwa użytkownika lub E-mail" required>
                 <input type="password" id="loginPassword" placeholder="Hasło" required>
-                <button onclick="login()">Zaloguj</button>
+                <button id="loginButton" onclick="login()">
+                    <span class="button-text">Zaloguj</span>
+                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
                 <p class="error" id="loginError"></p>
             </div>
 
@@ -38,7 +41,10 @@
                 <input type="hidden" id="birthYear" required>
                 <input type="text" id="genderDisplay" placeholder="Wybierz płeć" readonly onclick="openGenderModal()">
                 <input type="hidden" id="gender" required>
-                <button onclick="register()">Zarejestruj</button>
+                <button id="registerButton" onclick="register()">
+                    <span class="button-text">Zarejestruj</span>
+                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
                 <p class="error" id="registerError"></p>
             </div>
         </div>
