@@ -1,5 +1,7 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
+const TEST_DATA_URL = 'testData.json';
+
 
 async function initializeUserData() {
   console.log('initializeUserData: Starting...', { url: window.location.href });
@@ -8,17 +10,29 @@ async function initializeUserData() {
   if (!window.location.href.startsWith('https://suspicioyt.github.io/')) {
     console.log('initializeUserData: Running in non-production environment');
     try {
-      sessionStorage.setItem('authToken', 'test');
-      sessionStorage.setItem('userData', JSON.stringify(data));
-      console.log('initializeUserData: sessionStorage updated', {
-        authToken: sessionStorage.getItem('authToken'),
-        userData: sessionStorage.getItem('userData'),
-      });
-    } catch (storageError) {
-      console.error('initializeUserData: Error writing to sessionStorage:', storageError);
+      console.log('initializeUserData: Fetching test data from', TEST_DATA_URL);
+      const response = await fetch(TEST_DATA_URL);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      console.log('initializeUserData: Test data fetched:', data);
+
+      // Save to sessionStorage with error handling
+      try {
+        sessionStorage.setItem('authToken', 'test');
+        sessionStorage.setItem('userData', JSON.stringify(data));
+        console.log('initializeUserData: sessionStorage updated', {
+          authToken: sessionStorage.getItem('authToken'),
+          userData: sessionStorage.getItem('userData'),
+        });
+      } catch (storageError) {
+        console.error('initializeUserData: Error writing to sessionStorage:', storageError);
+        return {};
+      }
+      return data;
+    } catch (error) {
+      console.error('initializeUserData: Error fetching test data:', error);
       return {};
     }
-    return data;
   }
 
   // Production environment
