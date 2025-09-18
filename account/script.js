@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSOXIISrb_FT65cUfo3lMmXQElmLV0Vdbgk_Skr2BJDQKwRZ9NRoMJz26T7h3r8-zr/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -96,6 +96,8 @@ function openAccessCodeModal(username) {
 
 function closeAccessCodeModal() {
   document.getElementById('accessCodeModal').style.display = 'none';
+  document.getElementById('loginModal').style.display = 'flex';
+  showTab('login');
 }
 
 function toggleButtonLoading(buttonId, isLoading) {
