@@ -37,6 +37,7 @@
                 <input type="email" id="registerEmail" placeholder="E-mail (opcjonalnie)">
                 <input type="password" id="registerPassword" placeholder="Hasło" required>
                 <input type="password" id="confirmPassword" placeholder="Potwierdź hasło" required>
+                <input type="text" id="accessCode" placeholder="6-cyfrowy kod dostępu" required maxlength="6">
                 <input type="text" id="birthYearDisplay" placeholder="Wybierz rok urodzenia" readonly onclick="openYearModal()">
                 <input type="hidden" id="birthYear" required>
                 <input type="text" id="genderDisplay" placeholder="Wybierz płeć" readonly onclick="openGenderModal()">
@@ -47,6 +48,21 @@
                 </button>
                 <p class="error" id="registerError"></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal kodu dostępu -->
+    <div id="accessCodeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Weryfikacja kodu dostępu</h3>
+            <p id="usernameDisplay"></p>
+            <input type="text" id="accessCodeInput" placeholder="Wprowadź 6-cyfrowy kod dostępu" required maxlength="6">
+            <button id="codeButton" onclick="verifyAccessCode()">
+                <span class="button-text">Zweryfikuj</span>
+                <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+            <button onclick="closeAccessCodeModal()">Anuluj</button>
+            <p class="error" id="codeError"></p>
         </div>
     </div>
 

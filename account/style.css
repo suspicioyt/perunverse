@@ -13,7 +13,7 @@ body {
     align-items: center;
 }
 
-#loginModal {
+#loginModal, #accessCodeModal {
     display: none;
     position: fixed;
     top: 0;
@@ -192,6 +192,12 @@ button:hover:not(:disabled) {
 .modal-content h3 {
     color: #ffffff;
     font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.modal-content p {
+    color: #cccccc;
+    font-size: 1rem;
     margin-bottom: 1rem;
 }
 

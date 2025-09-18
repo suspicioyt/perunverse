@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSOXIISrb_FT65cUfo3lMmXQElmLV0Vdbgk_Skr2BJDQKwRZ9NRoMJz26T7h3r8-zr/exec';
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -41,6 +41,11 @@ function validateGender(gender) {
   return ['M', 'F', 'O'].includes(gender);
 }
 
+function validateAccessCode(code) {
+  const re = /^\d{6}$/;
+  return re.test(code);
+}
+
 function populateYearSelect() {
   const select = document.getElementById('yearSelect');
   const currentYear = new Date().getFullYear();
@@ -80,6 +85,17 @@ function selectGender() {
   document.getElementById('genderDisplay').value = selectedGender === 'M' ? 'Mężczyzna' : selectedGender === 'F' ? 'Kobieta' : 'Inna';
   document.getElementById('gender').value = selectedGender;
   closeGenderModal();
+}
+
+function openAccessCodeModal(username) {
+  document.getElementById('usernameDisplay').textContent = `Nazwa użytkownika: ${username}`;
+  document.getElementById('accessCodeModal').style.display = 'flex';
+  document.getElementById('accessCodeInput').value = '';
+  document.getElementById('codeError').classList.remove('show');
+}
+
+function closeAccessCodeModal() {
+  document.getElementById('accessCodeModal').style.display = 'none';
 }
 
 function toggleButtonLoading(buttonId, isLoading) {
@@ -129,7 +145,7 @@ function login() {
     .then(data => {
       toggleButtonLoading('loginButton', false);
       if (data.status === 'success') {
-        sessionStorage.setItem('authToken', data.token);
+        localStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
         window.location.href = getRedirectUrl();
       } else {
@@ -150,6 +166,7 @@ function register() {
   const email = document.getElementById('registerEmail').value.trim();
   const password = document.getElementById('registerPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
+  const accessCode = document.getElementById('accessCode').value.trim();
   const birthYear = document.getElementById('birthYear').value;
   const gender = document.getElementById('gender').value;
   const errorMessage = document.getElementById('registerError');
@@ -176,6 +193,11 @@ function register() {
     errorMessage.classList.add('show');
     return;
   }
+  if (!validateAccessCode(accessCode)) {
+    errorMessage.textContent = 'Kod dostępu musi być 6-cyfrową liczbą';
+    errorMessage.classList.add('show');
+    return;
+  }
   if (!birthYear || isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
     errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia (1900–' + new Date().getFullYear() + ')';
     errorMessage.classList.add('show');
@@ -198,7 +220,8 @@ function register() {
       birthYear: parseInt(birthYear),
       gender: gender,
       money: 0,
-      joined: new Date().toISOString()
+      joined: new Date().toISOString(),
+      accessCode: accessCode
     }
   };
 
@@ -212,6 +235,7 @@ function register() {
       birthYear: birthYear,
       gender: gender,
       email: email || '',
+      accessCode: accessCode,
       appData: JSON.stringify(appData)
     }).toString(),
     mode: 'cors',
@@ -224,7 +248,7 @@ function register() {
     .then(data => {
       toggleButtonLoading('registerButton', false);
       if (data.status === 'success') {
-        sessionStorage.setItem('authToken', data.token);
+        localStorage.setItem('authToken', data.token);
         sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
         window.location.href = getRedirectUrl();
       } else {
@@ -240,13 +264,106 @@ function register() {
     });
 }
 
+function verifyAccessCode() {
+  const accessCode = document.getElementById('accessCodeInput').value.trim();
+  const errorMessage = document.getElementById('codeError');
+  errorMessage.textContent = '';
+  errorMessage.classList.remove('show');
+
+  if (!validateAccessCode(accessCode)) {
+    errorMessage.textContent = 'Kod dostępu musi być 6-cyfrową liczbą';
+    errorMessage.classList.add('show');
+    return;
+  }
+
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    errorMessage.textContent = 'Brak tokena autoryzacji';
+    errorMessage.classList.add('show');
+    return;
+  }
+
+  toggleButtonLoading('codeButton', true);
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      action: 'verifyAccessCode',
+      token: token,
+      accessCode: accessCode
+    }).toString(),
+    mode: 'cors',
+    credentials: 'omit'
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      toggleButtonLoading('codeButton', false);
+      if (data.status === 'success') {
+        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+        closeAccessCodeModal();
+        window.location.href = getRedirectUrl();
+      } else {
+        errorMessage.textContent = data.message || 'Nieprawidłowy kod dostępu';
+        errorMessage.classList.add('show');
+      }
+    })
+    .catch(error => {
+      toggleButtonLoading('codeButton', false);
+      errorMessage.textContent = 'Błąd serwera: ' + error.message;
+      errorMessage.classList.add('show');
+      console.error('Błąd weryfikacji kodu:', error);
+    });
+}
+
 function loadUserData() {
-  const token = sessionStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
+  const userData = sessionStorage.getItem('userData');
+
   if (!token) {
     document.getElementById('loginModal').style.display = 'flex';
+    showTab('login');
     return Promise.resolve(false);
   }
-  return fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
+
+  if (userData) {
+    return fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit'
+    })
+      .then(response => {
+        if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (data.status === 'success') {
+          sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+          window.location.href = getRedirectUrl();
+          return true;
+        } else {
+          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('userData');
+          document.getElementById('loginModal').style.display = 'flex';
+          showTab('login');
+          return false;
+        }
+      })
+      .catch(error => {
+        console.error('Błąd weryfikacji tokena:', error);
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('userData');
+        document.getElementById('loginModal').style.display = 'flex';
+        showTab('login');
+        return false;
+      });
+  }
+
+  // Token exists but no userData, fetch username and show access code modal
+  return fetch(`${SCRIPT_URL}?action=getUsername&token=${encodeURIComponent(token)}`, {
     method: 'GET',
     mode: 'cors',
     credentials: 'omit'
@@ -256,22 +373,21 @@ function loadUserData() {
       return response.json();
     })
     .then(data => {
-      if (data.status === 'success') {
-        sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
-        window.location.href = getRedirectUrl();
-        return true;
+      if (data.status === 'success' && data.username) {
+        openAccessCodeModal(data.username);
+        return false;
       } else {
-        sessionStorage.removeItem('authToken');
-        sessionStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
         document.getElementById('loginModal').style.display = 'flex';
+        showTab('login');
         return false;
       }
     })
     .catch(error => {
-      console.error('Błąd weryfikacji tokena:', error);
-      sessionStorage.removeItem('authToken');
-      sessionStorage.removeItem('userData');
+      console.error('Błąd pobierania nazwy użytkownika:', error);
+      localStorage.removeItem('authToken');
       document.getElementById('loginModal').style.display = 'flex';
+      showTab('login');
       return false;
     });
 }
