@@ -1,6 +1,6 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
-const TEST_DATA_URL = 'testData.json';
+const TEST_DATA_URL = 'https://suspicioyt.github.io/perunverse/data/testData.json';
 
 
 async function initializeUserData() {
