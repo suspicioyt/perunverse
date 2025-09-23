@@ -10,15 +10,15 @@
 
 :root {
     --border-radius: 20px;
-    --primary-color: #00ca00;
+    --primary-color: #d67600;
     --button-disabled-color: #3b3b3b;
-    --button-color: #0a7900;
-    --button-active-color: #113f00;
-    --button-hover-color: #3bde00;
-    --highlight-bg-color: rgba(0, 220, 7, 0.2);
-    --shadow-color: rgba(30, 255, 0, 0.177);
-    --border-color: #53f037;
-    --background-image: url('https://imgv3.fotor.com/images/blog-richtext-image/Tralalero-Tralala-banner-image-featuring-a-shark-with-three-legs-wearing-blue-Nike-sneakers.jpg');
+    --button-color: #cf7c00;
+    --button-active-color: #3f2400;
+    --button-hover-color: #de8200;
+    --highlight-bg-color: rgba(220, 121, 0, 0.2);
+    --shadow-color: rgba(255, 140, 0, 0.177);
+    --border-color: #f18100;
+    --background-image: url('https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?cs=srgb&dl=pexels-pixabay-33109.jpg&fm=jpg');
     --parallax-image: url('../img/perun4.png');
 }
 
@@ -1126,7 +1126,6 @@ a {
 
 #settingsModal button {
     display: block;
-    width: 100%;
     padding: 10px;
     font-size: 16px;
     border: none;
@@ -1139,7 +1138,9 @@ a {
 #settingsModal button:hover {
     background: var(--button-hover-color);
 }
-
+#settingsModal label {
+    color: var(--text-color);
+}
 #achievementModalContent {
     display: flex;
     justify-content: center;
@@ -1154,10 +1155,10 @@ a {
     position: fixed;
     z-index: 1;
     top: 0;
-    left: 0;
+    left: -110px;
     overflow-x: hidden;
     padding-top: 10px;
-    display: none;
+    display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 20px;
@@ -1171,7 +1172,7 @@ a {
 }
 
 #sidenav.show {
-    display: flex;
+    left: 0;
 }
 
 #sidenav button {
@@ -1974,4 +1975,20 @@ input[type="range" i] {
     1px -1px 0 var(--shadow-color),
     -1px 1px 0 var(--shadow-color),
     2px 2px 0 var(--shadow-color);
+}
+.accordion {
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+  transition: 0.4s;
+}
+
+.accordion-panel {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
 }

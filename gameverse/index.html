@@ -11,10 +11,30 @@
     <link rel="stylesheet" href="style/chat.css">
     <link rel="stylesheet" href="effects/like.css">
     <link rel="stylesheet" href="style/public.css">
+    <link rel="stylesheet" href="style/event.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="https://suspicioyt.github.io/perunverse/logo/gameverse.png">
 </head>
 <body>
+    <div id="eventEffectContainer">
+        <div id="leaves">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i> 
+        </div>
+    </div>
     <div id="notification-container" class="notification-container"></div>
     <header class="sticky">
         <div class="progress-container">
@@ -45,15 +65,17 @@
             [Kliknij w te okienko aby zamknąć]
         </div>
         <div id="sidenav">
-            <button onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></button>
+            <button onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-book"></i></button>
             <button disabled onclick="Modal.open('achievementModal')" class="sidenavButton" title="Osiągnięcia"><i class="fa-solid fa-trophy"></i></button>
-            <button onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></button>
+            <button onclick="Modal.open('indexModal')" class="sidenavButton" title="Naklejki"><i class="fa-solid fa-icons"></i></button>
             <button disabled onclick="Modal.open('chatModal');scrollToBottom()" class="sidenavButton" title="Chat"><i class="fa-solid fa-comments"></i></button>
             <button disabled onclick="Modal.open('rankingModal')" class="sidenavButton" title="Ranking"><i class="fa-solid fa-ranking-star"></i></button>
             <button disabled onclick="Modal.open('challengesModal')" class="sidenavButton" title="Wyzwania"><i class="fa-solid fa-star"></i></button>
             <button disabled onclick="Modal.open('consoleModal')" id="consoleButton" class="sidenavButton" title="Konsola"><i class="fas fa-terminal"></i></button>
             <button onclick="Modal.open('opinionModal')" class="sidenavButton" title="Feedback"><i class="fa-solid fa-paper-plane"></i></button>
+            <button onclick="Modal.open('infoModal')" class="sidenavButton" title="Informacje"><i class="fa-solid fa-info-circle"></i></button>
             <button onclick="Modal.open('navigationModal')" class="sidenavButton" title="Nawigacja"><i class="fa-solid fa-compass"></i></button>
+            <button onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></button>
         </div>
         <div id="mainwindow">
             <div class="search-filters-container borderColorChange">
@@ -76,16 +98,26 @@
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
-            <div class="event-container" id="eventContainer">
+            <div class="event-container">
+                <div class="events" id="easterEvent">
+                    <h1>Event jesienny!</h1>
+                    <div class="event-block">
+                        Zbierz 100 liści w grze Jesienne liście:
+                        <div class="event-progress-container" data-storage-key="autumn2025leaves" data-total-buttons="100"></div>
+                        <button onclick="checkForEventRewards()">Odbierz</button>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="event-container" id="eventContainer">
                 <div class="events" id="easterEvent">
                     <h1>Plebiscyt na HOT grę!</h1>
                     <div class="event-block">
                         <b style="color: gold;">1. miejsce: Automat - 66%</b><br>
                         <b style="color: silver;">2. miejsce: Rizz Party Tycoon - 33%</b>
-                        <!-- <button id="sendVoteButton" onclick="sendGameVote()" aria-label="Wyślij głos na wybraną grę">WYŚLIJ GŁOS</button> -->
+                        <button id="sendVoteButton" onclick="sendGameVote()" aria-label="Wyślij głos na wybraną grę">WYŚLIJ GŁOS</button>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
@@ -110,13 +142,6 @@
                     <span class="dot"></span>
                 </div>
             </div>
-            <!-- <div class="event-container">
-                <div class="events" id="easterEvent">
-                    <h1>Event wielkanocny!</h1>
-                    <div class="event-block">
-                    </div>
-                </div>
-            </div> -->
             <div class="game-container borderColorChange" max="12">
                 <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
             </div>
@@ -147,7 +172,7 @@
                         <thead><tr><th class="tg-0pky">Poniedziałek</th><th class="tg-0pky">Wtorek</th><th class="tg-0pky">Środa</th><th class="tg-0pky">Czwartek</th><th class="tg-0pky">Piątek</th><th class="tg-0pky">Sobota</th><th class="tg-0pky">Niedziela</th></tr></thead>
                         <tbody>
                             <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">20:00</td></tr>
-                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">Major Update</td></tr>
+                            <tr><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax"></td><td class="tg-0lax">Bowling Update</td></tr>
                         </tbody>
                     </table>
                     <b style="color: black;" id="demo"></b>
@@ -247,24 +272,42 @@
     <div id="settingsModal" class="modal" style="overflow-y: auto;">
         <h1>Ustawienia</h1>
         <div class="modal-content">
-            <h2>Personalizacja</h2>
-            <label>Motyw: </label>
-            <select name="theme" id="themeSelect" onchange="changeTheme(this.value)">
-                <option value="dark">Ciemny</option>
-                <option value="gray">Szary</option>
-                <option value="light">Jasny</option>
-            </select>
-            <h2>Eksperymenty</h2> <br>
-            <label class="switch"><input type="checkbox" switchId="01"><span class="slider round"></span></label><label>Tryb developera</label><br>
-            <label class="switch"><input type="checkbox" switchId="02"><span class="slider round"></span></label><label>Zapis modali</label><br>
-            <label class="switch"><input disabled type="checkbox" switchId="03"><span class="slider round"></span></label><label>Ładowanie obrazów na Chacie</label><br>
-            <label class="switch"><input disabled type="checkbox" switchId="04"><span class="slider round"></span></label><label>Ukrywanie zbanowanych słów na Chacie</label><br>
-            <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
-            <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Powiadomienia</label><br>
-            <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>Własna gra</label><br>
-            <label class="switch"><input type="checkbox" switchId="08"><span class="slider round"></span></label><label>Grane gry</label><br>
-            <label class="switch"><input type="checkbox" switchId="09"><span class="slider round"></span></label><label>Tryb kompaktowy</label><br>
-            <button onclick="resetSwitches();initializeSwitches()">Reset</button>
+            <button class="accordion"><h2>Personalizacja</h2></button>
+            <div class="accordion-panel">
+                <label>Motyw: </label>
+                <select name="theme" id="themeSelect" onchange="changeTheme(this.value)">
+                    <option value="dark">Ciemny</option>
+                    <option value="gray">Szary</option>
+                    <option value="light">Jasny</option>
+                </select>
+            </div>
+            <button class="accordion"><h2>Eksperymenty</h2></button>
+            <div class="accordion-panel">
+                <label class="switch"><input type="checkbox" switchId="01"><span class="slider round"></span></label><label>Tryb developera</label><br>
+                <label class="switch"><input type="checkbox" switchId="02"><span class="slider round"></span></label><label>Zapis modali</label><br>
+                <label class="switch"><input type="checkbox" switchId="03"><span class="slider round"></span></label><label>Grane gry</label><br>
+                <label class="switch"><input type="checkbox" switchId="04"><span class="slider round"></span></label><label>Powiadomienia</label><br>
+                <label class="switch"><input type="checkbox" switchId="05"><span class="slider round"></span></label><label>Własna gra</label><br>
+                <label class="switch"><input type="checkbox" switchId="06"><span class="slider round"></span></label><label>Ostatnio grana gra</label><br>
+                <label class="switch"><input type="checkbox" switchId="07"><span class="slider round"></span></label><label>Tryb kompaktowy</label><br>
+                <label class="switch"><input type="checkbox" switchId="08"><span class="slider round"></span></label><label>Automatyczny Sidenav</label><br>
+                <button onclick="resetSwitches();initializeSwitches()">Reset</button>
+            </div>
+        </div>
+    </div>
+    <div id="indexModal" class="modal" style="overflow-y: auto;">
+        <h1>Naklejki</h1>
+        <div class="modal-content">
+            <div class="index-left-panel">
+                <div class="thumbnails" id="thumbnails"></div>
+                <div class="no-icons" id="noIcons" style="display: none;">Brak posiadanych ikon.</div>
+            </div>
+            <div class="index-right-panel">
+                <div class="details" id="details">
+                    <h2>Kliknij na miniaturkę, aby zobaczyć szczegóły</h2>
+                    <p>Wybierz ikonę z lewej strony.</p>
+                </div>
+            </div>
         </div>
     </div>
     <div id="chatModal" class="modal">

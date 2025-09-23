@@ -4,421 +4,322 @@
       "id": "01",
       "name": "Sandbox",
       "link": "game/1/sandbox.html",
-      "status": "Beta",
-      "tooltip": "Stwórz własny świat",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Stwórz własny świat",
+      "tags": ["beta"]
     },
     {
       "id": "02",
       "name": "Pet Simulator",
       "link": "game/1/petsim.html",
-      "status": "Beta",
-      "tooltip": "Wykluwaj zwierzęta i niszcz struktury",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Wykluwaj zwierzęta i niszcz struktury",
+      "tags": ["beta"]
     },
     {
       "id": "03",
       "name": "RPG",
       "link": "game/1/rpg.html",
-      "status": "Testy",
-      "tooltip": "Eksploruj świat",
-      "classes": ["testy"],
-      "ulubione": true
+      "description": "Eksploruj świat",
+      "tags": ["testy"]
     },
     {
       "id": "04",
       "name": "Bloki 1",
       "link": "game/1/bloki1.html",
-      "status": "",
-      "tooltip": "Niszcz bloki lub uciekaj",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Niszcz bloki lub uciekaj",
+      "tags": ["ukonczona"]
     },
     {
       "id": "05",
       "name": "Dino Game",
       "link": "game/1/dino.html",
-      "status": "Konserwacje",
-      "tooltip": "Skacz nad przeszkodami",
-      "classes": ["konserwacje"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Skacz nad przeszkodami",
+      "tags": ["konserwacje", "disabled"]
     },
     {
       "id": "06",
       "name": "DuoPlayer",
       "link": "game/1/duoplayer.html",
-      "status": "Konserwacje",
-      "tooltip": "Rywalizuj z innym graczem",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Rywalizuj z innym graczem",
+      "tags": ["konserwacje"]
     },
     {
       "id": "07",
       "name": "Snake",
       "link": "game/1/snake.html",
-      "status": "Konserwacje",
-      "tooltip": "Zjadaj owoce, aby rosnąć",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Zjadaj owoce, aby rosnąć",
+      "tags": ["konserwacje"]
     },
     {
       "id": "08",
       "name": "Zgadywanie Liczb",
       "link": "game/1/zgadywanieliczb.html",
-      "status": "",
-      "tooltip": "Zgaduj liczby",
-      "classes": ["ukonczona"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Zgaduj liczby",
+      "tags": ["ukonczona", "disabled"]
     },
     {
       "id": "09",
       "name": "Rizz Party Tycoon",
       "link": "game/1/rizzpartytycoon.html",
-      "status": "Beta",
-      "tooltip": "Stwórz imperium imprezowe",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Stwórz imperium imprezowe",
+      "tags": ["beta"]
     },
     {
       "id": "10",
       "name": "Kółko-Krzyżyk",
       "link": "game/1/kolkokrzyzyk.html",
-      "status": "",
-      "tooltip": "Stawiaj kółka i krzyżyki, aby wygrać",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Stawiaj kółka i krzyżyki, aby wygrać",
+      "tags": ["ukonczona"]
     },
     {
       "id": "11",
       "name": "Tetris",
       "link": "game/1/tetris.html",
-      "status": "",
-      "tooltip": "Układaj bloki",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Układaj bloki",
+      "tags": ["ukonczona"]
     },
     {
       "id": "12",
       "name": "Obby",
       "link": "game/1/obby.html",
-      "status": "Beta",
-      "tooltip": "Przejdź tor przeszkód",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Przejdź tor przeszkód",
+      "tags": ["beta"]
     },
     {
       "id": "13",
       "name": "Bitcoin Clicker",
       "link": "game/1/bitcoinclicker.html",
-      "status": "",
-      "tooltip": "Klikaj i zdobywaj Bitcoiny",
-      "classes": ["ukonczona", "money"],
-      "ulubione": false
+      "description": "Klikaj i zdobywaj Bitcoiny",
+      "tags": ["ukonczona", "money"]
     },
     {
       "id": "14",
       "name": "Memory",
       "link": "game/1/memory.html",
-      "status": "",
-      "tooltip": "Szukaj podobnych kart",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Szukaj podobnych kart",
+      "tags": ["ukonczona"]
     },
     {
       "id": "15",
       "name": "Nonogram",
       "link": "game/1/nonogram.html",
-      "status": "Konserwacje",
-      "tooltip": "Rozwiąż puzzle",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Rozwiąż puzzle",
+      "tags": ["konserwacje"]
     },
     {
       "id": "16",
       "name": "Ping Pong",
       "link": "game/1/pingpong.html",
-      "status": "",
-      "tooltip": "Odbijaj piłkę",
-      "classes": ["ukonczona"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Odbijaj piłkę",
+      "tags": ["ukonczona", "disabled"]
     },
     {
       "id": "17",
       "name": "Flappy Bird",
       "link": "game/1/flappybird.html",
-      "status": "Beta",
-      "tooltip": "Wlatuj w dziury w ścianach",
-      "classes": ["beta"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Wlatuj w dziury w ścianach",
+      "tags": ["beta", "disabled"]
     },
     {
       "id": "18",
       "name": "Solitaire",
       "link": "game/1/solitaire.html",
-      "status": "",
-      "tooltip": "Układaj karty w Pasjansa",
-      "classes": ["ukonczona", "internet"],
-      "internet": "https://codepen.io/bfa/pen/ggGYeE",
-      "ulubione": false
+      "description": "Układaj karty w Pasjansa",
+      "tags": ["ukonczona", "internet"],
+      "internet": "https://codepen.io/bfa/pen/ggGYeE"
     },
     {
       "id": "19",
       "name": "Bloki 2",
       "link": "game/1/bloki2.html",
-      "status": "",
-      "tooltip": "Odbijaj piłkę i niszcz bloki",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Odbijaj piłkę i niszcz bloki",
+      "tags": ["ukonczona"]
     },
     {
       "id": "20",
       "name": "Wisielec",
       "link": "game/1/wisielec.html",
-      "status": "Konserwacje",
-      "tooltip": "Odgaduj słowa",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Odgaduj słowa",
+      "tags": ["konserwacje"]
     },
     {
       "id": "21",
       "name": "Pizza Tycoon",
       "link": "game/1/pizza.html",
-      "status": "Beta",
-      "tooltip": "Stwórz fabrykę pizzy",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Stwórz fabrykę pizzy",
+      "tags": ["beta"]
     },
     {
       "id": "22",
       "name": "Automat",
       "link": "game/1/machine.html",
-      "status": "HOT",
-      "tooltip": "Wylosuj 3 takie same ikony",
-      "classes": ["beta", "money","hot"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Wylosuj 3 takie same ikony",
+      "tags": ["beta", "money", "hot", "disabled"]
     },
     {
       "id": "23",
       "name": "Black Jack",
       "link": "game/1/blackjack.html",
-      "status": "Konserwacje",
-      "tooltip": "Dobieraj karty",
+      "description": "Dobieraj karty",
       "internet": "https://www.youtube.com/watch?v=bMYCWccL-3U",
-      "classes": ["konserwacje", "internet"],
-      "ulubione": false
+      "tags": ["konserwacje", "internet"]
     },
     {
       "id": "24",
       "name": "Scratch",
       "link": "game/1/scratch.html",
-      "status": "Beta",
-      "tooltip": "Stwórz algorytm dla duszka",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Stwórz algorytm dla duszka",
+      "tags": ["beta"]
     },
     {
       "id": "25",
       "name": "2048",
       "link": "game/1/2048.html",
-      "status": "Konserwacje",
-      "tooltip": "Łącz kafelki",
-      "classes": ["konserwacje"],
-      "ulubione": false,
-      "disabled":true
+      "description": "Łącz kafelki",
+      "tags": ["konserwacje", "disabled"]
     },
     {
       "id": "26",
       "name": "Wordle",
       "link": "game/1/wordle.html",
-      "status": "Konserwacje",
-      "tooltip": "Zgaduj słowa",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Zgaduj słowa",
+      "tags": ["konserwacje"]
     },
     {
       "id": "27",
       "name": "Wieża Hanoi",
       "link": "game/1/hanoitower.html",
-      "status": "Konserwacje",
-      "tooltip": "Przełóż dyski do wieży",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Przełóż dyski do wieży",
+      "tags": ["konserwacje"]
     },
     {
       "id": "28",
       "name": "NBA 3K",
       "link": "game/1/nba3k.html",
-      "status": "Beta",
-      "tooltip": "Symulator koszykówki",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Symulator koszykówki",
+      "tags": ["beta"]
     },
     {
       "id": "29",
       "name": "Basketball Game",
       "link": "game/1/basketballgame.html",
-      "status": "Beta",
-      "tooltip": "Rzucaj osobiste do kosza",
-      "classes": ["beta"],
-      "ulubione": false
+      "description": "Rzucaj osobiste do kosza",
+      "tags": ["beta"]
     },
     {
       "id": "30",
       "name": "Brainrot Guesser",
       "link": "game/1/brainrotguesser.html",
-      "status": "",
-      "tooltip": "Odgadnij Brainroty",
-      "classes": ["ukonczona"],
-      "ulubione": false
+      "description": "Odgadnij Brainroty",
+      "tags": ["ukonczona"]
     },
     {
       "id": "31",
       "name": "Saper",
       "link": "game/1/saper.html",
-      "status": "Konserwacje",
-      "tooltip": "Znajdź wszystkie miny",
-      "classes": ["konserwacje"],
-      "ulubione": false
+      "description": "Znajdź wszystkie miny",
+      "tags": ["konserwacje"]
     },
     {
       "id": "32",
       "name": "Grow a Garden",
       "link": "game/1/growagarden.html",
-      "status": "Beta",
-      "tooltip": "Wychoduj ogrodowe imperium",
-      "classes": ["nowosc", "beta"],
-      "ulubione": false
+      "description": "Wychoduj ogrodowe imperium",
+      "tags": ["beta"]
     },
     {
       "id": "33",
       "name": "Paint",
       "link": "game/1/paint.html",
-      "status": "Konserwacje",
-      "tooltip": "Maluj cokolwiek chcesz",
+      "description": "Maluj cokolwiek chcesz",
       "internet": "https://www.youtube.com/watch?v=y84tBZo8GFo",
-      "classes": ["nowosc", "konserwacje","internet"],
-      "ulubione": false
+      "tags": ["konserwacje", "internet"]
     },
     {
       "id": "34",
       "name": "Steal a Brainrot",
       "link": "game/1/stealabrainrot.html",
-      "status": "Konserwacje",
-      "tooltip": "Kradnij coraz lepsze brainroty",
-      "classes": ["nowosc", "kenserwacje"],
-      "ulubione": false
+      "description": "Kradnij coraz lepsze brainroty",
+      "tags": ["konserwacje"]
+    },
+    {
+      "id": "35",
+      "name": "Jesienne liście",
+      "link": "game/event/autumn.html",
+      "description": "Zbieraj liście",
+      "tags": ["nowosc", "event"]
     },
     {
       "id": "999",
       "name": "Whack A Mole",
       "link": "game/1/whackamole.html",
-      "status": "",
-      "tooltip": "Uderzaj w krety",
+      "description": "Uderzaj w krety",
       "internet": "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
-      "classes": ["nowosc", "ukonczona", "internet"],
-      "ulubione": false,
-      "premium": true
+      "tags": ["nowosc", "ukonczona", "internet", "premium"]
     },
     {
       "id": "999",
       "name": "Agar.io",
       "link": "game/1/agario.html",
-      "status": "",
-      "tooltip": "Zjadaj innych",
-      "classes": ["nowosc", "konserwacje"],
-      "ulubione": false,
-      "premium": true
+      "description": "Zjadaj innych",
+      "tags": ["nowosc", "konserwacje", "premium"]
     },
     {
       "id": "999",
       "name": "Paper.io",
       "link": "game/1/paperio.html",
-      "status": "Nie działa",
-      "tooltip": "Powiększaj swój teren",
-      "classes": ["nowosc", "testy"],
-      "ulubione": false,
-      "premium": true,
-      "disabled":true
+      "description": "Powiększaj swój teren",
+      "tags": ["nowosc", "testy", "premium", "disabled"]
     },
     {
       "id": "999",
       "name": "Kebab Maker",
       "link": "game/1/kebabmaker.html",
-      "status": "",
-      "tooltip": "Skręcaj kebaby",
-      "classes": ["nowosc", "beta"],
-      "ulubione": false,
-      "premium": true
+      "description": "Skręcaj kebaby",
+      "tags": ["nowosc", "beta", "premium"]
     },
     {
       "id": "999",
       "name": "Papier Kamień Nożyce",
       "link": "game/1/rockpaperscissors.html",
-      "status": "",
-      "tooltip": "Zniszcz przeciwnika",
-      "classes": ["nowosc", "ukonczone"],
-      "ulubione": false,
-      "premium": true
+      "description": "Zniszcz przeciwnika",
+      "tags": ["nowosc", "ukonczona", "premium"]
     },
-        {
+    {
       "id": "999",
       "name": "Papier Kamień Nożyce Minus 1",
       "link": "game/1/rockpaperscissorsminusone.html",
-      "status": "",
-      "tooltip": "Zniszcz przeciwnika",
+      "description": "Zniszcz przeciwnika",
       "internet": "https://youtu.be/pAwrDwvIGno?si=wweoHoQ-SyNiAA6Q",
-      "classes": ["nowosc", "ukonczone","internet"],
-      "ulubione": false,
-      "premium": true
+      "tags": ["nowosc", "ukonczona", "internet", "premium"]
     },
     {
       "id": "999",
       "name": "Minecraft",
       "link": "game/1/minecraft.html",
-      "status": "",
-      "tooltip": "Uderzaj w krety",
-      "classes": ["nowosc", "testy"],
-      "ulubione": false,
-      "premium": true
+      "description": "Uderzaj w krety",
+      "tags": ["nowosc", "testy", "premium"]
     },
-        {
+    {
       "id": "999",
       "name": "Dino Game",
       "link": "game/1/dino2.html",
-      "status": "Przyszła aktualizacja",
-      "tooltip": "Klasyczna gra Dino",
-      "classes": ["nowosc", "testy"],
-      "ulubione": false,
-      "premium": true
+      "description": "Klasyczna gra Dino",
+      "tags": ["nowosc", "testy", "premium"]
     },
     {
       "id": "999",
       "name": "GeoGuesser",
       "link": "game/1/geoguesser.html",
-      "status": "Nie działa",
-      "tooltip": "Uderzaj w krety",
-      "classes": ["nowosc", "konserwacje"],
-      "ulubione": false,
-      "premium": true,
-      "disabled":true
+      "description": "Uderzaj w krety",
+      "tags": ["nowosc", "konserwacje", "premium", "disabled"]
     },
     {
       "id": "999",
       "name": "Pizza Legends",
       "link": "game/PizzaLegends/index.html",
-      "status": "W tworzeniu",
-      "tooltip": "Uderzaj w krety",
+      "description": "Uderzaj w krety",
       "internet": "https://youtu.be/ej8SatOj3V4?si=tsuaZ696bqbQLnWV",
-      "classes": ["nowosc", "konserwacje", "internet"],
-      "ulubione": false,
-      "premium": true
+      "tags": ["nowosc", "konserwacje", "internet", "premium"]
     }
   ]
 }

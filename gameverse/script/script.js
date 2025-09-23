@@ -17,7 +17,7 @@ const STORAGE_KEYS = {
   VOTING_HISTORY: 'votingHistory'
 };
 
-const UPDATE_DATE = 'Sep 14, 2025 20:00:00';
+const UPDATE_DATE = 'Oct 12, 2025 20:00:00';
 
 const API_FIELD_MAP = {
   [STORAGE_KEYS.USERNAME]: 'username',
@@ -33,13 +33,13 @@ window.API_URL = 'https://script.google.com/macros/s/AKfycbzLuqmfiDBw9QVDFuPuWme
 window.settingSwitches = [
   { switchId: '01', value: false }, // tryb dev
   { switchId: '02', value: false }, // zapis modali
-  { switchId: '03', value: true },  // obrazy na chacie
-  { switchId: '04', value: true },  // zbanowane słowa
+  { switchId: '03', value: true },  // grane gry
+  { switchId: '04', value: true },  // powiadomienia
   { switchId: '05', value: false }, // ???
   { switchId: '06', value: true },  // ostatnio grana gra
-  { switchId: '07', value: true },  // powiadomienia
-  { switchId: '08', value: true },  // grane gry
-  { switchId: '09', value: false }, // tryb kompaktowy
+  { switchId: '07', value: false }, // tryb kompaktowy
+  { switchId: '08', value: true }, //automatyczny sidenav
+  { switchId: '09', value: false },
   { switchId: '10', value: false }
 ];
 
@@ -978,6 +978,7 @@ function copyToClipboard(text) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   await window.userData.initializeUserData();
+  loadIcons();
   const savedTheme = getLocalData('gameverse', STORAGE_KEYS.THEME);
   if (!savedTheme) {
     setLocalData('gameverse', STORAGE_KEYS.THEME, 'dark');
@@ -1042,12 +1043,22 @@ window.addEventListener('scroll', function () {
   const currentScrollY = window.scrollY;
   const elementHeight = element.offsetHeight;
 
+  let switches = getLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES) || window.settingSwitches;
+  if (!Array.isArray(switches)) {
+    switches = window.settingSwitches;
+    setLocalData('gameverse', STORAGE_KEYS.SETTING_SWITCHES, switches);
+  }
+  const autoSidenavSwitch = switches?.find(s => s.switchId === "08")?.value ?? false;
+
   if (currentScrollY >= 0 && currentScrollY <= (getElementPosition() + elementHeight)) {
     if (Math.abs(currentScrollY - lastScrollY) < threshold) {
       return;
     }
 
     if (!isScrolling && currentScrollY > lastScrollY) {
+      if(autoSidenavSwitch) {
+        document.getElementById("sidenav").classList.add("show");
+      }
       smoothScrollTo(getElementPosition());
       var header = document.querySelector('header');
       header.classList.add('scrolled');
@@ -1055,6 +1066,9 @@ window.addEventListener('scroll', function () {
     }
 
     if (!isScrolling && currentScrollY < lastScrollY && currentScrollY > 0) {
+      if(autoSidenavSwitch) {
+        document.getElementById("sidenav").classList.remove("show");
+      }
       smoothScrollTo(0);
       var header = document.querySelector('header');
       header.classList.remove('scrolled');
@@ -1085,3 +1099,109 @@ document.addEventListener('click', event => {
     gameTooltipContainer.classList.remove("show");
   }
 });
+async function loadIcons() {
+    try {
+        // Pobranie wszystkich ikon z pliku JSON
+        console.log('Próba pobrania icons.json...');
+        const response = await fetch('data/icons.json');
+        if (!response.ok) {
+            throw new Error(`Błąd HTTP: ${response.status} ${response.statusText}`);
+        }
+        const allIconsData = await response.json();
+        console.log('Pobrano wszystkie ikony:', allIconsData);
+        // Pobranie ID ikon posiadanych przez gracza
+        console.log('Pobieranie danych gracza...');
+        const playerIconsIds = window.userData.getData('gameverse', 'indexIcons') || [];
+        console.log('Posiadane ID ikon:', playerIconsIds);
+        // Walidacja danych
+        if (!allIconsData || typeof allIconsData !== 'object') {
+            console.error('Błąd: Dane wszystkich ikon są nieprawidłowe.', allIconsData);
+            return;
+        }
+        if (!Array.isArray(playerIconsIds)) {
+            console.error('Błąd: Dane ikon gracza nie są tablicą.', playerIconsIds);
+            return;
+        }
+        // Przygotowanie wszystkich ikon
+        const allIcons = Object.keys(allIconsData).map(id => {
+            const icon = allIconsData[id];
+            if (icon) {
+                return {
+                    id: icon.id || id,
+                    name: icon.name || 'Nieznana ikona',
+                    description: icon.description || 'Brak opisu.',
+                    img: icon.img || '<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjREREOEREOiIvPgo8dGV4dCB4PSI0MCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk9vcHM8L3RleHQ+Cjwvc3ZnPgo=" alt="Brak ikony">',
+                    isOwned: playerIconsIds.includes(id) || playerIconsIds.includes(parseInt(id))
+                };
+            }
+            console.warn(`Nieprawidłowe dane dla ikony ID: ${id}`);
+            return null;
+        }).filter(icon => icon !== null);
+        console.log('Wszystkie ikony po przetworzeniu:', allIcons);
+        // Wyświetl miniaturki
+        const thumbnailsContainer = document.getElementById('thumbnails');
+        const noIconsMsg = document.getElementById('noIcons');
+        if (!thumbnailsContainer || !noIconsMsg) {
+            console.error('Błąd: Elementy DOM #thumbnails lub #noIcons nie istnieją.');
+            return;
+        }
+        if (allIcons.length === 0) {
+            console.log('Brak ikon do wyświetlenia.');
+            thumbnailsContainer.style.display = 'none';
+            noIconsMsg.style.display = 'block';
+            return;
+        }
+        thumbnailsContainer.style.display = 'grid';
+        noIconsMsg.style.display = 'none';
+        thumbnailsContainer.innerHTML = '';
+        allIcons.forEach(icon => {
+            const thumb = document.createElement('div');
+            thumb.className = `thumbnail ${icon.isOwned ? 'owned' : 'unowned'}`;
+            thumb.innerHTML = `
+                ${icon.img}
+                <span>${icon.name}</span>
+            `;
+            thumb.addEventListener('click', () => showDetails(icon));
+            thumbnailsContainer.appendChild(thumb);
+        });
+        console.log('Miniaturki załadowane pomyślnie.');
+    } catch (error) {
+        console.error('Błąd podczas ładowania ikon:', error);
+    }
+}
+function showDetails(icon) {
+    const details = document.getElementById('details');
+    if (!details) {
+        console.error('Błąd: Element DOM #details nie istnieje.');
+        return;
+    }
+    details.classList.add('active');
+    details.innerHTML = `
+        ${icon.img}
+        <h2>${icon.name}</h2>
+        <p>${icon.description}</p>
+        <p>${icon.isOwned ? 'Posiadana' : 'Nieposiadana'}</p>
+    `;
+    console.log('Wyświetlono szczegóły ikony:', icon.name);
+}
+
+var acc = document.getElementsByClassName("accordion");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+
+async function checkForEventRewards() {
+  if(await window.userData.getData('gameverse', 'autumn2025leaves') >= 100) {
+    window.userData.setData('gameverse', 'indexIcons', [...window.userData.getData('gameverse', 'indexIcons') || [], 1]);
+  }
+}

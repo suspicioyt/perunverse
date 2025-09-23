@@ -1,16 +1,47 @@
 {
   "tabsData": [
     {
-      "name": "🧠 Brainrot Update",
+      "name": "🍂 Autumn 2025 Update",
+      "version": "1.2.2.1",
+      "date": "23.09.2025r.",
+      "quote": "Jesień: ostatni i najpiękniejszy uśmiech roku",
+      "backgroundImage": "https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?cs=srgb&dl=pexels-pixabay-33109.jpg&fm=jpg",
+      "paragraphs": [
+        {
+          "title": "Nowości",
+          "content": [
+            "🍂 Event jesienny",
+            "🚗 Automatyczny Sidenav",
+            "🖼️ Naklejki"
+          ]
+        },
+        {
+          "title": "Gry",
+          "content": [
+            "📃 Dodano tagi gier",
+            "🍂 Dodano Jesienne liście"
+          ]
+        },
+        {
+          "title": "Zmiany",
+          "content": [
+            "🛠️ Zaktualizowano kafelki gier",
+            "🛠️ Aktualizacja ustawień"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🧠 Brainrot Update part 1",
       "version": "1.2.2.0",
       "date": "16.09.2025r.",
-      "quote": "Brush brush po płótnie",
+      "quote": "Tralalero tralala",
       "backgroundImage": "https://imgv3.fotor.com/images/blog-richtext-image/Tralalero-Tralala-banner-image-featuring-a-shark-with-three-legs-wearing-blue-Nike-sneakers.jpg",
       "paragraphs": [
         {
           "title": "Gry",
           "content": [
-            "🧠 Odblokowano i zaaktualizowano Brainrot Guesser ( Czy zgadniesz wszystkie? )",
+            "🧠 Odblokowano i zaktualizowano Brainrot Guesser ( Czy zgadniesz wszystkie? )",
             "👺 Dodano Steal a Brainrot",
             "🪙 Zaktualizowano Bitcoin Clicker"
           ]
@@ -34,7 +65,7 @@
         {
           "title": "Nowości",
           "content": [
-            "📃 Dodano okno opisów gier"
+            "📃 Okno opisów gier"
           ]
         },
         {
@@ -89,7 +120,7 @@
         {
           "title": "Nowości",
           "content": [
-            "🪢 Dodano powiązanie z Perun Account"
+            "🪢 Powiązanie z Perun Account"
           ]
         },
         {
@@ -430,7 +461,7 @@
           "title": "Gry",
           "content": [
             "🕹️ Funkcja Ostatnio Grane",
-            "♣️ Dodano gry: Solitaire <a href=\"game/1/solitaire.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> , Bloki 2 <a href=\"bloki2/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "♣️ Dodano gry: Solitaire i Bloki 2"
           ]
         },
         {
@@ -461,8 +492,8 @@
         {
           "title": "Gry",
           "content": [
-            "🐦 Dodano nową grę: Flappy Bird <a href=\"flappybird/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🌟 Zaktualizowano gre: Spadające bloki <a href=\"game/1/bloki1.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Memory <a href=\"game/1/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>, Tetris <a href=\"game/1/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🐦 Dodano nową grę: Flappy Bird",
+            "🌟 Zaktualizowano gre: Spadające bloki, Memory, Tetris",
             "🖼️ Poprawiono wygląd tytułów zakładek istniejących gier"
           ]
         },
@@ -492,7 +523,7 @@
         {
           "title": "Gry",
           "content": [
-            "🏓 Dodano nową grę: Ping Pong <a href=\"pingpong/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🏓 Dodano nową grę: Ping Pong",
             "🌍 Zaktualizowano gre: Sandbox",
             "🪛 Zaktualizowano tooltipy i nazwy gier"
           ]
@@ -519,7 +550,7 @@
           "title": "Gry",
           "content": [
             "✂️ Usunięto gry eventowe",
-            "🔢 Dodano nową grę Nonogram <a href=\"nonogram/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🔢 Dodano nową grę Nonogram"
           ]
         },
         {
@@ -553,7 +584,7 @@
         {
           "title": "Gry",
           "content": [
-            "🔤 Dodano grę Memory <a href=\"game/1/memory.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
+            "🔤 Dodano grę Memory",
             "🖼️ Poprawiono wygląd tytułów zakładek istniejących gier"
           ]
         },
@@ -584,8 +615,8 @@
         {
           "title": "Gry",
           "content": [
-            "❄️ Dodano grę Śnieżynki <a href=\"sniezynki/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🖱️ Ulepszono grę Bitcoin Miner <a href=\"game/1/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "❄️ Dodano grę Śnieżynki",
+            "🖱️ Ulepszono grę Bitcoin Miner"
           ]
         },
         {
@@ -617,7 +648,7 @@
         {
           "title": "Gry",
           "content": [
-            "🖱️ Dodano nową grę: BitCoin Clicker <a href=\"game/1/bitcoinminer.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🖱️ Dodano nową grę: BitCoin Clicker"
           ]
         },
         {
@@ -647,9 +678,9 @@
         {
           "title": "Gry",
           "content": [
-            "🪛 Ulepszenie gier: Kółko-Krzyżyk <a href=\"game/1/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🟥 Dodano gry: Tetris <a href=\"game/1/tetris.html\" class=\"game-short-link\" target=\"_blank\">🎮</a> i Obby <a href=\"obby/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "😺 Pet Simulator jest zupełnie nowy <a href=\"petsim/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🪛 Ulepszenie gier: Kółko-Krzyżyk",
+            "🟥 Dodano gry: Tetris i Obby",
+            "😺 Pet Simulator jest zupełnie nowy"
           ]
         },
         {
@@ -681,9 +712,9 @@
         {
           "title": "Gry",
           "content": [
-            "🎮 Dodano nową grę: Rizz Party Tycoon <a href=\"rizzparty/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🪛 Ulepszono grę w Kółko i Krzyżyk <a href=\"game/1/kolkokrzyzyk.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>",
-            "🏗️ Rozpoczęto prace nad RPG HTML <a href=\"rpghtml/index.html\" class=\"game-short-link\" target=\"_blank\">🎮</a>"
+            "🎮 Dodano nową grę: Rizz Party Tycoon",
+            "🪛 Ulepszono grę w Kółko i Krzyżyk",
+            "🏗️ Rozpoczęto prace nad RPG HTML"
           ]
         },
         {
@@ -694,54 +725,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "🖊️ Do zrobienia",
-      "version": "todo",
-      "quote": "Jeśli możesz sobie coś wymarzyć, możesz to zrobić.",
-      "paragraphs": [
-        {
-          "title": "🎮 Gry",
-          "content": [
-            "Battleship",
-            "Najeźdzcy z kosmosu",
-            "Ścieżka wyboru przygody",
-            "Drzewko ulepszeń"
-          ]
-        },
-        {
-          "title": "🔥 Interaktywność i społeczność",
-          "content": [
-            "Profile graczy – Możliwość personalizacji awatara, opisu i ulubionych gier.",
-            "Lista znajomych – Zapraszanie znajomych i wspólne granie.",
-            "Turnieje i wydarzenia – Automatyczne organizowanie eventów i nagrody dla zwycięzców."
-          ]
-        },
-        {
-          "title": "🎮 Nowe mechaniki dla gier",
-          "content": [
-            "Tryb “Mystery Game” – Losowe gry do odkrywania dla użytkowników.",
-            "Daily Challenges – Codzienne zadania dla graczy z nagrodami.",
-            "Sezony tematyczne – Każdy sezon przynosi nowe gry, motywy i nagrody.",
-            "Plebiscyt na nowe gry – Gracze mogliby głosować na tytuły, które chcą zobaczyć w HUB-ie.",
-            "Nagrody za aktywność – System punktów, który można wymieniać na kosmetyki czy boosty w grach."
-          ]
-        },
-        {
-          "title": "⚡ Optymalizacja i UX",
-          "content": [
-            "Tryb offline – Możliwość testowania gier bez internetu.",
-            "Płynniejsza nawigacja – Animacje i responsywność na różnych urządzeniach.",
-            "Skróty klawiszowe – Ułatwienia dostępu dla zaawansowanych użytkowników."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "👀 Leaki",
-      "version": "leaks",
-      "quote": "Jeśli możesz sobie coś wymarzyć, możesz to zrobić.",
-      "paragraphs": []
     },
     {
       "name": "❓ Pomoc",

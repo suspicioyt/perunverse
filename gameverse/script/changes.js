@@ -1,7 +1,7 @@
 // Funkcja do pobierania danych z pliku JSON
 async function fetchTabsData() {
     try {
-        const response = await fetch('https://suspicioyt.github.io/perunverse/gameverse/data/changes.json');
+        const response = await fetch('data/changes.json');
         if (!response.ok) {
             throw new Error('Nie udało się załadować pliku JSON');
         }
