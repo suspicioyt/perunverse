@@ -1,7 +1,6 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWWif3XxfysFKVjrCeX6QEPREXvaGQZuSGUxteniNh44MOOHDYtgLGG0PwGlFyAwFJ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSOXIISrb_FT65cUfo3lMmXQElmLV0Vdbgk_Skr2BJDQKwRZ9NRoMJz26T7h3r8-zr/exec';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 const TEST_DATA_URL = 'https://suspicioyt.github.io/perunverse/data/testData.json';
-
 
 async function initializeUserData() {
   console.log('initializeUserData: Starting...', { url: window.location.href });
@@ -10,22 +9,27 @@ async function initializeUserData() {
   if (!window.location.href.startsWith('https://suspicioyt.github.io/')) {
     console.log('initializeUserData: Running in non-production environment');
     try {
+      const token = localStorage.getItem('authToken');
+      const userData = sessionStorage.getItem('userData');
+      if (userData) {
+        console.log('initializeUserData: Returning parsed userData:', JSON.parse(userData));
+        return JSON.parse(userData);
+      }
       console.log('initializeUserData: Fetching test data from', TEST_DATA_URL);
       const response = await fetch(TEST_DATA_URL);
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
       console.log('initializeUserData: Test data fetched:', data);
 
-      // Save to sessionStorage with error handling
       try {
-        sessionStorage.setItem('authToken', 'test');
+        if (!token) localStorage.setItem('authToken', 'test');
         sessionStorage.setItem('userData', JSON.stringify(data));
         console.log('initializeUserData: sessionStorage updated', {
-          authToken: sessionStorage.getItem('authToken'),
+          authToken: localStorage.getItem('authToken'),
           userData: sessionStorage.getItem('userData'),
         });
       } catch (storageError) {
-        console.error('initializeUserData: Error writing to sessionStorage:', storageError);
+        console.error('initializeUserData: Error writing to storage:', storageError);
         return {};
       }
       return data;
@@ -38,7 +42,7 @@ async function initializeUserData() {
   // Production environment
   console.log('initializeUserData: Running in production environment');
   const currentUrl = window.location.href;
-  const token = sessionStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
   const userData = sessionStorage.getItem('userData');
   console.log('initializeUserData: Current state', { token, userData });
 
@@ -67,7 +71,7 @@ async function initializeUserData() {
     return {};
   }
 
-  // Verify token and fetch user data
+  // Try fetching from server
   try {
     console.log('initializeUserData: Verifying token:', token);
     const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
@@ -85,27 +89,48 @@ async function initializeUserData() {
       console.log('initializeUserData: userData saved to sessionStorage:', userData);
       return userData;
     } else {
-      console.warn('initializeUserData: Invalid token, clearing sessionStorage');
+      console.warn('initializeUserData: Invalid token, checking test data');
+      try {
+        const testResponse = await fetch(TEST_DATA_URL);
+        if (!testResponse.ok) throw new Error(`HTTP error! Status: ${testResponse.status}`);
+        const testData = await testResponse.json();
+        sessionStorage.setItem('userData', JSON.stringify(testData));
+        console.log('initializeUserData: Test data saved to sessionStorage:', testData);
+        return testData;
+      } catch (testError) {
+        console.error('initializeUserData: Error fetching test data:', testError);
+        clearSessionStorage();
+        redirectToLogin(currentUrl);
+        return {};
+      }
+    }
+  } catch (error) {
+    console.error('initializeUserData: Fetch error:', error);
+    try {
+      console.log('initializeUserData: Falling back to test data');
+      const testResponse = await fetch(TEST_DATA_URL);
+      if (!testResponse.ok) throw new Error(`HTTP error! Status: ${testResponse.status}`);
+      const testData = await testResponse.json();
+      sessionStorage.setItem('userData', JSON.stringify(testData));
+      console.log('initializeUserData: Test data saved to sessionStorage:', testData);
+      return testData;
+    } catch (testError) {
+      console.error('initializeUserData: Error fetching test data:', testError);
       clearSessionStorage();
       redirectToLogin(currentUrl);
       return {};
     }
-  } catch (error) {
-    console.error('initializeUserData: Fetch error:', error);
-    clearSessionStorage();
-    redirectToLogin(currentUrl);
-    return {};
   }
 }
 
 async function saveUserDataToSheet() {
-  const token = sessionStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
   const userData = sessionStorage.getItem('userData');
   console.log('saveUserDataToSheet: Starting...', { token, userData });
 
   if (!token || !userData) {
     console.error('saveUserDataToSheet: Missing token or userData');
-    throw new Error('Missing token or userData in sessionStorage');
+    throw new Error('Missing token or userData in storage');
   }
 
   try {
@@ -196,7 +221,6 @@ function insertData(element, appId, key) {
   console.log(`insertData: Inserted value=${value} for appId=${appId}, key=${key}`);
 }
 
-// Helper function to redirect to login page
 function redirectToLogin(currentUrl) {
   if (!currentUrl.includes('/account/index.html')) {
     const redirectUrl = encodeURIComponent(currentUrl);
@@ -206,13 +230,12 @@ function redirectToLogin(currentUrl) {
   }
 }
 
-// Helper function to clear session storage
 function clearSessionStorage() {
-  console.warn('clearSessionStorage: Clearing sessionStorage', {
-    authToken: sessionStorage.getItem('authToken'),
+  console.warn('clearSessionStorage: Clearing sessionStorage and localStorage', {
+    authToken: localStorage.getItem('authToken'),
     userData: sessionStorage.getItem('userData'),
   });
-  sessionStorage.removeItem('authToken');
+  localStorage.removeItem('authToken');
   sessionStorage.removeItem('userData');
 }
 
