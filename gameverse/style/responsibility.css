@@ -110,3 +110,14 @@
     .notification-content { font-size: 14px; }
     .notification-action { padding: 6px 16px; }
 }
+
+/* Responsywność dla mniejszych ekranów */
+@media (max-width: 600px) {
+    .event-progress-container {
+        max-width: 100%; 
+    }
+    .event-progress-bar {
+        font-size: 12px;
+        height: 25px;
+    }
+}

@@ -63,7 +63,7 @@ async function updateProgressBar(progressContainer) {
     const totalButtons = parseInt(progressContainer.dataset.totalButtons, 10);
 
     // Pobierz dane z localStorage
-    let storedValue = JSON.parse(await window.userData.getData('gameverse', storageKey));
+    let storedValue = JSON.parse(getLocalData('gameverse', storageKey));
 
     // Oblicz postęp w zależności od typu wartości
     let currentProgress;

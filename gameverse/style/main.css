@@ -1992,3 +1992,25 @@ input[type="range" i] {
   display: none;
   overflow: hidden;
 }
+
+.event-progress-container {
+    width: 100%;
+    background-color: var(--primary-background-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+    padding: 2px;
+}
+
+.event-progress-bar {
+    height: 30px;
+    background-color: var(--primary-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: width 0.3s ease-in-out;
+    border-radius: 6px;
+}

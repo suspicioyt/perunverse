@@ -1200,8 +1200,20 @@ for (i = 0; i < acc.length; i++) {
   });
 }
 
-async function checkForEventRewards() {
-  if(await window.userData.getData('gameverse', 'autumn2025leaves') >= 100) {
-    window.userData.setData('gameverse', 'indexIcons', [...window.userData.getData('gameverse', 'indexIcons') || [], 1]);
+function checkForEventRewards() {
+  // Pobierz dane o liściach i ikonach
+  const leaves = getLocalData('gameverse', 'autumn2025leaves') || 0;
+  const indexIcons = window.userData.getData('gameverse', 'indexIcons') || [];
+
+  // Sprawdź, czy użytkownik spełnia warunki do otrzymania nagrody
+  if (leaves >= 100 && !indexIcons.includes(1)) {
+    // Dodaj naklejkę o ID 1 do tablicy indexIcons
+    window.userData.setData('gameverse', 'indexIcons', [...indexIcons, 1]);
+
+    // Wyświetl powiadomienie
+    notification("", "success", {
+      duration: 3000,
+      title: "Otrzymałeś nową naklejkę!",
+    });
   }
 }

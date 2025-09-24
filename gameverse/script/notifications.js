@@ -223,7 +223,7 @@ const notifier = new NotificationSystem({
     defaultDuration: 5000,
     soundEnabled: false // Domyślnie dźwięki wyłączone
 });
-const notificationSwitch = settingSwitches.find(s => s.switchId === "07");
+const notificationSwitch = settingSwitches.find(s => s.switchId === "04");
 // Funkcja wrapper dla pełnych powiadomień
 function notification(text, type = 'info', options = {}) {
     if(notificationSwitch && notificationSwitch.value) {
