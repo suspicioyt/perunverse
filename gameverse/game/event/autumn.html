@@ -47,7 +47,7 @@
         Sterowanie: Strzałki / WASD | R - Restart
     </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <script src="https://suspicioyt.github.io/perunverse/data/data.js"></script>
+    <script src="https://suspicioyt.github.io/perunverse/data/localData.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -55,10 +55,7 @@
         const highScoreDisplay = document.getElementById('highScore');
 
         let score = 0;
-        async function getData(data) {
-            return await window.userData.getData('gameverse', data)
-        }
-        let highScore = Number(getData('autumn2025leaves')) || 0;
+        let highScore = Number(getLocalData('gameverse','autumn2025leaves')) || 0;
         highScoreDisplay.textContent = highScore;
         let gameOver = false;
         let gameSpeed = 1;
@@ -139,10 +136,6 @@
             update();
         }
 
-        async function setData(highscore) {
-            await window.userData.setData('gameverse', 'autumn2025leaves', highscore)
-        }
-
         async function update() {
             if (gameOver) return;
 
@@ -174,7 +167,7 @@
                         score += 1;
                         if (score > highScore) {
                             highScore = score;
-                            setData(highScore);
+                            setLocalData('gameverse', 'autumn2025leaves', highScore)
                             highScoreDisplay.textContent = highScore;
                         }
                     } else {
