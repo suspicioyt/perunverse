@@ -13,7 +13,7 @@ body {
     align-items: center;
 }
 
-#loginModal, #accessCodeModal {
+#loginModal {
     display: none;
     position: fixed;
     top: 0;
@@ -217,7 +217,6 @@ button:hover:not(:disabled) {
     font-size: 0.9rem;
 }
 
-/* Responsywność */
 @media (max-width: 480px) {
     .container {
         padding: 1rem;
