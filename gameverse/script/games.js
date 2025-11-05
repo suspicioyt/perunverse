@@ -138,8 +138,10 @@ function createTagLabel(tag) {
         case 'w_tworzeniu':
         case 'nie_dziala':
         case 'przyszla_aktualizacja':
-        case 'disabled':
             icon = '<i class="fa-regular fa-circle"></i>';
+            break;
+        case 'disabled':
+            icon = '<i class="fa-solid fa-lock"></i>';
             break;
         default:
             icon = '<i class="fa-regular fa-circle"></i>';
@@ -175,7 +177,6 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
 
 
     if(game.tags.length>3) {
-        console.log('Podział na dwa kontenery:', game.tags.slice(0, 3), game.tags.slice(3));
         const tagContainerL = document.createElement("div");
         tagContainerL.classList.add("tag-containerL");
 
@@ -219,7 +220,6 @@ function createGameBox(game, games, switches, lastPlayedGameId, playedGames, vot
         gameBox.appendChild(tagContainerL);
         gameBox.appendChild(tagContainerR);    
     } else {
-        console.log('Jeden kontener:', game.tags);
         const tagContainer = document.createElement("div");
         tagContainer.classList.add("tag-containerL");
         game.tags.forEach(tag => {

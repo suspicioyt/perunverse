@@ -3,6 +3,12 @@
     "id": "1",
     "name": "Jesień 2025",
     "description": "Ukończ zadania w evencie Jesień 2025",
-    "img": "<img src=\"https://www.svgrepo.com/show/487553/maple-leaf.svg\" alt=\"Złoty Bitcoin\" width=\"80\" height=\"80\">"
+    "img": "<img src=\"https://www.svgrepo.com/show/487553/maple-leaf.svg\" alt=\"icon\" width=\"80\" height=\"80\">"
+  },
+  "2": {
+    "id": "2",
+    "name": "Urodziny 2025",
+    "description": "Zaloguj się w Urodziny 2025",
+    "img": "<img src=\"https://www.svgrepo.com/show/385391/baby-baloon-cartoon-cute.svg\" alt=\"icon\" width=\"80\" height=\"80\">"
   }
 }

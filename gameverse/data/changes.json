@@ -1,6 +1,27 @@
 {
   "tabsData": [
     {
+      "name": "🎉 Anniversary Update",
+      "version": "1.2.2.1",
+      "date": "19.10.2025r.",
+      "quote": "Sto lat, sto lat niech żyje nam!",
+      "backgroundImage": "https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?cs=srgb&dl=pexels-pixabay-33109.jpg&fm=jpg",
+      "paragraphs": [
+        {
+          "title": "Nowości",
+          "content": [
+            "🍂 Przycisk startowy"
+          ]
+        },
+        {
+          "title": "Gry",
+          "content": [
+            "🍂 Dodano Kebab Maker"
+          ]
+        }
+      ]
+    },
+    {
       "name": "🍂 Autumn 2025 Update",
       "version": "1.2.2.1",
       "date": "23.09.2025r.",

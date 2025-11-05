@@ -249,6 +249,13 @@
       "tags": ["nowosc", "event"]
     },
     {
+      "id": "36",
+      "name": "Kebab Maker",
+      "link": "game/1/kebabmaker.html",
+      "description": "Skręcaj kebaby",
+      "tags": ["nowosc", "beta"]
+    },
+    {
       "id": "999",
       "name": "Whack A Mole",
       "link": "game/1/whackamole.html",

@@ -56,6 +56,9 @@
         </div>
     </header>
     <div id="parallax"></div>
+    <div id="bottom-skip-bar">
+        <div id="bottom-skip-circle" onclick="scrollToSection('game-container','0')">Zjedź w dół</div>
+    </div>
     <div id="parallaxEnd"></div>
     <main>
         <div id="gameTooltipContainer">
@@ -105,6 +108,10 @@
                         Zbierz 100 liści w grze Jesienne liście:
                         <div class="event-progress-container" data-storage-key="autumn2025leaves" data-total-buttons="100"></div>
                         <button onclick="checkForEventRewards()">Odbierz</button>
+                    </div>
+                    <h1>Event urodzinowy!</h1>
+                    <div class="event-block">
+                        <button onclick="getEventReward()">Odbierz</button>
                     </div>
                 </div>
             </div>

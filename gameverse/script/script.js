@@ -47,39 +47,6 @@ const heartLikeInner1 = '<label for="heart';
 const heartLikeInner2 = '"><i class="fas fa-heart"></i></label><input type="checkbox" id="heart';
 const heartLikeInner3 = '" />';
 
-const API = {
-  async post(url, data) {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(data).toString(),
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      const result = await response.json();
-      console.log('API POST response:', result);
-      return result;
-    } catch (error) {
-      console.error('API POST error:', error);
-      throw error;
-    }
-  },
-  async get(url) {
-    try {
-      const response = await fetch(url, { method: 'GET', mode: 'cors', credentials: 'omit' });
-      if (!response.ok) throw new Error(`GET failed: ${response.status}`);
-      const data = await response.json();
-      console.log('API GET response:', data);
-      return data;
-    } catch (error) {
-      console.error('API GET error:', error);
-      throw error;
-    }
-  }
-};
-
 const Modal = {
   open(id) {
     const modal = document.getElementById(id);
@@ -1059,6 +1026,7 @@ window.addEventListener('scroll', function () {
       if(autoSidenavSwitch) {
         document.getElementById("sidenav").classList.add("show");
       }
+      document.getElementById("bottom-skip-bar").style.bottom="-250px";
       smoothScrollTo(getElementPosition());
       var header = document.querySelector('header');
       header.classList.add('scrolled');
@@ -1069,6 +1037,7 @@ window.addEventListener('scroll', function () {
       if(autoSidenavSwitch) {
         document.getElementById("sidenav").classList.remove("show");
       }
+      document.getElementById("bottom-skip-bar").style.bottom="0px";
       smoothScrollTo(0);
       var header = document.querySelector('header');
       header.classList.remove('scrolled');
@@ -1201,19 +1170,29 @@ for (i = 0; i < acc.length; i++) {
 }
 
 function checkForEventRewards() {
-  // Pobierz dane o liściach i ikonach
   const leaves = getLocalData('gameverse', 'autumn2025leaves') || 0;
   const indexIcons = window.userData.getData('gameverse', 'indexIcons') || [];
 
-  // Sprawdź, czy użytkownik spełnia warunki do otrzymania nagrody
   if (leaves >= 100 && !indexIcons.includes(1)) {
-    // Dodaj naklejkę o ID 1 do tablicy indexIcons
     window.userData.setData('gameverse', 'indexIcons', [...indexIcons, 1]);
 
-    // Wyświetl powiadomienie
     notification("", "success", {
       duration: 3000,
       title: "Otrzymałeś nową naklejkę!",
+      actions: [{ label: "Reload", callback: () => location.reload() }]
+    });
+  }
+} 
+function getEventReward() {
+  const indexIcons = window.userData.getData('gameverse', 'indexIcons') || [];
+
+  if (!indexIcons.includes(2)) {
+    window.userData.setData('gameverse', 'indexIcons', [...indexIcons, 2]);
+
+    notification("", "success", {
+      duration: 3000,
+      title: "Otrzymałeś nową naklejkę!",
+      actions: [{ label: "Reload", callback: () => location.reload() }]
     });
   }
 }
