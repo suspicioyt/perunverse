@@ -3,97 +3,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perunverse</title>
-  <link rel="icon" href="perun2.png" type="image/x-icon">
+  <title>Perun Multiverse</title>
+
+  <link rel="icon" href="https://suspicioyt.github.io/perunverse/logo/perun.png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     body {
-      background: linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       margin: 0;
-      font-family: 'Poppins', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0e0e0e, #1a1a1a);
+      font-family: 'Poppins', sans-serif;
+      color: white;
     }
+
+    /* ===== HEADER ===== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .auth-buttons button {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .auth-buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.4);
+    }
+
+    /* ===== CONTENT ===== */
     .container {
       max-width: 1400px;
-      margin: 0 auto;
-      padding: 30px;
-      position: relative;
+      margin: auto;
+      padding: 40px 20px;
     }
+
+    section {
+      margin-bottom: 80px;
+    }
+
+    section h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 36px;
+    }
+
     .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 30px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
     }
+
     .tile {
-      background: linear-gradient(135deg, #2c2c2c 0%, #222222 100%);
+      padding: 20px;
+      width: calc(33.33% - 60px);
+      background: linear-gradient(135deg, #2c2c2c, #222);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
       cursor: pointer;
-      transition: all 0.3s ease-in-out;
-      position: relative;
-      z-index: 1;
+      box-shadow: 0 8px 16px rgba(0,0,0,.4);
+      transition: all .3s ease;
     }
+
     .tile:hover {
       transform: scale(1.08) translateY(-10px);
-      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 30px rgba(0,0,0,.6);
     }
+
+    .tile img {
+      width: calc(100% - 20px);
+      margin: 8px;
+      border-radius: 12px;
+      object-fit: cover;
+      border-bottom: 3px solid;
+      transition: transform .3s;
+    }
+
     .tile:hover img {
       transform: scale(1.1);
     }
-    .tile img {
-      width: 100%-16px;
-      height: 280px;
-      object-fit: cover;
-      border-bottom: 3px solid;
-      transition: transform 0.3s ease-in-out;
-      border-radius: 12px 12px 0 0;
-      margin: 8px;
-    }
+
     .tile h2 {
-      color: #ffffff;
-      font-size: 28px;
-      font-weight: 600;
       text-align: center;
-      margin: 24px 0;
-      text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-      letter-spacing: 0.5px;
+      margin: 20px 0;
+      font-size: 26px;
     }
-    @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .tile img {
-        height: 320px;
-      }
+
+    /* ===== LOCKED SECTION ===== */
+    .locked {
+      opacity: 0.4;
+      filter: grayscale(100%);
+      pointer-events: none;
+      position: relative;
     }
-    @media (max-width: 480px) {
-      .tile h2 {
-        font-size: 24px;
-      }
-      .container {
-        padding: 15px;
+
+    .locked::after {
+      content: "Zaloguj się, aby odblokować";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 600;
+      border-radius: 20px;
+    }
+
+    .soon {
+      opacity: 0.4;
+      filter: grayscale(100%);
+      pointer-events: none;
+      position: relative;
+    }
+
+    .soon::after {
+      content: "Wyczekuj wydania!";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 600;
+      border-radius: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 15px;
       }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="logo">Perun Multiverse</div>
+  <div class="auth-buttons" id="authArea"></div>
+</header>
+
+<!-- ===== CONTENT ===== -->
+<div class="container">
+
+  <!-- PUBLIC -->
+  <section id="publicSection">
+    <h1>Strefa NIEzalogowanych</h1>
     <div class="grid">
 
-      <div class="tile" onclick="window.location.href='https://suspicioyt.github.io/perunverse/gameverse'">
-        <img src="https://suspicioyt.github.io/perunverse/gameverse/img/perun2.1.png" alt="Grafika 1" style="border-color: green;">
+      <div class="tile soon" onclick="changePage('gameverselite')">
+        <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
+        <h2>Perun Gameverse Lite</h2>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LOGGED ONLY -->
+  <section>
+    <h1>Strefa Zalogowanych</h1>
+    <div class="grid" id="loggedGrid">
+
+      <div class="tile" onclick="changePage('gameverse')">
+        <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
         <h2>Perun Gameverse</h2>
       </div>
 
-      <div class="tile" onclick="window.location.href='https://suspicioyt.github.io/perunverse/filmverse'">
-        <img src="https://suspicioyt.github.io/perunverse/filmverse/perun.png" alt="Grafika 2" style="border-color: blue;">
+      <div class="tile soon" onclick="changePage('quizverse')">
+        <img src="https://suspicioyt.github.io/perunverse/logo/quizverse.png" style="border-color: purple;">
+        <h2>Perun Quizverse</h2>
+      </div>
+
+      <div class="tile soon" onclick="changePage('filmverse')">
+        <img src="https://suspicioyt.github.io/perunverse/logo/filmverse.png" style="border-color: blue;">
         <h2>Perun Filmverse</h2>
       </div>
+
     </div>
-  </div>
+  </section>
+
+  <section>
+    <h1>Inne</h1>
+    <div class="grid">
+
+      <div class="tile soon" onclick="changePage('other/perunsearch')">
+        <h2>Perun Search</h2>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== SCRIPT ===== -->
+<script>
+  const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
+  const currentUrl = window.location.href;
+  const authToken = localStorage.getItem('authToken');
+  const isLoggedIn = !!authToken;
+
+  function changePage(app) {
+    const newUrl = currentUrl.replace('index.html', app);
+    window.location.href = newUrl;
+  }
+
+  function login() {
+    window.location.href = LOGIN_PAGE + encodeURIComponent(currentUrl);
+  }
+
+  function logout() {
+    localStorage.removeItem('authToken');
+    sessionStorage.clear();
+    location.reload();
+  }
+
+  /* ===== INIT ===== */
+  const authArea = document.getElementById('authArea');
+  const loggedGrid = document.getElementById('loggedGrid');
+
+  if (isLoggedIn) {
+    document.getElementById("publicSection").style.display="none";
+    authArea.innerHTML = `
+      <button onclick="changePage('account')">Panel</button>
+      <button onclick="logout()">Wyloguj</button>
+    `;
+  } else {
+    authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
+    loggedGrid.classList.add('locked');
+  }
+
+</script>
+
 </body>
 </html>
