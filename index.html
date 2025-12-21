@@ -181,7 +181,7 @@
     <h1>Strefa NIEzalogowanych</h1>
     <div class="grid">
 
-      <div class="tile soon" onclick="changePage('gameverselite')">
+      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverselite')">
         <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
         <h2>Perun Gameverse Lite</h2>
       </div>
@@ -194,17 +194,17 @@
     <h1>Strefa Zalogowanych</h1>
     <div class="grid" id="loggedGrid">
 
-      <div class="tile" onclick="changePage('gameverse')">
+      <div class="tile" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverse')">
         <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
         <h2>Perun Gameverse</h2>
       </div>
 
-      <div class="tile soon" onclick="changePage('quizverse')">
+      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/quizverse')">
         <img src="https://suspicioyt.github.io/perunverse/logo/quizverse.png" style="border-color: purple;">
         <h2>Perun Quizverse</h2>
       </div>
 
-      <div class="tile soon" onclick="changePage('filmverse')">
+      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/filmverse')">
         <img src="https://suspicioyt.github.io/perunverse/logo/filmverse.png" style="border-color: blue;">
         <h2>Perun Filmverse</h2>
       </div>
@@ -216,7 +216,7 @@
     <h1>Inne</h1>
     <div class="grid">
 
-      <div class="tile soon" onclick="changePage('other/perunsearch')">
+      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/other/perunsearch')">
         <h2>Perun Search</h2>
       </div>
 
@@ -233,8 +233,7 @@
   const isLoggedIn = !!authToken;
 
   function changePage(app) {
-    const newUrl = currentUrl.replace('index.html', app);
-    window.location.href = newUrl;
+    window.location.href = app;
   }
 
   function login() {
