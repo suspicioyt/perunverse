@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perunverse Account</title>
+    <title>Perunverse Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="https://suspicioyt.github.io/perunverse/logo/perun.png" type="image/x-icon">
     <style>
@@ -284,24 +284,21 @@
             <h2>Perunverse Account</h2>
             <h4>Zaloguj się lub zarejestruj, aby korzystać z aplikacji!</h4>
             
-            <!-- Zakładki -->
             <div class="tabs">
                 <button id="loginTab" class="tab-button active" onclick="showTab('login')">Logowanie</button>
                 <button id="registerTab" class="tab-button" onclick="showTab('register')">Rejestracja</button>
             </div>
 
-            <!-- Formularz logowania -->
             <div id="login" class="tab-content active">
                 <input type="text" id="loginIdentifier" placeholder="Nazwa użytkownika lub E-mail" required>
                 <input type="password" id="loginPassword" placeholder="Hasło" required>
                 <button id="loginButton" onclick="login()">
                     <span class="button-text">Zaloguj</span>
-                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                    <span class="spinner"><i class="fas fa-spinner fa-spin"></i></span>
                 </button>
                 <p class="error" id="loginError"></p>
             </div>
 
-            <!-- Formularz rejestracji -->
             <div id="register" class="tab-content">
                 <input type="text" id="registerUsername" placeholder="Nazwa użytkownika" required maxlength="20">
                 <input type="email" id="registerEmail" placeholder="E-mail (opcjonalnie)">
@@ -313,26 +310,22 @@
                 <input type="hidden" id="gender" required>
                 <button id="registerButton" onclick="register()">
                     <span class="button-text">Zarejestruj</span>
-                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                    <span class="spinner"><i class="fas fa-spinner fa-spin"></i></span>
                 </button>
                 <p class="error" id="registerError"></p>
             </div>
         </div>
     </div>
 
-    <!-- Modal wyboru roku urodzenia -->
     <div id="yearModal" class="modal">
         <div class="modal-content">
             <h3>Wybierz rok urodzenia</h3>
-            <select id="yearSelect" size="10">
-                <!-- Wypełniane dynamicznie -->
-            </select>
+            <select id="yearSelect" size="10"></select>
             <button onclick="selectYear()">Wybierz</button>
             <button onclick="closeYearModal()">Anuluj</button>
         </div>
     </div>
 
-    <!-- Modal wyboru płci -->
     <div id="genderModal" class="modal">
         <div class="modal-content">
             <h3>Wybierz płeć</h3>
@@ -348,23 +341,24 @@
 
     <script>
         let SCRIPT_URL = '';
-            
-        fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
+
+        // Pobranie aktualnego URL backendu z pliku konfiguracyjnego
+        fetch('https://suspicioyt.github.io/perunverse/data/scripturl.txt')
           .then(response => {
-            if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
+            if (!response.ok) throw new Error('Nie udało się pobrać pliku konfiguracyjnego');
             return response.text();
           })
           .then(text => {
             SCRIPT_URL = text.trim();
             console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
-            // Po załadowaniu URL-a uruchamiamy inicjalizację strony
-            initPage();
+            loadUserData(); // Sprawdzamy token po załadowaniu URL-a
           })
           .catch(err => {
-            console.error('Błąd podczas ładowania SCRIPT_URL:', err);
-            alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
+            console.error('Błąd ładowania SCRIPT_URL:', err);
+            document.getElementById('loginModal').style.display = 'flex';
+            showTab('login');
           });
-      
+
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
@@ -372,40 +366,40 @@
             document.getElementById(tabName + 'Tab').classList.add('active');
             document.querySelectorAll('.error').forEach(error => error.classList.remove('show'));
         }
-        
+
         function uuidv4() {
             return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
                 (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
             );
         }
-        
+
         function getRedirectUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('redirect') || '../index.html';
         }
-        
+
         function validateEmail(email) {
             if (!email) return true;
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
-        
+
         function validatePassword(password) {
             const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
             return re.test(password);
         }
-        
+
         function validateUsername(username) {
             if (!username) return false;
             if (username.length > 20) return false;
             if (username.includes(' ')) return false;
             return true;
         }
-        
+
         function validateGender(gender) {
             return ['M', 'F', 'O'].includes(gender);
         }
-        
+
         function populateYearSelect() {
             const select = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
@@ -416,37 +410,37 @@
                 select.appendChild(option);
             }
         }
-        
+
         function openYearModal() {
             document.getElementById('yearModal').style.display = 'flex';
         }
-        
+
         function closeYearModal() {
             document.getElementById('yearModal').style.display = 'none';
         }
-        
+
         function selectYear() {
             const selectedYear = document.getElementById('yearSelect').value;
             document.getElementById('birthYearDisplay').value = selectedYear;
             document.getElementById('birthYear').value = selectedYear;
             closeYearModal();
         }
-        
+
         function openGenderModal() {
             document.getElementById('genderModal').style.display = 'flex';
         }
-        
+
         function closeGenderModal() {
             document.getElementById('genderModal').style.display = 'none';
         }
-        
+
         function selectGender() {
             const selectedGender = document.getElementById('genderSelect').value;
             document.getElementById('genderDisplay').value = selectedGender === 'M' ? 'Mężczyzna' : selectedGender === 'F' ? 'Kobieta' : 'Inna';
             document.getElementById('gender').value = selectedGender;
             closeGenderModal();
         }
-        
+
         function toggleButtonLoading(buttonId, isLoading) {
             const button = document.getElementById(buttonId);
             const buttonText = button.querySelector('.button-text');
@@ -455,27 +449,22 @@
             buttonText.style.display = isLoading ? 'none' : 'inline';
             spinner.style.display = isLoading ? 'inline-block' : 'none';
         }
-        
+
         async function login() {
             const identifier = document.getElementById('loginIdentifier').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorMessage = document.getElementById('loginError');
             errorMessage.textContent = '';
             errorMessage.classList.remove('show');
-        
-            if (!identifier) {
-                errorMessage.textContent = 'Wprowadź nazwę użytkownika lub email';
+
+            if (!identifier || !password) {
+                errorMessage.textContent = !identifier ? 'Wprowadź nazwę użytkownika lub email' : 'Wprowadź hasło';
                 errorMessage.classList.add('show');
                 return;
             }
-            if (!password) {
-                errorMessage.textContent = 'Wprowadź hasło';
-                errorMessage.classList.add('show');
-                return;
-            }
-        
+
             toggleButtonLoading('loginButton', true);
-        
+
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -488,13 +477,14 @@
                     mode: 'cors',
                     credentials: 'omit'
                 });
-            
+
                 if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
                 const data = await response.json();
-                console.log('login response:', data);
-            
+
                 toggleButtonLoading('loginButton', false);
+
                 if (data.status === 'success') {
+                    // Zawsze ustawiamy token i najnowsze dane użytkownika
                     localStorage.setItem('authToken', data.token);
                     sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
                     window.location.href = getRedirectUrl();
@@ -509,7 +499,7 @@
                 console.error('Błąd logowania:', error);
             }
         }
-        
+
         async function register() {
             const username = document.getElementById('registerUsername').value.trim();
             const email = document.getElementById('registerEmail').value.trim();
@@ -520,7 +510,7 @@
             const errorMessage = document.getElementById('registerError');
             errorMessage.textContent = '';
             errorMessage.classList.remove('show');
-        
+
             if (!validateUsername(username)) {
                 errorMessage.textContent = 'Nazwa użytkownika musi mieć do 20 znaków i nie może zawierać spacji';
                 errorMessage.classList.add('show');
@@ -542,18 +532,18 @@
                 return;
             }
             if (!birthYear || isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
-                errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia (1900–' + new Date().getFullYear() + ')';
+                errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia';
                 errorMessage.classList.add('show');
                 return;
             }
             if (!validateGender(gender)) {
-                errorMessage.textContent = 'Wybierz płeć (Mężczyzna, Kobieta lub Inna)';
+                errorMessage.textContent = 'Wybierz płeć';
                 errorMessage.classList.add('show');
                 return;
             }
-        
+
             toggleButtonLoading('registerButton', true);
-        
+
             const appData = {
                 profile: {
                     username,
@@ -566,7 +556,7 @@
                     joined: new Date().toISOString()
                 }
             };
-        
+
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -583,13 +573,14 @@
                     mode: 'cors',
                     credentials: 'omit'
                 });
-            
+
                 if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
                 const data = await response.json();
-                console.log('register response:', data);
-            
+
                 toggleButtonLoading('registerButton', false);
+
                 if (data.status === 'success') {
+                    // Zawsze ustawiamy token i najnowsze dane użytkownika
                     localStorage.setItem('authToken', data.token);
                     sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
                     window.location.href = getRedirectUrl();
@@ -604,54 +595,52 @@
                 console.error('Błąd rejestracji:', error);
             }
         }
-        
+
         async function loadUserData() {
             const token = localStorage.getItem('authToken');
-            const userData = sessionStorage.getItem('userData');
-        
-            console.log('loadUserData - token:', token);
-            console.log('loadUserData - userData:', userData);
-        
-            if (!token) {
-                console.log('Brak tokena - wyświetlanie loginModal');
+
+            if (!token || !SCRIPT_URL) {
                 document.getElementById('loginModal').style.display = 'flex';
                 showTab('login');
-                return false;
+                return;
             }
-        
+
             try {
-                console.log('Weryfikacja tokena:', token);
                 const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
                     method: 'GET',
                     mode: 'cors',
                     credentials: 'omit'
                 });
-            
-                if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+
+                if (!response.ok) throw new Error('Błąd HTTP');
+
                 const data = await response.json();
                 console.log('verify response:', data);
-            
+
                 if (data.status === 'success') {
+                    // Aktualizujemy dane użytkownika najnowszymi z serwera
                     sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+                    // Przekierowujemy do strony docelowej
                     window.location.href = getRedirectUrl();
-                    return true;
                 } else {
-                    console.log('Nieprawidłowy token - wyświetlanie loginModal');
+                    // Nieprawidłowy token – pokazujemy logowanie
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('userData');
                     document.getElementById('loginModal').style.display = 'flex';
                     showTab('login');
-                    return false;
                 }
             } catch (error) {
                 console.error('Błąd weryfikacji tokena:', error);
+                localStorage.removeItem('authToken');
+                sessionStorage.removeItem('userData');
                 document.getElementById('loginModal').style.display = 'flex';
                 showTab('login');
-                return false;
             }
         }
-        
+
         window.onload = () => {
             populateYearSelect();
-            loadUserData();
+            // loadUserData() uruchamiane po załadowaniu SCRIPT_URL
         };
     </script>
 </body>
