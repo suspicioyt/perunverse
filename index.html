@@ -12,6 +12,7 @@
     body {
       margin: 0;
       min-height: 100vh;
+      overflow-y: scroll;
       background: linear-gradient(135deg, #0e0e0e, #1a1a1a);
       font-family: 'Poppins', sans-serif;
       color: white;
@@ -55,22 +56,60 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(0,0,0,.4);
     }
+    main {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #main-window {
+      width: 80%;
+      background-color: #1a1a1a;
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 40px 0 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      background: #333;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.4);
+    }
+
+    .tab-button:hover:not(.active) {
+      background: #444;
+    }
 
     /* ===== CONTENT ===== */
     .container {
       max-width: 1400px;
       margin: auto;
-      padding: 40px 20px;
+      padding: 0 20px 40px;
     }
 
-    section {
-      margin-bottom: 80px;
+    .tab-content {
+      display: none;
     }
 
-    section h1 {
-      text-align: center;
-      margin-bottom: 40px;
-      font-size: 36px;
+    .tab-content.active {
+      display: block;
     }
 
     .grid {
@@ -115,7 +154,7 @@
       font-size: 26px;
     }
 
-    /* ===== LOCKED SECTION ===== */
+    /* ===== LOCKED / SOON ===== */
     .locked {
       opacity: 0.4;
       filter: grayscale(100%);
@@ -161,76 +200,98 @@
         flex-direction: column;
         gap: 15px;
       }
+      .tile {
+        width: calc(100% - 30px);
+      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- ===== HEADER ===== -->
 <header>
   <div class="logo">Perun Multiverse</div>
   <div class="auth-buttons" id="authArea"></div>
 </header>
 
-<!-- ===== CONTENT ===== -->
-<div class="container">
+<main>
+  <div id="main-window">
 
-  <!-- PUBLIC -->
-  <section id="publicSection">
-    <h1>Strefa NIEzalogowanych</h1>
-    <div class="grid">
+    <div class="tabs">
+      <button class="tab-button active" data-tab="public">Strefa NIEzalogowanych</button>
+      <button class="tab-button" data-tab="logged">Strefa Zalogowanych</button>
+      <button class="tab-button" data-tab="other">Inne</button>
+    </div>
 
-      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverselite')">
-        <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
-        <h2>Perun Gameverse Lite</h2>
+    <div class="container">
+
+      <!-- Tab 1: Public -->
+      <div id="public" class="tab-content active">
+        <div class="grid">
+          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverselite')">
+            <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
+            <h2>Perun Gameverse Lite</h2>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Logged in only -->
+      <div id="logged" class="tab-content">
+        <div class="grid" id="loggedGrid">
+          <div class="tile" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverse')">
+            <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
+            <h2>Perun Gameverse</h2>
+          </div>
+
+          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/quizverse')">
+            <img src="https://suspicioyt.github.io/perunverse/logo/quizverse.png" style="border-color: purple;">
+            <h2>Perun Quizverse</h2>
+          </div>
+
+          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/filmverse')">
+            <img src="https://suspicioyt.github.io/perunverse/logo/filmverse.png" style="border-color: blue;">
+            <h2>Perun Filmverse</h2>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Other -->
+      <div id="other" class="tab-content">
+        <div class="grid">
+          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/other/perunsearch')">
+            <h2>Perun Search</h2>
+          </div>
+        </div>
       </div>
 
     </div>
-  </section>
-
-  <!-- LOGGED ONLY -->
-  <section>
-    <h1>Strefa Zalogowanych</h1>
-    <div class="grid" id="loggedGrid">
-
-      <div class="tile" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverse')">
-        <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
-        <h2>Perun Gameverse</h2>
-      </div>
-
-      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/quizverse')">
-        <img src="https://suspicioyt.github.io/perunverse/logo/quizverse.png" style="border-color: purple;">
-        <h2>Perun Quizverse</h2>
-      </div>
-
-      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/filmverse')">
-        <img src="https://suspicioyt.github.io/perunverse/logo/filmverse.png" style="border-color: blue;">
-        <h2>Perun Filmverse</h2>
-      </div>
-
-    </div>
-  </section>
-
-  <section>
-    <h1>Inne</h1>
-    <div class="grid">
-
-      <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/other/perunsearch')">
-        <h2>Perun Search</h2>
-      </div>
-
-    </div>
-  </section>
-
-</div>
-
+  </div>
+</main>
 <!-- ===== SCRIPT ===== -->
 <script>
-  const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
+  const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/login.html?redirect=';
   const currentUrl = window.location.href;
   const authToken = localStorage.getItem('authToken');
   const isLoggedIn = !!authToken;
+
+  let SCRIPT_URL = ''; // Będzie pobrany z pliku
+
+  // Pobranie SCRIPT_URL z pliku tekstowego – POPRAWIONA ŚCIEŻKA!
+  fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
+    .then(response => {
+      if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
+      return response.text();
+    })
+    .then(text => {
+      SCRIPT_URL = text.trim();
+      console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
+      // Po załadowaniu URL-a uruchamiamy inicjalizację strony
+      initPage();
+    })
+    .catch(err => {
+      console.error('Błąd podczas ładowania SCRIPT_URL:', err);
+      alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
+    });
 
   function changePage(app) {
     window.location.href = app;
@@ -246,21 +307,126 @@
     location.reload();
   }
 
-  /* ===== INIT ===== */
-  const authArea = document.getElementById('authArea');
-  const loggedGrid = document.getElementById('loggedGrid');
+  /* ===== TABS SWITCHING ===== */
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
 
-  if (isLoggedIn) {
-    document.getElementById("publicSection").style.display="none";
-    authArea.innerHTML = `
-      <button onclick="changePage('account')">Panel</button>
-      <button onclick="logout()">Wyloguj</button>
-    `;
-  } else {
-    authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
-    loggedGrid.classList.add('locked');
+  function switchTab(tabId) {
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    tabContents.forEach(content => content.classList.remove('active'));
+
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
   }
 
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tabId = button.getAttribute('data-tab');
+      switchTab(tabId);
+    });
+  });
+
+  /* ===== AUTH AREA & INIT ===== */
+  async function initPage() {
+    const authArea = document.getElementById('authArea');
+    const loggedGrid = document.getElementById('loggedGrid');
+
+    if (isLoggedIn) {
+      document.querySelector('[data-tab="public"]').style.display = 'none';
+      switchTab('logged');
+
+      authArea.innerHTML = `
+        <button onclick="changePage('account')">Panel</button>
+        <button onclick="logout()">Wyloguj</button>
+      `;
+
+      await initializeUserData();
+    } else {
+      authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
+      loggedGrid.classList.add('locked');
+    }
+  }
+
+  async function initializeUserData() {
+    console.log('initializeUserData: Starting...', { url: window.location.href });
+
+    const token = localStorage.getItem('authToken');
+    const userData = sessionStorage.getItem('userData');
+
+    if (userData) {
+      try {
+        const parsedData = JSON.parse(userData);
+        console.log('initializeUserData: Returning cached userData');
+        return parsedData;
+      } catch (error) {
+        console.error('initializeUserData: Error parsing cached userData:', error);
+        sessionStorage.removeItem('userData');
+      }
+    }
+
+    if (token && SCRIPT_URL) {    
+      try {
+        console.log('initializeUserData: Verifying token with server...');
+        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        console.log('initializeUserData: Server response:', data);
+
+        if (data.status === 'success') {
+          const userAppData = data.appData || {};
+          sessionStorage.setItem('userData', JSON.stringify(userAppData));
+          console.log('initializeUserData: User data loaded and cached');
+          return userAppData;
+        } else {
+          console.warn('initializeUserData: Invalid token received');
+          clearSessionStorage();
+          redirectToLogin(currentUrl);
+          return {};
+        }
+      } catch (error) {
+        console.error('initializeUserData: Failed to verify token:', error);
+        clearSessionStorage();
+        redirectToLogin(currentUrl);
+        return {};
+      }
+    } else if (token && !SCRIPT_URL) {
+      console.error('initializeUserData: SCRIPT_URL nie załadowany – nie można zweryfikować tokenu');
+    }
+  }
+
+  function redirectToLogin(currentUrl) {
+    if (!currentUrl.includes('/account/index.html')) {
+      window.location.href = LOGIN_PAGE + encodeURIComponent(currentUrl);
+    }
+  }
+
+  function clearSessionStorage() {
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('userData');
+  }
+
+  function getData(section, key) {
+    const userData = sessionStorage.getItem('userData');
+    if (!userData) return null;
+
+    try {
+      const parsed = JSON.parse(userData);
+      return parsed[section]?.[key] ?? null;
+    } catch (error) {
+      console.error('getData: Error parsing userData:', error);
+      return null;
+    }
+  }
+
+  window.userData = {
+    initializeUserData,
+    getData,
+  };
 </script>
 
 </body>
