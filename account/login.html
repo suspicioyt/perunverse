@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perunverse Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="https://suspicioyt.github.io/perunverse/logo/perun.png" type="image/x-icon">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #6d6d6d, #4a4a4a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #loginModal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .container {
+            background-color: #333333;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+        }
+        
+        h4 {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            color: #cccccc;
+            font-size: 1rem;
+            font-style: italic;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            color: #333333;
+            background-color: #e5e7eb;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+        
+        .tab-button.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        
+        .tab-button:hover {
+            background-color: #d1d5db;
+            transform: scale(1.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        input, select {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #555555;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #333333;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+        }
+        
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.75rem 0 0.5rem;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.3s, transform 0.2s;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        button:disabled {
+            background-color: #0056b3;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+            transform: scale(1.03);
+        }
+        
+        .spinner {
+            display: none;
+            font-size: 1rem;
+            color: #ffffff;
+        }
+        
+        .button-text {
+            display: inline;
+        }
+        
+        .error {
+            color: #e11d48;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+        
+        .modal-content {
+            background-color: #333333;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        
+        .modal-content h3 {
+            color: #ffffff;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .modal-content p {
+            color: #cccccc;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .modal-content select {
+            margin: 1rem 0;
+            padding: 0.75rem;
+            border: 1px solid #555555;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #333333;
+            font-size: 1rem;
+        }
+        
+        .modal-content button {
+            margin: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+                max-width: 90%;
+            }
+        
+            h2 {
+                font-size: 1.5rem;
+            }
+        
+            h4 {
+                font-size: 0.9rem;
+            }
+        
+            .tab-button {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+        
+            input, select {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+                margin: 0.4rem 0;
+            }
+        
+            button {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+                margin: 0.6rem 0 0.4rem;
+            }
+        
+            .modal-content {
+                padding: 1rem;
+                max-width: 85%;
+            }
+        
+            .modal-content h3 {
+                font-size: 1.2rem;
+            }
+        
+            .modal-content select {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+        
+            .modal-content button {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginModal">
+        <div class="container">
+            <h2>Perunverse Account</h2>
+            <h4>Zaloguj się lub zarejestruj, aby korzystać z aplikacji!</h4>
+            
+            <!-- Zakładki -->
+            <div class="tabs">
+                <button id="loginTab" class="tab-button active" onclick="showTab('login')">Logowanie</button>
+                <button id="registerTab" class="tab-button" onclick="showTab('register')">Rejestracja</button>
+            </div>
+
+            <!-- Formularz logowania -->
+            <div id="login" class="tab-content active">
+                <input type="text" id="loginIdentifier" placeholder="Nazwa użytkownika lub E-mail" required>
+                <input type="password" id="loginPassword" placeholder="Hasło" required>
+                <button id="loginButton" onclick="login()">
+                    <span class="button-text">Zaloguj</span>
+                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+                <p class="error" id="loginError"></p>
+            </div>
+
+            <!-- Formularz rejestracji -->
+            <div id="register" class="tab-content">
+                <input type="text" id="registerUsername" placeholder="Nazwa użytkownika" required maxlength="20">
+                <input type="email" id="registerEmail" placeholder="E-mail (opcjonalnie)">
+                <input type="password" id="registerPassword" placeholder="Hasło" required>
+                <input type="password" id="confirmPassword" placeholder="Potwierdź hasło" required>
+                <input type="text" id="birthYearDisplay" placeholder="Wybierz rok urodzenia" readonly onclick="openYearModal()">
+                <input type="hidden" id="birthYear" required>
+                <input type="text" id="genderDisplay" placeholder="Wybierz płeć" readonly onclick="openGenderModal()">
+                <input type="hidden" id="gender" required>
+                <button id="registerButton" onclick="register()">
+                    <span class="button-text">Zarejestruj</span>
+                    <span class="spinner" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+                <p class="error" id="registerError"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal wyboru roku urodzenia -->
+    <div id="yearModal" class="modal">
+        <div class="modal-content">
+            <h3>Wybierz rok urodzenia</h3>
+            <select id="yearSelect" size="10">
+                <!-- Wypełniane dynamicznie -->
+            </select>
+            <button onclick="selectYear()">Wybierz</button>
+            <button onclick="closeYearModal()">Anuluj</button>
+        </div>
+    </div>
+
+    <!-- Modal wyboru płci -->
+    <div id="genderModal" class="modal">
+        <div class="modal-content">
+            <h3>Wybierz płeć</h3>
+            <select id="genderSelect" size="3">
+                <option value="M">Mężczyzna</option>
+                <option value="F">Kobieta</option>
+                <option value="O">Inna</option>
+            </select>
+            <button onclick="selectGender()">Wybierz</button>
+            <button onclick="closeGenderModal()">Anuluj</button>
+        </div>
+    </div>
+
+    <script>
+        let SCRIPT_URL = '';
+            
+        fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
+          .then(response => {
+            if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
+            return response.text();
+          })
+          .then(text => {
+            SCRIPT_URL = text.trim();
+            console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
+            // Po załadowaniu URL-a uruchamiamy inicjalizację strony
+            initPage();
+          })
+          .catch(err => {
+            console.error('Błąd podczas ładowania SCRIPT_URL:', err);
+            alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
+          });
+      
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelectorAll('.error').forEach(error => error.classList.remove('show'));
+        }
+        
+        function uuidv4() {
+            return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+                (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+            );
+        }
+        
+        function getRedirectUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('redirect') || '../index.html';
+        }
+        
+        function validateEmail(email) {
+            if (!email) return true;
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function validatePassword(password) {
+            const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+            return re.test(password);
+        }
+        
+        function validateUsername(username) {
+            if (!username) return false;
+            if (username.length > 20) return false;
+            if (username.includes(' ')) return false;
+            return true;
+        }
+        
+        function validateGender(gender) {
+            return ['M', 'F', 'O'].includes(gender);
+        }
+        
+        function populateYearSelect() {
+            const select = document.getElementById('yearSelect');
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= 1900; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                select.appendChild(option);
+            }
+        }
+        
+        function openYearModal() {
+            document.getElementById('yearModal').style.display = 'flex';
+        }
+        
+        function closeYearModal() {
+            document.getElementById('yearModal').style.display = 'none';
+        }
+        
+        function selectYear() {
+            const selectedYear = document.getElementById('yearSelect').value;
+            document.getElementById('birthYearDisplay').value = selectedYear;
+            document.getElementById('birthYear').value = selectedYear;
+            closeYearModal();
+        }
+        
+        function openGenderModal() {
+            document.getElementById('genderModal').style.display = 'flex';
+        }
+        
+        function closeGenderModal() {
+            document.getElementById('genderModal').style.display = 'none';
+        }
+        
+        function selectGender() {
+            const selectedGender = document.getElementById('genderSelect').value;
+            document.getElementById('genderDisplay').value = selectedGender === 'M' ? 'Mężczyzna' : selectedGender === 'F' ? 'Kobieta' : 'Inna';
+            document.getElementById('gender').value = selectedGender;
+            closeGenderModal();
+        }
+        
+        function toggleButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const buttonText = button.querySelector('.button-text');
+            const spinner = button.querySelector('.spinner');
+            button.disabled = isLoading;
+            buttonText.style.display = isLoading ? 'none' : 'inline';
+            spinner.style.display = isLoading ? 'inline-block' : 'none';
+        }
+        
+        async function login() {
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorMessage = document.getElementById('loginError');
+            errorMessage.textContent = '';
+            errorMessage.classList.remove('show');
+        
+            if (!identifier) {
+                errorMessage.textContent = 'Wprowadź nazwę użytkownika lub email';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (!password) {
+                errorMessage.textContent = 'Wprowadź hasło';
+                errorMessage.classList.add('show');
+                return;
+            }
+        
+            toggleButtonLoading('loginButton', true);
+        
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        identifier,
+                        password
+                    }),
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+            
+                if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+                const data = await response.json();
+                console.log('login response:', data);
+            
+                toggleButtonLoading('loginButton', false);
+                if (data.status === 'success') {
+                    localStorage.setItem('authToken', data.token);
+                    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+                    window.location.href = getRedirectUrl();
+                } else {
+                    errorMessage.textContent = data.message || 'Błąd logowania';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                toggleButtonLoading('loginButton', false);
+                errorMessage.textContent = 'Błąd serwera: Spróbuj ponownie później';
+                errorMessage.classList.add('show');
+                console.error('Błąd logowania:', error);
+            }
+        }
+        
+        async function register() {
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const birthYear = document.getElementById('birthYear').value;
+            const gender = document.getElementById('gender').value;
+            const errorMessage = document.getElementById('registerError');
+            errorMessage.textContent = '';
+            errorMessage.classList.remove('show');
+        
+            if (!validateUsername(username)) {
+                errorMessage.textContent = 'Nazwa użytkownika musi mieć do 20 znaków i nie może zawierać spacji';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (!validateEmail(email)) {
+                errorMessage.textContent = 'Nieprawidłowy format emaila';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (!validatePassword(password)) {
+                errorMessage.textContent = 'Hasło musi mieć co najmniej 8 znaków, dużą i małą literę, cyfrę oraz znak specjalny';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Hasła nie są zgodne';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (!birthYear || isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
+                errorMessage.textContent = 'Wybierz prawidłowy rok urodzenia (1900–' + new Date().getFullYear() + ')';
+                errorMessage.classList.add('show');
+                return;
+            }
+            if (!validateGender(gender)) {
+                errorMessage.textContent = 'Wybierz płeć (Mężczyzna, Kobieta lub Inna)';
+                errorMessage.classList.add('show');
+                return;
+            }
+        
+            toggleButtonLoading('registerButton', true);
+        
+            const appData = {
+                profile: {
+                    username,
+                    badges: {},
+                    uuid: uuidv4(),
+                    email: email || '',
+                    birthYear: parseInt(birthYear),
+                    gender,
+                    money: 0,
+                    joined: new Date().toISOString()
+                }
+            };
+        
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'register',
+                        username,
+                        password,
+                        birthYear,
+                        gender,
+                        email: email || '',
+                        appData: JSON.stringify(appData)
+                    }),
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+            
+                if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+                const data = await response.json();
+                console.log('register response:', data);
+            
+                toggleButtonLoading('registerButton', false);
+                if (data.status === 'success') {
+                    localStorage.setItem('authToken', data.token);
+                    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+                    window.location.href = getRedirectUrl();
+                } else {
+                    errorMessage.textContent = data.message || 'Błąd rejestracji';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                toggleButtonLoading('registerButton', false);
+                errorMessage.textContent = 'Błąd serwera: Spróbuj ponownie później';
+                errorMessage.classList.add('show');
+                console.error('Błąd rejestracji:', error);
+            }
+        }
+        
+        async function loadUserData() {
+            const token = localStorage.getItem('authToken');
+            const userData = sessionStorage.getItem('userData');
+        
+            console.log('loadUserData - token:', token);
+            console.log('loadUserData - userData:', userData);
+        
+            if (!token) {
+                console.log('Brak tokena - wyświetlanie loginModal');
+                document.getElementById('loginModal').style.display = 'flex';
+                showTab('login');
+                return false;
+            }
+        
+            try {
+                console.log('Weryfikacja tokena:', token);
+                const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+            
+                if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
+                const data = await response.json();
+                console.log('verify response:', data);
+            
+                if (data.status === 'success') {
+                    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+                    window.location.href = getRedirectUrl();
+                    return true;
+                } else {
+                    console.log('Nieprawidłowy token - wyświetlanie loginModal');
+                    document.getElementById('loginModal').style.display = 'flex';
+                    showTab('login');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Błąd weryfikacji tokena:', error);
+                document.getElementById('loginModal').style.display = 'flex';
+                showTab('login');
+                return false;
+            }
+        }
+        
+        window.onload = () => {
+            populateYearSelect();
+            loadUserData();
+        };
+    </script>
+</body>
+</html>
