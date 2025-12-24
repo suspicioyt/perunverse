@@ -343,7 +343,7 @@
         let SCRIPT_URL = '';
 
         // Pobranie aktualnego URL backendu z pliku konfiguracyjnego
-        fetch('https://suspicioyt.github.io/perunverse/data/scripturl.txt')
+        fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
           .then(response => {
             if (!response.ok) throw new Error('Nie udało się pobrać pliku konfiguracyjnego');
             return response.text();
