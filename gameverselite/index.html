@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perun Gameverse Lite</title>
+    <link rel="stylesheet" href="style/main.css">
+    <link rel="stylesheet" href="style/responsibility.css">
+    <link rel="stylesheet" href="style/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="https://suspicioyt.github.io/perunverse/logo/gameverse.png">
+</head>
+<body>
+    <div id="notification-container" class="notification-container"></div>
+    <header class="sticky">
+        <div class="progress-container">
+            <div class="progress-bar" id="myBar"></div>
+        </div>  
+        <div id="sidenavOpenButton">
+            <a onclick="Modal.open('updateModal')" class="sidenavButton" title="Dziennik Zmian"><i class="fa-solid fa-clipboard-list"></i></a>
+            <a onclick="Modal.open('settingsModal')" class="sidenavButton" title="Ustawienia"><i class="fa-solid fa-cog"></i></a>
+        </div>
+        <div id="headertytul">
+            <h1>PERUN GAMEVERSE LITE</h1>
+            <h3>Najlepsze gry na wyciągnięcie ręki</h3>
+        </div>
+    </header>
+    <div id="parallax"></div>
+    <div id="parallaxEnd"></div>
+    <main>
+        <div id="mainwindow">
+            <div class="search-filters-container borderColorChange">
+                <input type="text" id="searchInput" placeholder="Szukaj">
+            </div>
+            <div id="lastPlayedGames"></div>
+            <div class="game-container borderColorChange" max="1000">
+                <button class="refreshButton"><i class="fas fa-redo" onclick="reloadGames()"></i></button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p id="footerText">© 2025 Perun Gameverse & ChatGPT & Grok. Wszelkie prawa zastrzeżone. Wersja 1.0.0 Lite</p>
+    </footer>
+
+    <div id="updateModal" class="modal">
+        <h1>Dziennik zmian</h1>
+        <div class="modal-content">
+            <div id="tabsContainer" class="tab">
+                <button class="tablinks" style="width: 100%;padding: 12px;" onclick="openTab(event, 'updt')">📆 Aktualizacje</button>
+            </div>
+            <div id="tabContentsContainer">
+                <div style="text-align: center;" id="updt" class="tabcontent" style="display: block;">
+                    Dziennik aktualizacji dotyczy pełnej wersji Perun Gameverse.
+                    Zmiany w wersji Lite będą nieregularne i ciche.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <div class="firework"></div>
+            <div class="firework"></div>
+            <div class="firework"></div>
+            <h2>Witaj na PERUN GAMEVERSE!</h2>
+            <p>Cieszymy się, że do nas dołączyłeś! Teraz możesz zagrać w dowolną grę, jaką tylko chcesz. <br><b>Miłej zabawy!</b> <br>Ale najpierw wpisz swoją nazwę użytkownika.</p>
+            <button id="welcomeStartBtn">Start</button>
+        </div>
+    </div>
+    <div id="settingsModal" class="modal">
+        <h1>Ustawienia</h1>
+        <div class="modal-content">
+            <h2>Personalizacja</h2>
+            <span>Motyw: </span>
+            <select name="theme" id="themeSelect" onchange="changeTheme(this.value)">
+                <option value="dark">Ciemny</option>
+                <option value="gray">Szary</option>
+                <option value="light">Jasny</option>
+            </select>
+        </div>
+    </div>
+    <div class="loader-container loading-screen" id="loader">
+        <div class="text">
+            <span class="word1">Perun </span>
+            <span class="word2">Gameverse</span>
+            <span class="word3">Lite</span>
+        </div>
+        <div class="loading-tip" id="loading-tip"></div>
+        <div class="siteLoadingSpinner"></div>
+    </div>
+    <script src="script/script.js"></script>
+    <script src="script/games.js"></script>
+    <script src="script/changes.js"></script>
+</body>
+</html>
