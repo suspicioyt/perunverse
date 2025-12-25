@@ -84,7 +84,7 @@ async function initializeUser() {
 function loadFireworksStyles() {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'effects/fireworks.css';
+  link.href = 'https://suspicioyt.github.io/perunverse/gameverse/effects/fireworks.css';
   link.id = 'fireworksStyles';
   document.head.appendChild(link);
 }
