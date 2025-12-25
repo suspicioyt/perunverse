@@ -33,7 +33,7 @@
       "name": "Dino Game",
       "link": "game/1/dino.html",
       "description": "Skacz nad przeszkodami",
-      "tags": ["konserwacje", "disabled"]
+      "tags": ["konserwacje", "disabled","login"]
     },
     {
       "id": "06",
@@ -54,7 +54,7 @@
       "name": "Zgadywanie Liczb",
       "link": "game/1/zgadywanieliczb.html",
       "description": "Zgaduj liczby",
-      "tags": ["ukonczona", "disabled"]
+      "tags": ["ukonczona", "disabled","login"]
     },
     {
       "id": "09",
@@ -89,7 +89,7 @@
       "name": "Bitcoin Clicker",
       "link": "game/1/bitcoinclicker.html",
       "description": "Klikaj i zdobywaj Bitcoiny",
-      "tags": ["ukonczona", "money"]
+      "tags": ["ukonczona", "money","login"]
     },
     {
       "id": "14",
@@ -110,14 +110,14 @@
       "name": "Ping Pong",
       "link": "game/1/pingpong.html",
       "description": "Odbijaj piłkę",
-      "tags": ["ukonczona", "disabled"]
+      "tags": ["ukonczona", "disabled","login"]
     },
     {
       "id": "17",
       "name": "Flappy Bird",
       "link": "game/1/flappybird.html",
       "description": "Wlatuj w dziury w ścianach",
-      "tags": ["beta", "disabled"]
+      "tags": ["beta", "disabled","login"]
     },
     {
       "id": "18",
@@ -153,7 +153,7 @@
       "name": "Automat",
       "link": "game/1/machine.html",
       "description": "Wylosuj 3 takie same ikony",
-      "tags": ["beta", "money", "hot", "disabled"]
+      "tags": ["beta", "money", "hot", "disabled","login"]
     },
     {
       "id": "23",
@@ -175,7 +175,7 @@
       "name": "2048",
       "link": "game/1/2048.html",
       "description": "Łącz kafelki",
-      "tags": ["konserwacje", "disabled"]
+      "tags": ["konserwacje", "disabled","login"]
     },
     {
       "id": "26",
@@ -210,7 +210,7 @@
       "name": "Brainrot Guesser",
       "link": "game/1/brainrotguesser.html",
       "description": "Odgadnij Brainroty",
-      "tags": ["ukonczona"]
+      "tags": ["ukonczona","login"]
     },
     {
       "id": "31",
@@ -246,7 +246,7 @@
       "name": "Jesienne liście",
       "link": "game/event/autumn.html",
       "description": "Zbieraj liście",
-      "tags": ["nowosc", "event"]
+      "tags": ["nowosc", "event","login"]
     },
     {
       "id": "36",
@@ -319,6 +319,13 @@
       "link": "game/1/geoguesser.html",
       "description": "Uderzaj w krety",
       "tags": ["nowosc", "konserwacje", "premium", "disabled"]
+    },
+    {
+      "id": "999",
+      "name": "PerunCode Compiler",
+      "link": "game/1/peruncode.html",
+      "description": "Napisz własny skrypt",
+      "tags": ["nowosc", "konserwacje", "premium"]
     },
     {
       "id": "999",
