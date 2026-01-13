@@ -9,12 +9,9 @@ fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(text => {
     SCRIPT_URL = text.trim();
     console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
-    loadUserData();
   })
   .catch(err => {
     console.error('Błąd ładowania SCRIPT_URL:', err);
-    document.getElementById('loginModal').style.display = 'flex';
-    showTab('login');
   });
 
 async function initializeUserData() {
