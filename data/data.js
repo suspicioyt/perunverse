@@ -1,6 +1,6 @@
 let SCRIPT_URL = '';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
-        
+
 fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(response => {
     if (!response.ok) throw new Error('Nie udało się pobrać pliku konfiguracyjnego');
@@ -45,6 +45,11 @@ async function initializeUserData() {
     return {};
   }
 
+  while (!SCRIPT_URL) {
+    console.log("Czekam na SCRIPT_URL…");
+    await new Promise(r => setTimeout(r, 50));
+  }
+
   try {
     console.log('initializeUserData: Verifying token with server...');
     const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
@@ -54,6 +59,7 @@ async function initializeUserData() {
     });
 
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
     const data = await response.json();
     console.log('initializeUserData: Server response:', data);
 
@@ -99,16 +105,18 @@ async function saveUserDataToSheet() {
     });
 
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
     const data = await response.json();
     console.log('saveUserDataToSheet: Response:', data);
 
     if (data.status !== 'success') {
       throw new Error(data.message || 'Błąd podczas zapisywania danych');
     }
--
+
     sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
     console.log('saveUserDataToSheet: Data successfully saved');
     return data;
+
   } catch (error) {
     console.error('saveUserDataToSheet: Error:', error);
     throw error;
@@ -128,34 +136,33 @@ function getData(section, key) {
   }
 }
 
+let saveTimeout = null;
+
 async function setData(section, key, value) {
   let parsedData = {};
   const stored = sessionStorage.getItem('userData');
 
   try {
     parsedData = stored ? JSON.parse(stored) : {};
-  } catch (error) {
-    console.error('setData: Error parsing existing userData:', error);
+  } catch {
     parsedData = {};
   }
 
-  if (!parsedData[section]) parsedData[section] = {};
+  if (!parsedData[section] || typeof parsedData[section] !== "object") {
+    parsedData[section] = {};
+  }
+
   parsedData[section][key] = value;
 
-  try {
-    sessionStorage.setItem('userData', JSON.stringify(parsedData));
-  } catch (error) {
-    console.error('setData: Failed to save to sessionStorage:', error);
-    throw error;
-  }
+  sessionStorage.setItem('userData', JSON.stringify(parsedData));
 
-  try {
-    await saveUserDataToSheet();
-    return parsedData;
-  } catch (error) {
-    console.error('setData: Failed to save to server:', error);
-    throw error;
-  }
+  if (saveTimeout) clearTimeout(saveTimeout);
+
+  saveTimeout = setTimeout(() => {
+    saveUserDataToSheet().catch(err => console.error(err));
+  }, 1200);
+
+  return parsedData;
 }
 
 function insertData(element, appId, key) {
@@ -181,6 +188,13 @@ function clearSessionStorage() {
   localStorage.removeItem('authToken');
   sessionStorage.removeItem('userData');
 }
+
+window.addEventListener('beforeunload', () => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveUserDataToSheet();
+  }
+});
 
 window.userData = {
   initializeUserData,
