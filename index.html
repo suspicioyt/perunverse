@@ -131,7 +131,7 @@
     }
 
     .tile:hover {
-      transform: scale(1.08) translateY(-10px);
+      transform: scale(1.05) translateY(-5px);
       box-shadow: 0 20px 30px rgba(0,0,0,.6);
     }
 
@@ -141,11 +141,6 @@
       border-radius: 12px;
       object-fit: cover;
       border-bottom: 3px solid;
-      transition: transform .3s;
-    }
-
-    .tile:hover img {
-      transform: scale(1.1);
     }
 
     .tile h2 {
@@ -173,36 +168,32 @@
       font-size: 20px;
       font-weight: 600;
       border-radius: 20px;
+      text-align: center;
     }
 
     .soon {
-      opacity: 0.4;
-      filter: grayscale(100%);
-      pointer-events: none;
+      opacity: 0.6;
+      filter: grayscale(50%);
       position: relative;
     }
 
     .soon::after {
-      content: "Wyczekuj wydania!";
+      content: "Wkrótce!";
       position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      font-weight: 600;
-      border-radius: 20px;
+      top: 10px;
+      right: 10px;
+      background: #ffaa00;
+      color: black;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: bold;
     }
 
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        gap: 15px;
-      }
-      .tile {
-        width: calc(100% - 30px);
-      }
+    @media (max-width: 900px) { .tile { width: calc(50% - 40px); } }
+    @media (max-width: 600px) { 
+      header { flex-direction: column; gap: 15px; }
+      .tile { width: 100%; } 
     }
   </style>
 </head>
@@ -211,21 +202,20 @@
 
 <header>
   <div class="logo">Perun Multiverse</div>
-  <div class="auth-buttons" id="authArea"></div>
+  <div class="auth-buttons" id="authArea">
+    <span id="authLoading" style="display: none; padding: 10px; color: #aaa;">Ładowanie...</span>
+  </div>
 </header>
 
 <main>
   <div id="main-window">
-
     <div class="tabs">
-      <button class="tab-button active" data-tab="public">Strefa NIEzalogowanych</button>
-      <button class="tab-button" data-tab="logged">Strefa Zalogowanych</button>
-      <button class="tab-button" data-tab="other">Inne</button>
+      <button class="tab-button active" data-tab="public" onclick="switchTab('public')">Strefa Publiczna</button>
+      <button class="tab-button" data-tab="logged" onclick="switchTab('logged')">Strefa Zalogowanych</button>
+      <button class="tab-button" data-tab="other" onclick="switchTab('other')">Inne</button>
     </div>
 
     <div class="container">
-
-      <!-- Tab 1: Public -->
       <div id="public" class="tab-content active">
         <div class="grid">
           <div class="tile" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverselite')">
@@ -235,207 +225,175 @@
         </div>
       </div>
 
-      <!-- Tab 2: Logged in only -->
       <div id="logged" class="tab-content">
         <div class="grid" id="loggedGrid">
-          <div class="tile" onclick="changePage('https://suspicioyt.github.io/perunverse/gameverse')">
+          <div class="tile locked" data-require-auth onclick="changePage('https://suspicioyt.github.io/perunverse/gameverse')">
             <img src="https://suspicioyt.github.io/perunverse/logo/gameverse.png" style="border-color: green;">
             <h2>Perun Gameverse</h2>
           </div>
-
-          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/quizverse')">
+          <div class="tile locked soon" data-require-auth>
             <img src="https://suspicioyt.github.io/perunverse/logo/quizverse.png" style="border-color: purple;">
             <h2>Perun Quizverse</h2>
           </div>
-
-          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/filmverse')">
+          <div class="tile locked soon" data-require-auth>
             <img src="https://suspicioyt.github.io/perunverse/logo/filmverse.png" style="border-color: blue;">
             <h2>Perun Filmverse</h2>
           </div>
         </div>
       </div>
 
-      <!-- Tab 3: Other -->
       <div id="other" class="tab-content">
         <div class="grid">
-          <div class="tile soon" onclick="changePage('https://suspicioyt.github.io/perunverse/other/perunsearch')">
-            <h2>Perun Search</h2>
+          <div class="tile soon">
+            <h2 style="margin-top: 40px;">Perun Search</h2>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </main>
-<!-- ===== SCRIPT ===== -->
+
 <script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZTbKBAAc0hWwRzqu4sW8OGUsk5oeqHBNTgRLJyJ-MKqye7UhxTHWEGiNp07osD9Ar/exec';
   const LOGIN_PAGE = 'account/login.html?redirect=';
   const currentUrl = window.location.href;
 
-  let SCRIPT_URL = '';
-  let initialized = false;
+  // --- RDZEŃ ZARZĄDZANIA DANYMI ---
+  window.userData = {
+    async initializeUserData() {
+      const token = localStorage.getItem('authToken');
+      const cached = sessionStorage.getItem('userData');
 
-  // Pobranie backend_url
-  fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
-    .then(r => r.ok ? r.text() : Promise.reject())
-    .then(t => {
-      SCRIPT_URL = t.trim();
-      console.log("SCRIPT_URL:", SCRIPT_URL);
-      initPage();
-    })
-    .catch(err => {
-      console.error("Błąd ładowania SCRIPT_URL:", err);
-      initPage(); // nawet jeśli URL nie działa, strona główna ma działać
-    });
+      if (!token) return null;
 
-  function hasToken() {
-    return !!localStorage.getItem('authToken');
+      try {
+        // Próba pobrania świeżych danych z GAS
+        const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          const appData = data.appData || {};
+          sessionStorage.setItem('userData', JSON.stringify(appData));
+          return appData;
+        } else if (data.message === 'invalid_token') {
+          // Tylko jeśli serwer wyraźnie powie, że token wygasł
+          this.logout();
+        }
+      } catch (err) {
+        console.warn("Błąd sieci, używam cache:", err);
+      }
+
+      // Jeśli fetch się nie udał, ale mamy cache - użyj go
+      return cached ? JSON.parse(cached) : null;
+    },
+
+    getData(section, key) {
+      const raw = sessionStorage.getItem('userData');
+      if (!raw) return null;
+      try {
+        const obj = JSON.parse(raw);
+        return obj?.[section]?.[key] ?? null;
+      } catch { return null; }
+    },
+
+    async setData(section, key, value) {
+      let data = {};
+      const raw = sessionStorage.getItem('userData');
+      if (raw) data = JSON.parse(raw);
+
+      if (!data[section]) data[section] = {};
+      data[section][key] = value;
+
+      // Zapisz lokalnie natychmiast
+      sessionStorage.setItem('userData', JSON.stringify(data));
+      
+      // Wyślij do chmury
+      return await this.saveUserDataToSheet(data);
+    },
+
+    async saveUserDataToSheet(fullData) {
+      const token = localStorage.getItem('authToken');
+      if (!token) return { status: 'error', message: 'No token' };
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Ważne dla GAS przy POST
+          cache: 'no-cache',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateUserData',
+            token: token,
+            appData: fullData
+          })
+        });
+        return { status: 'sent' }; // no-cors nie zwraca treści, ale wysyła dane
+      } catch (err) {
+        console.error("Błąd zapisu:", err);
+        return { status: 'error' };
+      }
+    },
+
+    logout() {
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('userData');
+      window.location.reload();
+    }
+  };
+
+  // --- LOGIKA INTERFEJSU ---
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  async function initPage() {
+    const authArea = document.getElementById('authArea');
+    const loading = document.getElementById('authLoading');
+    loading.style.display = 'inline';
+
+    const token = localStorage.getItem('authToken');
+
+    if (token) {
+      const data = await window.userData.initializeUserData();
+      if (data) {
+        authArea.innerHTML = `
+          <button onclick="changePage('account/index.html')">Panel</button>
+          <button onclick="window.userData.logout()">Wyloguj</button>
+        `;
+        document.querySelectorAll('.tile[data-require-auth]').forEach(tile => tile.classList.remove('locked'));
+        switchTab('logged');
+      } else {
+        showLoginBtn();
+      }
+    } else {
+      showLoginBtn();
+    }
+    loading.style.display = 'none';
+  }
+
+  function showLoginBtn() {
+    authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
+    document.querySelectorAll('.tile[data-require-auth]').forEach(tile => tile.classList.add('locked'));
+    switchTab('public');
   }
 
   function login() {
     window.location.href = LOGIN_PAGE + encodeURIComponent(currentUrl);
   }
 
-  function logout() {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('userData');
-    location.reload();
-  }
-
-  // ==== INIT STRONY GŁÓWNEJ ====
-  function switchTab(tabId) {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    tabContents.forEach(content => content.classList.remove('active'));
-    
-    const btn = document.querySelector(`[data-tab="${tabId}"]`);
-    const content = document.getElementById(tabId);
-    
-    if (btn) btn.classList.add('active');
-    if (content) content.classList.add('active');
-  }
-
-  async function initPage() {
-    const authArea = document.getElementById('authArea');
-    const loggedGrid = document.getElementById('loggedGrid');
-
-    if (hasToken()) {
-      authArea.innerHTML = `
-        <button onclick="changePage('account')">Panel</button>
-        <button onclick="logout()">Wyloguj</button>
-      `;
-
-      await initializeUserData();
-
-      if (loggedGrid) loggedGrid.classList.remove('locked');
-      switchTab('logged');
-
-    } else {
-      authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
-      if (loggedGrid) loggedGrid.classList.add('locked');
-      switchTab('public');
+  function changePage(url) {
+    if (url.includes('https://') || url.includes('.html')) {
+       window.location.href = url;
     }
   }
 
-  function changePage(app) {
-    window.location.href = app;
-  }
-
-  // ==== INICJALIZACJA DANYCH UŻYTKOWNIKA ====
-  async function initializeUserData() {
-    const token = localStorage.getItem('authToken');
-    const cached = sessionStorage.getItem('userData');
-
-    // Jeśli mamy cache → używamy
-    if (cached) {
-      try {
-        initialized = true;
-        return JSON.parse(cached);
-      } catch {
-        sessionStorage.removeItem('userData');
-      }
-    }
-
-    // Brak tokena → nic nie robimy
-    if (!token) {
-      initialized = true;
-      return {};
-    }
-
-    // Brak SCRIPT_URL → nie wylogowujemy
-    if (!SCRIPT_URL) {
-      console.warn("Brak SCRIPT_URL — używam tylko cache");
-      initialized = true;
-      return cached ? JSON.parse(cached) : {};
-    }
-
-    try {
-      const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
-      if (!res.ok) throw 0;
-
-      const data = await res.json();
-
-      if (data.status === 'success') {
-        const appData = data.appData || {};
-
-        // NIE nadpisujemy pustymi danymi
-        if (Object.keys(appData).length > 0) {
-          sessionStorage.setItem('userData', JSON.stringify(appData));
-        }
-
-        initialized = true;
-        return appData;
-      }
-
-      // Token naprawdę nieprawidłowy → wylogowanie
-      clearSessionStorage();
-      redirectToLogin(currentUrl);
-      return {};
-
-    } catch (err) {
-      console.warn("Błąd verify — NIE wylogowuję:", err);
-
-      initialized = true;
-
-      // Używamy cache jeśli jest
-      if (cached) {
-        try { return JSON.parse(cached); }
-        catch {}
-      }
-
-      return {};
-    }
-  }
-
-  function redirectToLogin(url) {
-    if (!url.includes('/account/index.html')) {
-      window.location.href = LOGIN_PAGE + encodeURIComponent(url);
-    }
-  }
-
-  function clearSessionStorage() {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('userData');
-  }
-
-  function getData(section, key) {
-    const raw = sessionStorage.getItem('userData');
-    if (!raw) return null;
-
-    try {
-      const obj = JSON.parse(raw);
-      return obj?.[section]?.[key] ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  window.userData = {
-    initializeUserData,
-    getData
-  };
+  // Start
+  initPage();
 </script>
 
 </body>
