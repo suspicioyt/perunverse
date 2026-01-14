@@ -1,8 +1,8 @@
 let SCRIPT_URL = '';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
-// Style debugowania
-const dLog = (msg, color = '#00aaff') => console.log(`%c[DEBUG] ${msg}`);
+// Czyste logowanie bez kolorów
+const dLog = (msg) => console.log(`[DEBUG] ${msg}`);
 
 dLog("Inicjalizacja systemu danych...");
 
@@ -11,9 +11,9 @@ fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(r => r.ok ? r.text() : Promise.reject())
   .then(t => { 
     SCRIPT_URL = t.trim(); 
-    dLog("URL Backendu załadowany: " + SCRIPT_URL, "#00ff88");
+    dLog("URL Backendu załadowany: " + SCRIPT_URL);
   })
-  .catch(() => console.error("%c[DEBUG] BŁĄD: Nie udało się pobrać backend_url.txt", "color: #ff4444"));
+  .catch(() => console.error("[DEBUG] BŁĄD: Nie udało się pobrać backend_url.txt"));
 
 let saveTimeout = null;
 let isSaving = false;
@@ -28,7 +28,7 @@ async function initializeUserData() {
   if (currentUrl.includes('/account/')) return cached ? JSON.parse(cached) : {};
 
   if (!token) {
-    dLog("Brak tokena - przekierowanie do logowania.", "#ffaa00");
+    dLog("Brak tokena - przekierowanie do logowania.");
     redirectToLogin(currentUrl);
     return {};
   }
@@ -46,7 +46,7 @@ async function initializeUserData() {
     const data = await res.json();
 
     if (data && data.status === 'success') {
-      dLog("Weryfikacja udana. Pobrano świeże dane.", "#00ff88");
+      dLog("Weryfikacja udana. Pobrano świeże dane.");
       const app = data.appData || {};
       sessionStorage.setItem('userData', JSON.stringify(app));
       pendingChanges = false;
@@ -54,16 +54,15 @@ async function initializeUserData() {
     } 
     
     if (data && data.message === 'invalid_token') {
-      dLog("Token unieważniony przez serwer!", "#ff4444");
+      dLog("Token unieważniony przez serwer!");
       clearSessionStorage();
       redirectToLogin(currentUrl);
       return {};
     }
   } catch (e) {
-    dLog("Błąd sieci podczas weryfikacji. Przechodzę w tryb offline (cache).", "#ffaa00");
+    dLog("Błąd sieci podczas weryfikacji. Używam cache (Offline Mode).");
   }
 
-  // Jeśli jesteśmy tutaj, to albo błąd sieci, albo dziwna odpowiedź - używamy cache
   return cached ? JSON.parse(cached) : {};
 }
 
@@ -76,13 +75,12 @@ async function saveUserDataToSheet(opts = {}) {
   if (!token || !userData || !SCRIPT_URL || isSaving) return;
 
   isSaving = true;
-  dLog("Rozpoczynam zapis do chmury...", "#cc88ff");
+  dLog("Chmura: Rozpoczynam zapis...");
 
   try {
-    // Używamy POST z JSON - GAS lepiej to trawi przy appData
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', // Ważne: GAS często wymaga no-cors przy POST z innych domen
+      mode: 'no-cors', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'updateUserData',
@@ -91,11 +89,10 @@ async function saveUserDataToSheet(opts = {}) {
       })
     });
 
-    // Przy no-cors nie sprawdzamy res.ok, zakładamy że wyszło
-    dLog("Zapis wysłany pomyślnie.", "#00ff88");
+    dLog("Chmura: Dane wysłane.");
     pendingChanges = false;
   } catch (e) {
-    dLog("Błąd podczas zapisu! Spróbuję później.", "#ff4444");
+    dLog("BŁĄD ZAPISU! Ponowienie za 5s.");
     if (!immediate) {
        setTimeout(() => { if (pendingChanges) saveUserDataToSheet(); }, 5000);
     }
@@ -124,13 +121,13 @@ async function setData(section, key, value) {
 
   if (!parsed[section] || typeof parsed[section] !== 'object') parsed[section] = {};
   
-  if (parsed[section][key] === value) return parsed; // brak zmian
+  if (parsed[section][key] === value) return parsed; 
 
   parsed[section][key] = value;
   sessionStorage.setItem('userData', JSON.stringify(parsed));
   pendingChanges = true;
 
-  dLog(`Zmiana lokalna: [${section}][${key}] = ${value}`, "#aaa");
+  dLog(`Zmiana: [${section}][${key}] = ${value}`);
 
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
@@ -158,22 +155,21 @@ function clearSessionStorage() {
   sessionStorage.removeItem('userData');
 }
 
-// Mostek dla starych skryptów (Naprawia ReferenceError)
+// Mostek dla starych skryptów
 window.loadUserData = initializeUserData;
 window.API = {
-  updateRanking: () => dLog("Stary ranking nie jest już wspierany.", "#ffaa00"),
+  updateRanking: () => dLog("Stary ranking nieaktywny."),
   sendLocalData: () => saveUserDataToSheet()
 };
 
 // Zapis przy zamykaniu
-window.addEventListener('beforeunload', (e) => {
+window.addEventListener('beforeunload', () => {
   if (pendingChanges && SCRIPT_URL) {
     const data = JSON.stringify({
       action: 'updateUserData',
       token: localStorage.getItem('authToken'),
       appData: JSON.parse(sessionStorage.getItem('userData') || '{}')
     });
-    // navigator.sendBeacon jest pewniejszy przy zamykaniu karty
     navigator.sendBeacon(SCRIPT_URL, new Blob([data], {type: 'application/json'}));
   }
 });
