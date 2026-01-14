@@ -44,9 +44,14 @@ async function initializeUserData() {
     clearSessionStorage();
     redirectToLogin(currentUrl);
     return {};
-  } catch {
-    clearSessionStorage();
-    redirectToLogin(currentUrl);
+  } catch (e) {
+    console.warn("Błąd weryfikacji tokena, ale NIE wylogowuję:", e);
+  
+    if (cached) {
+      try { return JSON.parse(cached); }
+      catch {}
+    }
+
     return {};
   }
 }
