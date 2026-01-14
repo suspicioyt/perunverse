@@ -1,38 +1,53 @@
-let SCRIPT_URL = '';
-const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
+/* ============================================================
+   KONFIGURACJA
+============================================================ */
 
-fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
-  .then(r => { if (!r.ok) throw 0; return r.text(); })
-  .then(t => { SCRIPT_URL = t.trim(); })
-  .catch(e => console.error("Błąd ładowania SCRIPT_URL:", e));
+let SCRIPT_URL = "";
+const LOGIN_PAGE = "https://suspicioyt.github.io/perunverse/account/index.html?redirect=";
 
-let saveTimeout = null;
+fetch("https://suspicioyt.github.io/perunverse/config/backend_url.txt")
+  .then(r => r.ok ? r.text() : Promise.reject())
+  .then(t => SCRIPT_URL = t.trim())
+  .catch(err => console.error("Błąd ładowania backend_url:", err));
+
+let initialized = false;
 let isSaving = false;
 let pendingChanges = false;
-let initialized = false;
+let saveTimeout = null;
 
-// Czekanie aż backend_url się załaduje
+
+/* ============================================================
+   FUNKCJA: Czekanie na SCRIPT_URL
+============================================================ */
+
 async function waitForScriptUrl() {
   while (!SCRIPT_URL) {
     await new Promise(r => setTimeout(r, 50));
   }
 }
 
+
+/* ============================================================
+   FUNKCJA: Inicjalizacja danych użytkownika
+============================================================ */
+
 async function initializeUserData() {
-  const currentUrl = window.location.href;
-  const token = localStorage.getItem('authToken');
-  const cached = sessionStorage.getItem('userData');
+  const url = window.location.href;
+  const token = localStorage.getItem("authToken");
+  const cached = sessionStorage.getItem("userData");
 
-  if (currentUrl.includes('/account/index.html')) return {};
+  // Strona logowania nie potrzebuje danych
+  if (url.includes("/account/index.html")) return {};
 
-  // Jeśli mamy cache → zwracamy od razu
+  // Jeśli mamy cache → zwracamy natychmiast
   if (cached) {
     try { return JSON.parse(cached); }
-    catch { sessionStorage.removeItem('userData'); }
+    catch { sessionStorage.removeItem("userData"); }
   }
 
+  // Brak tokena → logowanie
   if (!token) {
-    redirectToLogin(currentUrl);
+    redirectToLogin(url);
     return {};
   }
 
@@ -44,44 +59,54 @@ async function initializeUserData() {
 
     const data = await res.json();
 
-    // Token nieprawidłowy → tylko wtedy wylogowujemy
-    if (data.status !== 'success') {
-      console.warn("Token nieprawidłowy:", data);
+    // Token nieprawidłowy → wylogowanie
+    if (data.status !== "success") {
       clearSessionStorage();
-      redirectToLogin(currentUrl);
+      redirectToLogin(url);
       return {};
     }
 
     const app = data.appData || {};
-    sessionStorage.setItem('userData', JSON.stringify(app));
-    pendingChanges = false;
+
+    // Jeśli backend zwrócił puste dane → NIE nadpisujemy lokalnych
+    if (Object.keys(app).length > 0) {
+      sessionStorage.setItem("userData", JSON.stringify(app));
+      pendingChanges = false;
+    }
+
     initialized = true;
     return app;
 
-  } catch (e) {
-    console.warn("Błąd weryfikacji tokena, NIE wylogowuję:", e);
+  } catch (err) {
+    console.warn("Błąd weryfikacji tokena — używam lokalnych danych:", err);
+
+    initialized = true;
 
     if (cached) {
       try { return JSON.parse(cached); }
       catch {}
     }
 
-    initialized = true;
     return {};
   }
 }
 
+
+/* ============================================================
+   FUNKCJA: Zapis danych do backendu
+============================================================ */
+
 async function saveUserDataToSheet(opts = {}) {
   const { immediate = false } = opts;
-  const token = localStorage.getItem('authToken');
-  const userData = sessionStorage.getItem('userData');
+
+  const token = localStorage.getItem("authToken");
+  const userData = sessionStorage.getItem("userData");
 
   // Nie zapisujemy jeśli:
-  if (!token || !initialized) return;
-  if (!userData || userData === "{}") {
-    console.warn("Pominięto zapis — userData puste");
-    return;
-  }
+  if (!initialized) return;
+  if (!token) return;
+  if (!userData || userData === "{}") return;
+  if (!pendingChanges) return;
 
   await waitForScriptUrl();
 
@@ -90,29 +115,28 @@ async function saveUserDataToSheet(opts = {}) {
 
   try {
     const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        action: 'updateUserData',
+        action: "updateUserData",
         token,
         appData: userData
-      }).toString()
+      })
     });
 
     if (!res.ok) throw new Error("Błąd zapisu");
 
     const data = await res.json();
 
-    if (data.status !== 'success') {
-      console.warn("Backend odrzucił zapis:", data);
-      throw new Error("Odrzucono zapis");
+    if (data.status !== "success") {
+      throw new Error("Backend odrzucił zapis");
     }
 
-    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+    sessionStorage.setItem("userData", JSON.stringify(data.appData || {}));
     pendingChanges = false;
 
-  } catch (e) {
-    console.warn("Błąd zapisu danych:", e);
+  } catch (err) {
+    console.warn("Błąd zapisu danych:", err);
 
     if (!immediate) {
       setTimeout(() => {
@@ -125,61 +149,92 @@ async function saveUserDataToSheet(opts = {}) {
   }
 }
 
+
+/* ============================================================
+   FUNKCJE: Pobieranie i ustawianie danych
+============================================================ */
+
 function getData(section, key) {
-  const raw = sessionStorage.getItem('userData');
+  const raw = sessionStorage.getItem("userData");
   if (!raw) return null;
+
   try {
-    const d = JSON.parse(raw);
-    return d?.[section]?.[key] ?? null;
+    const obj = JSON.parse(raw);
+    return obj?.[section]?.[key] ?? null;
   } catch {
     return null;
   }
 }
 
 async function setData(section, key, value) {
-  let parsed = {};
-  const raw = sessionStorage.getItem('userData');
+  let obj = {};
 
-  try { parsed = raw ? JSON.parse(raw) : {}; }
-  catch { parsed = {}; }
+  try {
+    obj = JSON.parse(sessionStorage.getItem("userData") || "{}");
+  } catch {
+    obj = {};
+  }
 
-  if (!parsed[section] || typeof parsed[section] !== 'object') parsed[section] = {};
-  parsed[section][key] = value;
+  if (!obj[section] || typeof obj[section] !== "object") {
+    obj[section] = {};
+  }
 
-  sessionStorage.setItem('userData', JSON.stringify(parsed));
+  obj[section][key] = value;
+
+  sessionStorage.setItem("userData", JSON.stringify(obj));
   pendingChanges = true;
 
   if (saveTimeout) clearTimeout(saveTimeout);
 
   saveTimeout = setTimeout(() => {
     if (pendingChanges) saveUserDataToSheet().catch(() => {});
-  }, 2500);
+  }, 2000);
 
-  return parsed;
+  return obj;
 }
 
-function insertData(el, appId, key) {
+
+/* ============================================================
+   FUNKCJA: Wstawianie danych do elementu HTML
+============================================================ */
+
+function insertData(el, section, key) {
   if (!el) return;
-  const v = getData(appId, key);
-  el.innerHTML = v !== null ? String(v) : '';
+  const v = getData(section, key);
+  el.innerHTML = v !== null ? String(v) : "";
 }
+
+
+/* ============================================================
+   FUNKCJE: Logowanie / czyszczenie
+============================================================ */
 
 function redirectToLogin(url) {
-  if (!url.includes('/account/index.html')) {
+  if (!url.includes("/account/index.html")) {
     window.location.href = `${LOGIN_PAGE}${encodeURIComponent(url)}`;
   }
 }
 
 function clearSessionStorage() {
-  localStorage.removeItem('authToken');
-  sessionStorage.removeItem('userData');
+  localStorage.removeItem("authToken");
+  sessionStorage.removeItem("userData");
 }
 
-window.addEventListener('beforeunload', () => {
+
+/* ============================================================
+   Zapis przy zamknięciu strony
+============================================================ */
+
+window.addEventListener("beforeunload", () => {
   if (pendingChanges) {
     saveUserDataToSheet({ immediate: true });
   }
 });
+
+
+/* ============================================================
+   Eksport API
+============================================================ */
 
 window.userData = {
   initializeUserData,
