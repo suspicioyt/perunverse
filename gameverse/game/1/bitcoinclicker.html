@@ -64,23 +64,6 @@
 
         .bitcoin-icon:active { transform: scale(0.95); }
 
-        /* Pasek postępu pod Bitcoinem */
-        .cooldown-bar-container {
-            width: 220px;
-            height: 10px;
-            background: #333;
-            border-radius: 5px;
-            margin: 20px auto;
-            overflow: hidden;
-        }
-
-        #cooldown-bar {
-            width: 100%;
-            height: 100%;
-            background: var(--btc-color);
-            transition: width 0.1s linear;
-        }
-
         .val-display {
             font-size: 2rem;
             font-weight: 800;
@@ -127,6 +110,7 @@
             pointer-events: none;
             animation: floatUp 0.6s ease-out forwards;
             font-size: 1.5rem;
+            z-index: 100;
         }
 
         @keyframes floatUp {
@@ -155,10 +139,7 @@
         <div class="bitcoin-wrapper">
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" class="bitcoin-icon" id="btcClicker">
         </div>
-        <div class="cooldown-bar-container">
-            <div id="cooldown-bar"></div>
-        </div>
-        <p id="instruction" style="color: #444;">Klikaj! Naliczanie co 0.5s</p>
+        <p id="instruction" style="color: #444; margin-top: 20px;">Klikaj Bitcoin!</p>
     </div>
 
     <div class="side-panel">
@@ -184,14 +165,11 @@
         let pln = 0;
         let rate = 350000;
         let autoSaveSec = 30;
-
-        // Rate limiting variables
-        const COOLDOWN_MS = 50; 
-        let lastNaliczenieTime = 0;
+        const CLICK_LIMIT_MS = 50; 
+        let lastClickTime = 0;
 
         const plnSync = document.getElementById('plnSync');
         const plnStatusText = document.getElementById('plnStatusText');
-        const cooldownBar = document.getElementById('cooldown-bar');
         const btcClicker = document.getElementById('btcClicker');
 
         async function checkDatabase() {
@@ -228,11 +206,7 @@
             plnSync.className = 'sync-indicator fas fa-spinner fa-spin';
             try {
                 if (window.userData) {
-                    // Zapisujemy obie wartości do bazy
                     await window.userData.setData('profile', 'money', pln.toFixed(2));
-                    // Opcjonalnie: jeśli masz pole na bitcoiny w bazie:
-                    // await window.userData.setData('profile', 'bitcoin', btc.toFixed(8));
-                    
                     plnSync.className = 'sync-indicator fas fa-check';
                     plnStatusText.textContent = "ZSYNCHRONIZOWANO";
                 }
@@ -244,18 +218,15 @@
             }
         }
 
-        // --- GŁÓWNA LOGIKA KLIKANIA ---
+        // Klikanie z floating text
         btcClicker.addEventListener('click', (e) => {
             const now = Date.now();
-
-            // Możesz klikać ile chcesz, ale nalicza tylko jeśli minęło 500ms
-            if (now - lastNaliczenieTime >= COOLDOWN_MS) {
-                lastNaliczenieTime = now;
+            if (now - lastClickTime >= CLICK_LIMIT_MS) {
+                lastClickTime = now;
                 btc += 0.00000001;
                 setLocalData('gameverse', 'bitcoin', btc.toFixed(8));
                 updateUI();
 
-                // Efekt wizualny naliczenia
                 const float = document.createElement('div');
                 float.className = 'floating-text';
                 float.textContent = '+1 sat';
@@ -263,14 +234,6 @@
                 float.style.top = (e.clientY - 20) + 'px';
                 document.body.appendChild(float);
                 setTimeout(() => float.remove(), 600);
-
-                // Reset paska cooldownu
-                cooldownBar.style.transition = 'none';
-                cooldownBar.style.width = '0%';
-                setTimeout(() => {
-                    cooldownBar.style.transition = `width ${COOLDOWN_MS}ms linear`;
-                    cooldownBar.style.width = '100%';
-                }, 10);
             }
         });
 
@@ -284,14 +247,27 @@
             }
         }, 1000);
 
+        // POPRAWKA: Teraz aktualizuje localData po wymianie
         document.getElementById('btnBtcToPln').addEventListener('click', async () => {
             const v = document.getElementById('inputBtc').value === "" ? btc : parseFloat(document.getElementById('inputBtc').value);
-            if (v > 0 && v <= btc) { btc -= v; pln += v * rate; updateUI(); await saveToCloud(); }
+            if (v > 0 && v <= btc) {
+                btc -= v;
+                pln += v * rate;
+                setLocalData('gameverse', 'bitcoin', btc.toFixed(8)); // AKTUALIZACJA BIBLIOTEKI
+                updateUI();
+                await saveToCloud();
+            }
         });
 
         document.getElementById('btnPlnToBtc').addEventListener('click', async () => {
             const v = document.getElementById('inputPln').value === "" ? pln : parseFloat(document.getElementById('inputPln').value);
-            if (v > 0 && v <= pln) { pln -= v; btc += v / rate; updateUI(); await saveToCloud(); }
+            if (v > 0 && v <= pln) {
+                pln -= v;
+                btc += v / rate;
+                setLocalData('gameverse', 'bitcoin', btc.toFixed(8)); // AKTUALIZACJA BIBLIOTEKI
+                updateUI();
+                await saveToCloud();
+            }
         });
 
         async function fetchRate() {
