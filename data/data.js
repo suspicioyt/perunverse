@@ -66,8 +66,11 @@ async function initializeUserData() {
       console.groupEnd();
       return data.appData;
     } else {
-      console.error("%c[DEBUG] Serwer odrzucił token:", debugStyle.error, data.message);
-      if (data.message === 'invalid_token') {
+      const errorMsg = data.message || "Brak szczegółów błędu (może błąd skryptu GAS?)";
+      console.error("%c[DEBUG] Serwer odrzucił token:", debugStyle.error, errorMsg);
+      console.log("Pełna odpowiedź serwera:", data); // To pokaże co dokładnie zwrócił GAS
+
+      if (errorMsg === 'invalid_token') {
         clearSessionStorage();
         redirectToLogin(currentUrl);
       }
