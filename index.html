@@ -269,32 +269,27 @@
 </main>
 <!-- ===== SCRIPT ===== -->
 <script>
-  const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/login.html?redirect=';
+  const LOGIN_PAGE = 'account/login.html?redirect=';
   const currentUrl = window.location.href;
-  const authToken = localStorage.getItem('authToken');
-  const isLoggedIn = !!authToken;
 
-  let SCRIPT_URL = ''; // Będzie pobrany z pliku
+  let SCRIPT_URL = '';
+  let initialized = false;
 
-  // Pobranie SCRIPT_URL z pliku tekstowego – POPRAWIONA ŚCIEŻKA!
+  // Pobranie backend_url
   fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
-    .then(response => {
-      if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
-      return response.text();
-    })
-    .then(text => {
-      SCRIPT_URL = text.trim();
-      console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
-      // Po załadowaniu URL-a uruchamiamy inicjalizację strony
+    .then(r => r.ok ? r.text() : Promise.reject())
+    .then(t => {
+      SCRIPT_URL = t.trim();
+      console.log("SCRIPT_URL:", SCRIPT_URL);
       initPage();
     })
     .catch(err => {
-      console.error('Błąd podczas ładowania SCRIPT_URL:', err);
-      alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
+      console.error("Błąd ładowania SCRIPT_URL:", err);
+      initPage(); // nawet jeśli URL nie działa, strona główna ma działać
     });
 
-  function changePage(app) {
-    window.location.href = app;
+  function hasToken() {
+    return !!localStorage.getItem('authToken');
   }
 
   function login() {
@@ -303,105 +298,106 @@
 
   function logout() {
     localStorage.removeItem('authToken');
-    sessionStorage.clear();
+    sessionStorage.removeItem('userData');
     location.reload();
   }
 
-  /* ===== TABS SWITCHING ===== */
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
-
-  function switchTab(tabId) {
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    tabContents.forEach(content => content.classList.remove('active'));
-
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    document.getElementById(tabId).classList.add('active');
-  }
-
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const tabId = button.getAttribute('data-tab');
-      switchTab(tabId);
-    });
-  });
-
-  /* ===== AUTH AREA & INIT ===== */
+  // ==== INIT STRONY GŁÓWNEJ ====
   async function initPage() {
     const authArea = document.getElementById('authArea');
     const loggedGrid = document.getElementById('loggedGrid');
 
-    if (isLoggedIn) {
-      document.querySelector('[data-tab="public"]').style.display = 'none';
-      switchTab('logged');
-
+    if (hasToken()) {
       authArea.innerHTML = `
         <button onclick="changePage('account')">Panel</button>
         <button onclick="logout()">Wyloguj</button>
       `;
 
       await initializeUserData();
+
+      if (loggedGrid) loggedGrid.classList.remove('locked');
+      switchTab('logged');
+
     } else {
       authArea.innerHTML = `<button onclick="login()">Zaloguj</button>`;
-      loggedGrid.classList.add('locked');
+      if (loggedGrid) loggedGrid.classList.add('locked');
+      switchTab('public');
     }
   }
 
+  function changePage(app) {
+    window.location.href = app;
+  }
+
+  // ==== INICJALIZACJA DANYCH UŻYTKOWNIKA ====
   async function initializeUserData() {
-    console.log('initializeUserData: Starting...', { url: window.location.href });
-
     const token = localStorage.getItem('authToken');
-    const userData = sessionStorage.getItem('userData');
+    const cached = sessionStorage.getItem('userData');
 
-    if (userData) {
+    // Jeśli mamy cache → używamy
+    if (cached) {
       try {
-        const parsedData = JSON.parse(userData);
-        console.log('initializeUserData: Returning cached userData');
-        return parsedData;
-      } catch (error) {
-        console.error('initializeUserData: Error parsing cached userData:', error);
+        initialized = true;
+        return JSON.parse(cached);
+      } catch {
         sessionStorage.removeItem('userData');
       }
     }
 
-    if (token && SCRIPT_URL) {    
-      try {
-        console.log('initializeUserData: Verifying token with server...');
-        const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-        });
+    // Brak tokena → nic nie robimy
+    if (!token) {
+      initialized = true;
+      return {};
+    }
 
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
-        console.log('initializeUserData: Server response:', data);
+    // Brak SCRIPT_URL → nie wylogowujemy
+    if (!SCRIPT_URL) {
+      console.warn("Brak SCRIPT_URL — używam tylko cache");
+      initialized = true;
+      return cached ? JSON.parse(cached) : {};
+    }
 
-        if (data.status === 'success') {
-          const userAppData = data.appData || {};
-          sessionStorage.setItem('userData', JSON.stringify(userAppData));
-          console.log('initializeUserData: User data loaded and cached');
-          return userAppData;
-        } else {
-          console.warn('initializeUserData: Invalid token received');
-          clearSessionStorage();
-          redirectToLogin(currentUrl);
-          return {};
+    try {
+      const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
+      if (!res.ok) throw 0;
+
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        const appData = data.appData || {};
+
+        // NIE nadpisujemy pustymi danymi
+        if (Object.keys(appData).length > 0) {
+          sessionStorage.setItem('userData', JSON.stringify(appData));
         }
-      } catch (error) {
-        console.error('initializeUserData: Failed to verify token:', error);
-        clearSessionStorage();
-        redirectToLogin(currentUrl);
-        return {};
+
+        initialized = true;
+        return appData;
       }
-    } else if (token && !SCRIPT_URL) {
-      console.error('initializeUserData: SCRIPT_URL nie załadowany – nie można zweryfikować tokenu');
+
+      // Token naprawdę nieprawidłowy → wylogowanie
+      clearSessionStorage();
+      redirectToLogin(currentUrl);
+      return {};
+
+    } catch (err) {
+      console.warn("Błąd verify — NIE wylogowuję:", err);
+
+      initialized = true;
+
+      // Używamy cache jeśli jest
+      if (cached) {
+        try { return JSON.parse(cached); }
+        catch {}
+      }
+
+      return {};
     }
   }
 
-  function redirectToLogin(currentUrl) {
-    if (!currentUrl.includes('/account/index.html')) {
-      window.location.href = LOGIN_PAGE + encodeURIComponent(currentUrl);
+  function redirectToLogin(url) {
+    if (!url.includes('/account/index.html')) {
+      window.location.href = LOGIN_PAGE + encodeURIComponent(url);
     }
   }
 
@@ -411,21 +407,20 @@
   }
 
   function getData(section, key) {
-    const userData = sessionStorage.getItem('userData');
-    if (!userData) return null;
+    const raw = sessionStorage.getItem('userData');
+    if (!raw) return null;
 
     try {
-      const parsed = JSON.parse(userData);
-      return parsed[section]?.[key] ?? null;
-    } catch (error) {
-      console.error('getData: Error parsing userData:', error);
+      const obj = JSON.parse(raw);
+      return obj?.[section]?.[key] ?? null;
+    } catch {
       return null;
     }
   }
 
   window.userData = {
     initializeUserData,
-    getData,
+    getData
   };
 </script>
 
