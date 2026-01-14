@@ -4,11 +4,19 @@ const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?r
 fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(r => { if (!r.ok) throw 0; return r.text(); })
   .then(t => { SCRIPT_URL = t.trim(); })
-  .catch(e => console.error(e));
+  .catch(e => console.error("Błąd ładowania SCRIPT_URL:", e));
 
 let saveTimeout = null;
 let isSaving = false;
 let pendingChanges = false;
+let initialized = false;
+
+// Czekanie aż backend_url się załaduje
+async function waitForScriptUrl() {
+  while (!SCRIPT_URL) {
+    await new Promise(r => setTimeout(r, 50));
+  }
+}
 
 async function initializeUserData() {
   const currentUrl = window.location.href;
@@ -17,6 +25,7 @@ async function initializeUserData() {
 
   if (currentUrl.includes('/account/index.html')) return {};
 
+  // Jeśli mamy cache → zwracamy od razu
   if (cached) {
     try { return JSON.parse(cached); }
     catch { sessionStorage.removeItem('userData'); }
@@ -27,31 +36,37 @@ async function initializeUserData() {
     return {};
   }
 
-  while (!SCRIPT_URL) await new Promise(r => setTimeout(r, 50));
+  await waitForScriptUrl();
 
   try {
     const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
-    if (!res.ok) throw 0;
+    if (!res.ok) throw new Error("Błąd połączenia");
+
     const data = await res.json();
 
-    if (data.status === 'success') {
-      const app = data.appData || {};
-      sessionStorage.setItem('userData', JSON.stringify(app));
-      pendingChanges = false;
-      return app;
+    // Token nieprawidłowy → tylko wtedy wylogowujemy
+    if (data.status !== 'success') {
+      console.warn("Token nieprawidłowy:", data);
+      clearSessionStorage();
+      redirectToLogin(currentUrl);
+      return {};
     }
 
-    clearSessionStorage();
-    redirectToLogin(currentUrl);
-    return {};
+    const app = data.appData || {};
+    sessionStorage.setItem('userData', JSON.stringify(app));
+    pendingChanges = false;
+    initialized = true;
+    return app;
+
   } catch (e) {
-    console.warn("Błąd weryfikacji tokena, ale NIE wylogowuję:", e);
-  
+    console.warn("Błąd weryfikacji tokena, NIE wylogowuję:", e);
+
     if (cached) {
       try { return JSON.parse(cached); }
       catch {}
     }
 
+    initialized = true;
     return {};
   }
 }
@@ -61,10 +76,16 @@ async function saveUserDataToSheet(opts = {}) {
   const token = localStorage.getItem('authToken');
   const userData = sessionStorage.getItem('userData');
 
-  if (!token || !userData) return;
+  // Nie zapisujemy jeśli:
+  if (!token || !initialized) return;
+  if (!userData || userData === "{}") {
+    console.warn("Pominięto zapis — userData puste");
+    return;
+  }
 
-  if (isSaving || !SCRIPT_URL) return;
+  await waitForScriptUrl();
 
+  if (isSaving) return;
   isSaving = true;
 
   try {
@@ -78,20 +99,27 @@ async function saveUserDataToSheet(opts = {}) {
       }).toString()
     });
 
-    if (!res.ok) throw 0;
+    if (!res.ok) throw new Error("Błąd zapisu");
 
     const data = await res.json();
-    if (data.status !== 'success') throw 0;
+
+    if (data.status !== 'success') {
+      console.warn("Backend odrzucił zapis:", data);
+      throw new Error("Odrzucono zapis");
+    }
 
     sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
     pendingChanges = false;
-    return data;
-  } catch {
+
+  } catch (e) {
+    console.warn("Błąd zapisu danych:", e);
+
     if (!immediate) {
       setTimeout(() => {
         if (pendingChanges && !isSaving) saveUserDataToSheet().catch(() => {});
       }, 3000);
     }
+
   } finally {
     isSaving = false;
   }
@@ -148,8 +176,7 @@ function clearSessionStorage() {
 }
 
 window.addEventListener('beforeunload', () => {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
+  if (pendingChanges) {
     saveUserDataToSheet({ immediate: true });
   }
 });
