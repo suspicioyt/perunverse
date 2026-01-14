@@ -1,245 +1,169 @@
-/* ============================================================
-   KONFIGURACJA
-============================================================ */
+let SCRIPT_URL = '';
+const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
-let SCRIPT_URL = "";
-const LOGIN_PAGE = "https://suspicioyt.github.io/perunverse/account/index.html?redirect=";
+// Pobieranie URL backendu
+fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
+  .then(r => r.text())
+  .then(t => { SCRIPT_URL = t.trim(); })
+  .catch(e => console.error("Nie udało się pobrać URL backendu:", e));
 
-fetch("https://suspicioyt.github.io/perunverse/config/backend_url.txt")
-  .then(r => r.ok ? r.text() : Promise.reject())
-  .then(t => SCRIPT_URL = t.trim())
-  .catch(err => console.error("Błąd ładowania backend_url:", err));
-
-let initialized = false;
+let saveTimeout = null;
 let isSaving = false;
 let pendingChanges = false;
-let saveTimeout = null;
-
-
-/* ============================================================
-   FUNKCJA: Czekanie na SCRIPT_URL
-============================================================ */
-
-async function waitForScriptUrl() {
-  while (!SCRIPT_URL) {
-    await new Promise(r => setTimeout(r, 50));
-  }
-}
-
-
-/* ============================================================
-   FUNKCJA: Inicjalizacja danych użytkownika
-============================================================ */
 
 async function initializeUserData() {
-  const url = window.location.href;
-  const token = localStorage.getItem("authToken");
-  const cached = sessionStorage.getItem("userData");
+  const currentUrl = window.location.href;
+  const token = localStorage.getItem('authToken');
+  const cached = sessionStorage.getItem('userData');
 
-  // Strona logowania nie potrzebuje danych
-  if (url.includes("/account/index.html")) return {};
+  // Jeśli jesteśmy na stronie logowania, nie rób nic
+  if (currentUrl.includes('/account/')) return cached ? JSON.parse(cached) : {};
 
-  // Jeśli mamy cache → zwracamy natychmiast
-  if (cached) {
-    try { return JSON.parse(cached); }
-    catch { sessionStorage.removeItem("userData"); }
-  }
-
-  // Brak tokena → logowanie
+  // Brak tokena = przekierowanie
   if (!token) {
-    redirectToLogin(url);
+    redirectToLogin(currentUrl);
     return {};
   }
 
-  await waitForScriptUrl();
+  // Czekaj na SCRIPT_URL (max 3 sekundy)
+  let attempts = 0;
+  while (!SCRIPT_URL && attempts < 60) {
+    await new Promise(r => setTimeout(r, 50));
+    attempts++;
+  }
+
+  if (!SCRIPT_URL) {
+    console.warn("Backend URL nie załadował się na czas. Używam cache.");
+    return cached ? JSON.parse(cached) : {};
+  }
 
   try {
     const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
-    if (!res.ok) throw new Error("Błąd połączenia");
-
+    if (!res.ok) throw new Error("Server error");
+    
     const data = await res.json();
 
-    // Token nieprawidłowy → wylogowanie
-    if (data.status !== "success") {
-      clearSessionStorage();
-      redirectToLogin(url);
-      return {};
-    }
-
-    const app = data.appData || {};
-
-    // Jeśli backend zwrócił puste dane → NIE nadpisujemy lokalnych
-    if (Object.keys(app).length > 0) {
-      sessionStorage.setItem("userData", JSON.stringify(app));
+    if (data.status === 'success') {
+      const app = data.appData || {};
+      sessionStorage.setItem('userData', JSON.stringify(app));
       pendingChanges = false;
+      return app;
+    } else if (data.message === 'invalid_token') {
+      // Tylko wyraźny błąd tokena wylogowuje użytkownika
+      clearSessionStorage();
+      redirectToLogin(currentUrl);
     }
-
-    initialized = true;
-    return app;
-
+    
+    return cached ? JSON.parse(cached) : {};
   } catch (err) {
-    console.warn("Błąd weryfikacji tokena — używam lokalnych danych:", err);
-
-    initialized = true;
-
-    if (cached) {
-      try { return JSON.parse(cached); }
-      catch {}
-    }
-
-    return {};
+    console.warn("Błąd weryfikacji (sieć), zostaję w trybie offline/cache.");
+    return cached ? JSON.parse(cached) : {};
   }
 }
 
+async function saveUserDataToSheet() {
+  const token = localStorage.getItem('authToken');
+  const userData = sessionStorage.getItem('userData');
 
-/* ============================================================
-   FUNKCJA: Zapis danych do backendu
-============================================================ */
+  if (!token || !userData || !SCRIPT_URL || isSaving) return;
 
-async function saveUserDataToSheet(opts = {}) {
-  const { immediate = false } = opts;
-
-  const token = localStorage.getItem("authToken");
-  const userData = sessionStorage.getItem("userData");
-
-  // Nie zapisujemy jeśli:
-  if (!initialized) return;
-  if (!token) return;
-  if (!userData || userData === "{}") return;
-  if (!pendingChanges) return;
-
-  await waitForScriptUrl();
-
-  if (isSaving) return;
   isSaving = true;
+  console.log("%c[System] Zapisywanie danych...", "color: #aaa");
 
   try {
     const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        action: "updateUserData",
-        token,
-        appData: userData
+      method: 'POST',
+      mode: 'no-cors', // Stabilniejsze dla Google Apps Script
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateUserData',
+        token: token,
+        appData: JSON.parse(userData)
       })
     });
 
-    if (!res.ok) throw new Error("Błąd zapisu");
-
-    const data = await res.json();
-
-    if (data.status !== "success") {
-      throw new Error("Backend odrzucił zapis");
-    }
-
-    sessionStorage.setItem("userData", JSON.stringify(data.appData || {}));
+    // Przy no-cors nie odczytamy res.json(), więc zakładamy sukces jeśli nie ma błędu sieci
     pendingChanges = false;
-
+    console.log("%c[System] Dane wysłane do chmury", "color: #00ff88");
   } catch (err) {
-    console.warn("Błąd zapisu danych:", err);
-
-    if (!immediate) {
-      setTimeout(() => {
-        if (pendingChanges && !isSaving) saveUserDataToSheet().catch(() => {});
-      }, 3000);
-    }
-
+    console.error("Błąd podczas zapisu:", err);
   } finally {
     isSaving = false;
   }
 }
 
-
-/* ============================================================
-   FUNKCJE: Pobieranie i ustawianie danych
-============================================================ */
-
 function getData(section, key) {
-  const raw = sessionStorage.getItem("userData");
+  const raw = sessionStorage.getItem('userData');
   if (!raw) return null;
-
   try {
-    const obj = JSON.parse(raw);
-    return obj?.[section]?.[key] ?? null;
-  } catch {
-    return null;
-  }
+    const d = JSON.parse(raw);
+    return d?.[section]?.[key] ?? null;
+  } catch { return null; }
 }
 
 async function setData(section, key, value) {
-  let obj = {};
+  let parsed = {};
+  const raw = sessionStorage.getItem('userData');
 
-  try {
-    obj = JSON.parse(sessionStorage.getItem("userData") || "{}");
-  } catch {
-    obj = {};
-  }
+  try { parsed = raw ? JSON.parse(raw) : {}; }
+  catch { parsed = {}; }
 
-  if (!obj[section] || typeof obj[section] !== "object") {
-    obj[section] = {};
-  }
+  if (!parsed[section] || typeof parsed[section] !== 'object') parsed[section] = {};
+  
+  // Sprawdź czy wartość się zmieniła, żeby nie zapisywać bez sensu
+  if (parsed[section][key] === value) return parsed;
 
-  obj[section][key] = value;
-
-  sessionStorage.setItem("userData", JSON.stringify(obj));
+  parsed[section][key] = value;
+  sessionStorage.setItem('userData', JSON.stringify(parsed));
   pendingChanges = true;
 
   if (saveTimeout) clearTimeout(saveTimeout);
 
   saveTimeout = setTimeout(() => {
-    if (pendingChanges) saveUserDataToSheet().catch(() => {});
-  }, 2000);
+    saveUserDataToSheet();
+  }, 2500);
 
-  return obj;
+  return parsed;
 }
 
-
-/* ============================================================
-   FUNKCJA: Wstawianie danych do elementu HTML
-============================================================ */
-
-function insertData(el, section, key) {
+function insertData(el, appId, key) {
   if (!el) return;
-  const v = getData(section, key);
-  el.innerHTML = v !== null ? String(v) : "";
+  const v = getData(appId, key);
+  el.innerHTML = v !== null ? String(v) : '';
 }
-
-
-/* ============================================================
-   FUNKCJE: Logowanie / czyszczenie
-============================================================ */
 
 function redirectToLogin(url) {
-  if (!url.includes("/account/index.html")) {
+  if (!url.includes('/account/')) {
     window.location.href = `${LOGIN_PAGE}${encodeURIComponent(url)}`;
   }
 }
 
 function clearSessionStorage() {
-  localStorage.removeItem("authToken");
-  sessionStorage.removeItem("userData");
+  localStorage.removeItem('authToken');
+  sessionStorage.removeItem('userData');
 }
 
-
-/* ============================================================
-   Zapis przy zamknięciu strony
-============================================================ */
-
-window.addEventListener("beforeunload", () => {
+// Zapis przy zamykaniu strony
+window.addEventListener('beforeunload', () => {
   if (pendingChanges) {
-    saveUserDataToSheet({ immediate: true });
+    // Przy zamykaniu używamy navigator.sendBeacon dla pewności zapisu
+    if (SCRIPT_URL && localStorage.getItem('authToken')) {
+      const data = {
+        action: 'updateUserData',
+        token: localStorage.getItem('authToken'),
+        appData: JSON.parse(sessionStorage.getItem('userData') || '{}')
+      };
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      navigator.sendBeacon(SCRIPT_URL, blob);
+    }
   }
 });
-
-
-/* ============================================================
-   Eksport API
-============================================================ */
 
 window.userData = {
   initializeUserData,
   saveUserDataToSheet,
   getData,
   setData,
-  insertData
+  insertData,
+  logout: () => { clearSessionStorage(); location.reload(); }
 };
