@@ -1,130 +1,146 @@
 let SCRIPT_URL = '';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
+// Style debugowania
+const dLog = (msg, color = '#00aaff') => console.log(`%c[DEBUG] ${msg}`);
+
+dLog("Inicjalizacja systemu danych...");
+
+// 1. Pobieranie URL backendu
 fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
-  .then(r => { if (!r.ok) throw 0; return r.text(); })
-  .then(t => { SCRIPT_URL = t.trim(); })
-  .catch(e => console.error(e));
+  .then(r => r.ok ? r.text() : Promise.reject())
+  .then(t => { 
+    SCRIPT_URL = t.trim(); 
+    dLog("URL Backendu załadowany: " + SCRIPT_URL, "#00ff88");
+  })
+  .catch(() => console.error("%c[DEBUG] BŁĄD: Nie udało się pobrać backend_url.txt", "color: #ff4444"));
 
 let saveTimeout = null;
 let isSaving = false;
 let pendingChanges = false;
 
+// 2. Weryfikacja i Inicjalizacja
 async function initializeUserData() {
   const currentUrl = window.location.href;
   const token = localStorage.getItem('authToken');
   const cached = sessionStorage.getItem('userData');
 
-  if (currentUrl.includes('/account/index.html')) return {};
-
-  if (cached) {
-    try { return JSON.parse(cached); }
-    catch { sessionStorage.removeItem('userData'); }
-  }
+  if (currentUrl.includes('/account/')) return cached ? JSON.parse(cached) : {};
 
   if (!token) {
+    dLog("Brak tokena - przekierowanie do logowania.", "#ffaa00");
     redirectToLogin(currentUrl);
     return {};
   }
 
-  while (!SCRIPT_URL) await new Promise(r => setTimeout(r, 50));
+  // Czekaj na SCRIPT_URL (max 3 sekundy)
+  let attempts = 0;
+  while (!SCRIPT_URL && attempts < 60) {
+    await new Promise(r => setTimeout(r, 50));
+    attempts++;
+  }
 
   try {
+    dLog("Weryfikacja tokena w chmurze...");
     const res = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`);
-    if (!res.ok) throw 0;
     const data = await res.json();
 
-    if (data.status === 'success') {
+    if (data && data.status === 'success') {
+      dLog("Weryfikacja udana. Pobrano świeże dane.", "#00ff88");
       const app = data.appData || {};
       sessionStorage.setItem('userData', JSON.stringify(app));
       pendingChanges = false;
       return app;
+    } 
+    
+    if (data && data.message === 'invalid_token') {
+      dLog("Token unieważniony przez serwer!", "#ff4444");
+      clearSessionStorage();
+      redirectToLogin(currentUrl);
+      return {};
     }
-
-    clearSessionStorage();
-    redirectToLogin(currentUrl);
-    return {};
-  } catch {
-    clearSessionStorage();
-    redirectToLogin(currentUrl);
-    return {};
+  } catch (e) {
+    dLog("Błąd sieci podczas weryfikacji. Przechodzę w tryb offline (cache).", "#ffaa00");
   }
+
+  // Jeśli jesteśmy tutaj, to albo błąd sieci, albo dziwna odpowiedź - używamy cache
+  return cached ? JSON.parse(cached) : {};
 }
 
+// 3. Zapisywanie danych
 async function saveUserDataToSheet(opts = {}) {
   const { immediate = false } = opts;
   const token = localStorage.getItem('authToken');
   const userData = sessionStorage.getItem('userData');
 
-  if (!token || !userData) return;
-
-  if (isSaving || !SCRIPT_URL) return;
+  if (!token || !userData || !SCRIPT_URL || isSaving) return;
 
   isSaving = true;
+  dLog("Rozpoczynam zapis do chmury...", "#cc88ff");
 
   try {
+    // Używamy POST z JSON - GAS lepiej to trawi przy appData
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
+      mode: 'no-cors', // Ważne: GAS często wymaga no-cors przy POST z innych domen
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         action: 'updateUserData',
-        token,
-        appData: userData
-      }).toString()
+        token: token,
+        appData: JSON.parse(userData)
+      })
     });
 
-    if (!res.ok) throw 0;
-
-    const data = await res.json();
-    if (data.status !== 'success') throw 0;
-
-    sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
+    // Przy no-cors nie sprawdzamy res.ok, zakładamy że wyszło
+    dLog("Zapis wysłany pomyślnie.", "#00ff88");
     pendingChanges = false;
-    return data;
-  } catch {
+  } catch (e) {
+    dLog("Błąd podczas zapisu! Spróbuję później.", "#ff4444");
     if (!immediate) {
-      setTimeout(() => {
-        if (pendingChanges && !isSaving) saveUserDataToSheet().catch(() => {});
-      }, 3000);
+       setTimeout(() => { if (pendingChanges) saveUserDataToSheet(); }, 5000);
     }
   } finally {
     isSaving = false;
   }
 }
 
+// 4. Pobieranie konkretnych danych
 function getData(section, key) {
   const raw = sessionStorage.getItem('userData');
   if (!raw) return null;
   try {
     const d = JSON.parse(raw);
-    return d?.[section]?.[key] ?? null;
-  } catch {
-    return null;
-  }
+    const val = d?.[section]?.[key] ?? null;
+    return val;
+  } catch { return null; }
 }
 
+// 5. Ustawianie danych (z Debouncem)
 async function setData(section, key, value) {
   let parsed = {};
   const raw = sessionStorage.getItem('userData');
 
-  try { parsed = raw ? JSON.parse(raw) : {}; }
-  catch { parsed = {}; }
+  try { parsed = raw ? JSON.parse(raw) : {}; } catch { parsed = {}; }
 
   if (!parsed[section] || typeof parsed[section] !== 'object') parsed[section] = {};
-  parsed[section][key] = value;
+  
+  if (parsed[section][key] === value) return parsed; // brak zmian
 
+  parsed[section][key] = value;
   sessionStorage.setItem('userData', JSON.stringify(parsed));
   pendingChanges = true;
 
-  if (saveTimeout) clearTimeout(saveTimeout);
+  dLog(`Zmiana lokalna: [${section}][${key}] = ${value}`, "#aaa");
 
+  if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
-    if (pendingChanges) saveUserDataToSheet().catch(() => {});
+    if (pendingChanges) saveUserDataToSheet();
   }, 2500);
 
   return parsed;
 }
 
+// 6. Funkcje pomocnicze
 function insertData(el, appId, key) {
   if (!el) return;
   const v = getData(appId, key);
@@ -132,7 +148,7 @@ function insertData(el, appId, key) {
 }
 
 function redirectToLogin(url) {
-  if (!url.includes('/account/index.html')) {
+  if (!url.includes('/account/')) {
     window.location.href = `${LOGIN_PAGE}${encodeURIComponent(url)}`;
   }
 }
@@ -142,10 +158,23 @@ function clearSessionStorage() {
   sessionStorage.removeItem('userData');
 }
 
-window.addEventListener('beforeunload', () => {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
-    saveUserDataToSheet({ immediate: true });
+// Mostek dla starych skryptów (Naprawia ReferenceError)
+window.loadUserData = initializeUserData;
+window.API = {
+  updateRanking: () => dLog("Stary ranking nie jest już wspierany.", "#ffaa00"),
+  sendLocalData: () => saveUserDataToSheet()
+};
+
+// Zapis przy zamykaniu
+window.addEventListener('beforeunload', (e) => {
+  if (pendingChanges && SCRIPT_URL) {
+    const data = JSON.stringify({
+      action: 'updateUserData',
+      token: localStorage.getItem('authToken'),
+      appData: JSON.parse(sessionStorage.getItem('userData') || '{}')
+    });
+    // navigator.sendBeacon jest pewniejszy przy zamykaniu karty
+    navigator.sendBeacon(SCRIPT_URL, new Blob([data], {type: 'application/json'}));
   }
 });
 
@@ -154,5 +183,6 @@ window.userData = {
   saveUserDataToSheet,
   getData,
   setData,
-  insertData
+  insertData,
+  logout: () => { clearSessionStorage(); location.reload(); }
 };
