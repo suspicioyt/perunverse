@@ -8,7 +8,6 @@ function getLocalData(section, key) {
   try {
     const parsedData = JSON.parse(localData);
     const value = parsedData[section]?.[key] ?? null;
-    console.log(`getLocalData: Retrieved value=${value} for section=${section}, key=${key}`);
     return value;
   } catch (error) {
     console.error('getLocalData: Error parsing userData:', error);
@@ -31,10 +30,12 @@ function setLocalData(section, key, value) {
 
   try {
     localStorage.setItem('userData', JSON.stringify(parsedData));
-    console.log('setLocalData: Updated userData in localStorage:', parsedData);
     return parsedData;
   } catch (storageError) {
     console.error('setLocalData: Error writing to localStorage:', storageError);
     throw storageError;
   }
 }
+
+//setLocalData('settings', 'theme', theme);
+//const savedTheme = getLocalData('settings', 'theme') || 'light';
