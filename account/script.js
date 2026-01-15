@@ -1,4 +1,20 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNnxWtQdPpUZcoXD1ppL-pq4PgETxPgDt-MN2MM9egCQvqwDQ30M6WjOdx4NURDD8/exec';
+let SCRIPT_URL = '';
+
+fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
+  .then(response => {
+    if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
+    return response.text();
+  })
+  .then(text => {
+    SCRIPT_URL = text.trim();
+    console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
+    // Po załadowaniu URL-a uruchamiamy inicjalizację strony
+    initPage();
+  })
+  .catch(err => {
+    console.error('Błąd podczas ładowania SCRIPT_URL:', err);
+    alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
+  });
 
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -123,16 +139,21 @@ async function login() {
             mode: 'cors',
             credentials: 'omit'
         });
-
+        
         if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
         const data = await response.json();
         console.log('login response:', data);
 
         toggleButtonLoading('loginButton', false);
         if (data.status === 'success') {
-            localStorage.setItem('authToken', data.token);
-            sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
-            window.location.href = getRedirectUrl();
+            const token = data.token;
+            const targetUrl = getRedirectUrl();
+            
+            const url = new URL(targetUrl, window.location.origin);
+            url.searchParams.set('token', token);
+
+            console.log('Logowanie udane, przekierowanie do innej domeny...');
+            window.location.href = url.toString();
         } else {
             errorMessage.textContent = data.message || 'Błąd logowania';
             errorMessage.classList.add('show');
@@ -225,9 +246,14 @@ async function register() {
 
         toggleButtonLoading('registerButton', false);
         if (data.status === 'success') {
-            localStorage.setItem('authToken', data.token);
-            sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
-            window.location.href = getRedirectUrl();
+            const token = data.token;
+            const targetUrl = getRedirectUrl();
+            
+            const url = new URL(targetUrl, window.location.origin);
+            url.searchParams.set('token', token);
+
+            console.log('Logowanie udane, przekierowanie do innej domeny...');
+            window.location.href = url.toString();
         } else {
             errorMessage.textContent = data.message || 'Błąd rejestracji';
             errorMessage.classList.add('show');
