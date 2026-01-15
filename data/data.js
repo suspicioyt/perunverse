@@ -1,12 +1,10 @@
 let SCRIPT_URL = '';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
-// Czyste logowanie bez kolorów
 const dLog = (msg) => console.log(`[DEBUG] ${msg}`);
 
 dLog("Inicjalizacja systemu danych...");
 
-// 1. Pobieranie URL backendu
 fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(r => r.ok ? r.text() : Promise.reject())
   .then(t => { 
@@ -19,21 +17,29 @@ let saveTimeout = null;
 let isSaving = false;
 let pendingChanges = false;
 
-// 2. Weryfikacja i Inicjalizacja
 async function initializeUserData() {
-  const currentUrl = window.location.href;
-  const token = localStorage.getItem('authToken');
+  const currentUrl = new URL(window.location.href);
+  let token = localStorage.getItem('authToken');
   const cached = sessionStorage.getItem('userData');
 
-  if (currentUrl.includes('/account/')) return cached ? JSON.parse(cached) : {};
+  const tokenFromUrl = currentUrl.searchParams.get('token');
+  if (tokenFromUrl) {
+    dLog("Wykryto token w URL. Zapisywanie...");
+    localStorage.setItem('authToken', tokenFromUrl);
+    token = tokenFromUrl;
+    
+    currentUrl.searchParams.delete('token');
+    window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
+  }
+
+  if (window.location.href.includes('/account/')) return cached ? JSON.parse(cached) : {};
 
   if (!token) {
     dLog("Brak tokena - przekierowanie do logowania.");
-    redirectToLogin(currentUrl);
+    redirectToLogin(window.location.href);
     return {};
   }
 
-  // Czekaj na SCRIPT_URL (max 3 sekundy)
   let attempts = 0;
   while (!SCRIPT_URL && attempts < 60) {
     await new Promise(r => setTimeout(r, 50));
@@ -56,17 +62,16 @@ async function initializeUserData() {
     if (data && data.message === 'invalid_token') {
       dLog("Token unieważniony przez serwer!");
       clearSessionStorage();
-      redirectToLogin(currentUrl);
+      redirectToLogin(window.location.href);
       return {};
     }
   } catch (e) {
-    dLog("Błąd sieci podczas weryfikacji. Używam cache (Offline Mode).");
+    dLog("Błąd sieci podczas weryfikacji. Używam cache.");
   }
 
   return cached ? JSON.parse(cached) : {};
 }
 
-// 3. Zapisywanie danych
 async function saveUserDataToSheet(opts = {}) {
   const { immediate = false } = opts;
   const token = localStorage.getItem('authToken');
@@ -101,7 +106,6 @@ async function saveUserDataToSheet(opts = {}) {
   }
 }
 
-// 4. Pobieranie konkretnych danych
 function getData(section, key) {
   const raw = sessionStorage.getItem('userData');
   if (!raw) return null;
@@ -112,7 +116,6 @@ function getData(section, key) {
   } catch { return null; }
 }
 
-// 5. Ustawianie danych (z Debouncem)
 async function setData(section, key, value) {
   let parsed = {};
   const raw = sessionStorage.getItem('userData');
@@ -137,7 +140,6 @@ async function setData(section, key, value) {
   return parsed;
 }
 
-// 6. Funkcje pomocnicze
 function insertData(el, appId, key) {
   if (!el) return;
   const v = getData(appId, key);
@@ -155,14 +157,12 @@ function clearSessionStorage() {
   sessionStorage.removeItem('userData');
 }
 
-// Mostek dla starych skryptów
 window.loadUserData = initializeUserData;
 window.API = {
   updateRanking: () => dLog("Stary ranking nieaktywny."),
   sendLocalData: () => saveUserDataToSheet()
 };
 
-// Zapis przy zamykaniu
 window.addEventListener('beforeunload', () => {
   if (pendingChanges && SCRIPT_URL) {
     const data = JSON.stringify({
@@ -182,3 +182,15 @@ window.userData = {
   insertData,
   logout: () => { clearSessionStorage(); location.reload(); }
 };
+
+//let money = window.userData.getData('profile', 'money') || 0;
+
+//await window.userData.setData('profile', 'money', newMoney);
+
+//const moneyDisplay = document.getElementById('money-count');
+//window.userData.insertData(moneyDisplay, 'profile', 'money');
+
+//const data = await window.userData.initializeUserData();
+//console.log("Witaj ponownie, " + data.profile.username);
+
+//<button onclick="window.userData.logout()">Wyloguj się</button>
