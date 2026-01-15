@@ -1,19 +1,25 @@
 let SCRIPT_URL = '';
 
+// 1. Definiujemy initPage, aby uniknąć ReferenceError
+function initPage() {
+    console.log('Inicjalizacja interfejsu użytkownika...');
+    populateYearSelect();
+    loadUserData(); // Uruchamiamy ładowanie danych dopiero gdy mamy SCRIPT_URL
+}
+
+// 2. Ładowanie konfiguracji serwera
 fetch('https://suspicioyt.github.io/perunverse/config/backend_url.txt')
   .then(response => {
-    if (!response.ok) throw new Error('Nie udało się pobrać scripturl.txt (status: ' + response.status + ')');
+    if (!response.ok) throw new Error('Nie udało się pobrać backend_url.txt');
     return response.text();
   })
   .then(text => {
     SCRIPT_URL = text.trim();
     console.log('SCRIPT_URL załadowany pomyślnie:', SCRIPT_URL);
-    // Po załadowaniu URL-a uruchamiamy inicjalizację strony
-    initPage();
+    initPage(); 
   })
   .catch(err => {
     console.error('Błąd podczas ładowania SCRIPT_URL:', err);
-    alert('Błąd ładowania konfiguracji serwera. Sprawdź konsolę (F12) po szczegóły.');
   });
 
 function showTab(tabName) {
@@ -267,46 +273,62 @@ async function register() {
 }
 
 async function loadUserData() {
-    const token = localStorage.getItem('authToken');
-    const userData = sessionStorage.getItem('userData');
+    const currentUrl = new URL(window.location.href);
+    const tokenFromUrl = currentUrl.searchParams.get('token');
+    
+    // Jeśli w URL jest token (przyjście z innej domeny), zapisz go
+    if (tokenFromUrl) {
+        localStorage.setItem('authToken', tokenFromUrl);
+        // Usuwamy token z URL dla estetyki
+        currentUrl.searchParams.delete('token');
+        window.history.replaceState({}, document.title, currentUrl.pathname);
+    }
 
-    console.log('loadUserData - token:', token);
-    console.log('loadUserData - userData:', userData);
+    const token = localStorage.getItem('authToken');
 
     if (!token) {
-        console.log('Brak tokena - wyświetlanie loginModal');
-        document.getElementById('loginModal').style.display = 'flex';
-        showTab('login');
+        if (!window.location.href.includes('/account/')) {
+             document.getElementById('loginModal').style.display = 'flex';
+             showTab('login');
+        }
         return false;
     }
 
+    // WAŻNE: Upewniamy się, że używamy SCRIPT_URL a nie adresu strony HTML
+    if (!SCRIPT_URL) {
+        console.warn('Oczekiwanie na SCRIPT_URL...');
+        return; 
+    }
+
     try {
-        console.log('Weryfikacja tokena:', token);
+        console.log('Weryfikacja tokena w Google Script:', token);
+        // POPRAWKA: fetch musi iść do SCRIPT_URL
         const response = await fetch(`${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}`, {
             method: 'GET',
-            mode: 'cors',
-            credentials: 'omit'
+            mode: 'cors'
         });
 
-        if (!response.ok) throw new Error(`Błąd HTTP! Status: ${response.status}`);
-        const data = await response.json();
+        const text = await response.text();
+        if (!text || text === '{}') throw new Error("Pusta odpowiedź serwera");
+        
+        const data = JSON.parse(text);
         console.log('verify response:', data);
 
         if (data.status === 'success') {
             sessionStorage.setItem('userData', JSON.stringify(data.appData || {}));
-            window.location.href = getRedirectUrl();
+            // Jeśli jesteśmy na stronie logowania, a mamy ważny token - przekieruj dalej
+            if (window.location.href.includes('account/index.html')) {
+                window.location.href = getRedirectUrl();
+            }
             return true;
         } else {
-            console.log('Nieprawidłowy token - wyświetlanie loginModal');
+            localStorage.removeItem('authToken');
             document.getElementById('loginModal').style.display = 'flex';
             showTab('login');
-            return false;
         }
     } catch (error) {
         console.error('Błąd weryfikacji tokena:', error);
-        document.getElementById('loginModal').style.display = 'flex';
-        showTab('login');
-        return false;
+        // W razie błędu sieci nie wylogowuj, użyj danych z sesji jeśli są
     }
 }
 
