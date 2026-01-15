@@ -1,6 +1,8 @@
 let SCRIPT_URL = '';
 const LOGIN_PAGE = 'https://suspicioyt.github.io/perunverse/account/index.html?redirect=';
 
+let memoryCache = null; 
+
 const dLog = (msg) => console.log(`[DEBUG] ${msg}`);
 
 dLog("Inicjalizacja systemu danych...");
@@ -20,19 +22,20 @@ let pendingChanges = false;
 async function initializeUserData() {
   const currentUrl = new URL(window.location.href);
   let token = localStorage.getItem('authToken');
+  
   const cached = sessionStorage.getItem('userData');
+  if (cached) memoryCache = JSON.parse(cached);
 
   const tokenFromUrl = currentUrl.searchParams.get('token');
   if (tokenFromUrl) {
     dLog("Wykryto token w URL. Zapisywanie...");
     localStorage.setItem('authToken', tokenFromUrl);
     token = tokenFromUrl;
-    
     currentUrl.searchParams.delete('token');
     window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
   }
 
-  if (window.location.href.includes('/account/')) return cached ? JSON.parse(cached) : {};
+  if (window.location.href.includes('/account/')) return memoryCache || {};
 
   if (!token) {
     dLog("Brak tokena - przekierowanie do logowania.");
@@ -53,10 +56,10 @@ async function initializeUserData() {
 
     if (data && data.status === 'success') {
       dLog("Weryfikacja udana. Pobrano świeże dane.");
-      const app = data.appData || {};
-      sessionStorage.setItem('userData', JSON.stringify(app));
+      memoryCache = data.appData || {}; // Zapisz do RAM
+      sessionStorage.setItem('userData', JSON.stringify(memoryCache));
       pendingChanges = false;
-      return app;
+      return memoryCache;
     } 
     
     if (data && data.message === 'invalid_token') {
@@ -69,75 +72,70 @@ async function initializeUserData() {
     dLog("Błąd sieci podczas weryfikacji. Używam cache.");
   }
 
-  return cached ? JSON.parse(cached) : {};
+  return memoryCache || {};
 }
 
 async function saveUserDataToSheet(opts = {}) {
-  const { immediate = false } = opts;
   const token = localStorage.getItem('authToken');
-  const userData = sessionStorage.getItem('userData');
-
-  if (!token || !userData || !SCRIPT_URL || isSaving) return;
+  if (!token || !memoryCache || !SCRIPT_URL || isSaving) return;
 
   isSaving = true;
-  dLog("Chmura: Rozpoczynam zapis...");
+  dLog("Chmura: Rozpoczynam zapis (Auto-save)...");
 
   try {
-    const res = await fetch(SCRIPT_URL, {
+    await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'updateUserData',
         token: token,
-        appData: JSON.parse(userData)
+        appData: memoryCache
       })
     });
 
-    dLog("Chmura: Dane wysłane.");
+    dLog("Chmura: Dane wysłane pomyślnie.");
     pendingChanges = false;
   } catch (e) {
-    dLog("BŁĄD ZAPISU! Ponowienie za 5s.");
-    if (!immediate) {
-       setTimeout(() => { if (pendingChanges) saveUserDataToSheet(); }, 5000);
-    }
+    dLog("BŁĄD ZAPISU! Ponowienie nastąpi przy kolejnej zmianie.");
   } finally {
     isSaving = false;
   }
 }
 
 function getData(section, key) {
-  const raw = sessionStorage.getItem('userData');
-  if (!raw) return null;
-  try {
-    const d = JSON.parse(raw);
-    const val = d?.[section]?.[key] ?? null;
-    return val;
-  } catch { return null; }
+  if (!memoryCache) {
+      const raw = sessionStorage.getItem('userData');
+      if (raw) memoryCache = JSON.parse(raw);
+      else return null;
+  }
+  return memoryCache?.[section]?.[key] ?? null;
 }
 
 async function setData(section, key, value) {
-  let parsed = {};
-  const raw = sessionStorage.getItem('userData');
+  if (!memoryCache) memoryCache = {};
 
-  try { parsed = raw ? JSON.parse(raw) : {}; } catch { parsed = {}; }
-
-  if (!parsed[section] || typeof parsed[section] !== 'object') parsed[section] = {};
+  if (!memoryCache[section] || typeof memoryCache[section] !== 'object') {
+      memoryCache[section] = {};
+  }
   
-  if (parsed[section][key] === value) return parsed; 
+  if (memoryCache[section][key] === value) return memoryCache; 
 
-  parsed[section][key] = value;
-  sessionStorage.setItem('userData', JSON.stringify(parsed));
+  memoryCache[section][key] = value;
+  sessionStorage.setItem('userData', JSON.stringify(memoryCache));
   pendingChanges = true;
 
-  dLog(`Zmiana: [${section}][${key}] = ${value}`);
+  dLog(`Zmiana lokalna: [${section}][${key}] = ${value}. Zapis za 5s...`);
 
   if (saveTimeout) clearTimeout(saveTimeout);
+  
   saveTimeout = setTimeout(() => {
-    if (pendingChanges) saveUserDataToSheet();
-  }, 2500);
+    if (pendingChanges) {
+        saveUserDataToSheet();
+    }
+  }, 5000);
 
-  return parsed;
+  return memoryCache;
 }
 
 function insertData(el, appId, key) {
@@ -155,6 +153,7 @@ function redirectToLogin(url) {
 function clearSessionStorage() {
   localStorage.removeItem('authToken');
   sessionStorage.removeItem('userData');
+  memoryCache = null;
 }
 
 window.loadUserData = initializeUserData;
@@ -164,11 +163,11 @@ window.API = {
 };
 
 window.addEventListener('beforeunload', () => {
-  if (pendingChanges && SCRIPT_URL) {
+  if (pendingChanges && SCRIPT_URL && memoryCache) {
     const data = JSON.stringify({
       action: 'updateUserData',
       token: localStorage.getItem('authToken'),
-      appData: JSON.parse(sessionStorage.getItem('userData') || '{}')
+      appData: memoryCache
     });
     navigator.sendBeacon(SCRIPT_URL, new Blob([data], {type: 'application/json'}));
   }
